@@ -92,7 +92,6 @@ void MyMainFrame::myCreateMenuBar()
     menu_file->AppendSeparator();
     menu_file->Append(wxID_EXIT);
 
-    @@@
     // TODO: CONTINUE HERE. What are better names for these?
 
     wxMenu *menu_mode = new wxMenu;

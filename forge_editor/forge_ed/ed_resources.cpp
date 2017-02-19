@@ -10,7 +10,7 @@ wxBitmap *toolbar_bitmap_entity;
 
 
 // Constants.
-const std::string RESOURCE_PATH = "D:\\Projects\\forge_resources\\editor";
+const std::string RESOURCE_PATH = "C:\\forge_ahead\\forge_resources\\editor";
 
 
 // After all these years, I still thing C++ is fucking stupid on how it handles strings.

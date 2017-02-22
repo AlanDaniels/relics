@@ -38,20 +38,22 @@ public:
 };
 
 
-// Our different ways of painting.
-enum TileMode
+// What do you want to draw?
+enum DrawWhat
 {
-    TILE_MODE_WALL,
-    TILE_MODE_FLOOR,
-    TILE_MODE_ENTITY
+    DRAW_WHAT_WALL,
+    DRAW_WHAT_FLOOR,
+    DRAW_WHAT_ENTITY
 };
 
-enum DrawMode
+
+// How do you want to draw it?
+enum DrawHow
 {
-    DRAW_MODE_BOX,
-    DRAW_MODE_LINE,
-    DRAW_MODE_TILES,
-    DRAW_MODE_ROOM
+    DRAW_HOW_BOX,
+    DRAW_HOW_LINE,
+    DRAW_HOW_TILES,
+    DRAW_HOW_ROOM
 };
 
 
@@ -61,15 +63,15 @@ class MySettings
 public:
     MySettings();
 
-    TileMode getTileMode() const { return m_tile_mode; }
-    DrawMode getDrawMode() const { return m_draw_mode; }
+    DrawWhat getDrawWhat() const { return m_draw_what; }
+    DrawHow  getDrawHow()  const { return m_draw_how; }
 
-    void setTileMode(TileMode val) { m_tile_mode = val; }
-    void setDrawMode(DrawMode val) { m_draw_mode = val; }
+    void setDrawWhat(DrawWhat val) { m_draw_what = val; }
+    void setDrawHow(DrawHow val)   { m_draw_how = val; }
 
 private:
-    TileMode m_tile_mode;
-    DrawMode m_draw_mode;
+    DrawWhat m_draw_what;
+    DrawHow m_draw_how;
 };
 
 
@@ -88,25 +90,21 @@ private:
     void operator=(const MyMainFrame &that) = delete;
 
     void myCreateMenuBar();
-    void myCreateToolBar();
+    void populateEntityList();
 
     void onMenuNew(wxCommandEvent &evt);
     void onMenuExit(wxCommandEvent &evt);
 
-    inline void onTileModeWallPress(wxCommandEvent &evt)   { m_settings.setTileMode(TILE_MODE_WALL); }
-    inline void onTileModeFloorPress(wxCommandEvent &evt)  { m_settings.setTileMode(TILE_MODE_FLOOR); }
-    inline void onTileModeEntityPress(wxCommandEvent &evt) { m_settings.setTileMode(TILE_MODE_ENTITY); }
-
-    inline void onMenuDrawModeTiles(wxCommandEvent &evt) { m_settings.setDrawMode(DRAW_MODE_TILES); }
-    inline void onMenuDrawModeLine(wxCommandEvent &evt)  { m_settings.setDrawMode(DRAW_MODE_LINE); }
-    inline void onMenuDrawModeBox(wxCommandEvent &evt)   { m_settings.setDrawMode(DRAW_MODE_BOX); }
-    inline void onMenuDrawModeRoom(wxCommandEvent &evt)  { m_settings.setDrawMode(DRAW_MODE_ROOM); }
+    inline void onMenuDrawModeTiles(wxCommandEvent &evt) { m_settings.setDrawHow(DRAW_HOW_TILES); }
+    inline void onMenuDrawModeLine(wxCommandEvent &evt)  { m_settings.setDrawHow(DRAW_HOW_LINE); }
+    inline void onMenuDrawModeBox(wxCommandEvent &evt)   { m_settings.setDrawHow(DRAW_HOW_BOX); }
+    inline void onMenuDrawModeRoom(wxCommandEvent &evt)  { m_settings.setDrawHow(DRAW_HOW_ROOM); }
 
     void onMenuAbout(wxCommandEvent &evt);
 
     wxListBox  *m_level_list;
     MyCanvas   *m_canvas;
-    wxListBox  *m_entity_list;
+    wxListCtrl *m_entity_list;
 
     GameLevel *m_game_world;
     MySettings m_settings;

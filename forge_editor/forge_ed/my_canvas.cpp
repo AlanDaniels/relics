@@ -31,26 +31,26 @@ static const wxColor COLOR_TILE_WALL(255, 255, 255);
 static const wxColor COLOR_TILE_FLOOR(192, 192, 192);
 
 
-
-// Thin wrapper calls for the parent.
-DrawMode MyCanvas::getDrawMode() const 
-{ 
-    return m_parent->getSettings().getDrawMode();
+// What do we want to draw?
+DrawWhat MyCanvas::getDrawWhat() const
+{
+    return m_parent->getSettings().getDrawWhat();
 }
 
 
-TileMode MyCanvas::getTileMode() const
-{
-    return m_parent->getSettings().getTileMode();
+// How do we want to draw it?
+DrawHow MyCanvas::getDrawHow() const 
+{ 
+    return m_parent->getSettings().getDrawHow();
 }
 
 
 BlockType MyCanvas::getBlockType()  const
 {
-    TileMode tile_mode = m_parent->getSettings().getTileMode();
+    DrawWhat tile_mode = m_parent->getSettings().getDrawWhat();
     switch (tile_mode) {
-    case TILE_MODE_WALL:  return BLOCK_TYPE_WALL;
-    case TILE_MODE_FLOOR: return BLOCK_TYPE_FLOOR;
+    case DRAW_WHAT_WALL:  return BLOCK_TYPE_WALL;
+    case DRAW_WHAT_FLOOR: return BLOCK_TYPE_FLOOR;
     default: return BLOCK_TYPE_NONE;
     }
 }
@@ -182,9 +182,9 @@ void MyCanvas::onLeftDownEvent(wxMouseEvent &evt)
 
     // Start a new change set.
     assert(m_current_change == nullptr);
-    m_current_change = new ChangeSet;
+    m_current_change = new ChangeSet(*m_game_level);
 
-    if (getDrawMode() == DRAW_MODE_TILES) {
+    if (getDrawHow() == DRAW_HOW_TILES) {
         XYCoord pt = mousePosToWorld();
         BlockType block_type = getBlockType();
         m_current_change->set(pt, block_type);
@@ -233,21 +233,21 @@ void MyCanvas::onMouseMoveEvent(wxMouseEvent &evt)
     }
 
     // If we're in the middle of drawing, go with that.
-    if (evt.LeftIsDown()) {
+    if (evt.LeftIsDown() && (m_current_change != nullptr)) {
         XYCoord pt = mousePosToWorld();
         BlockType block_type = getBlockType();
 
-        DrawMode mode = getDrawMode();
-        if (mode == DRAW_MODE_TILES) {
+        DrawHow mode = getDrawHow();
+        if (mode == DRAW_HOW_TILES) {
             m_current_change->set(pt, block_type);
         }
-        else if (mode == DRAW_MODE_BOX) {
+        else if (mode == DRAW_HOW_BOX) {
             m_current_change->drawBox(m_start_pos, pt, block_type);
         }
-        else if (mode == DRAW_MODE_LINE) {
+        else if (mode == DRAW_HOW_LINE) {
             m_current_change->drawLine(m_start_pos, pt, block_type);
         }
-        else if (mode == DRAW_MODE_ROOM) {
+        else if (mode == DRAW_HOW_ROOM) {
             m_current_change->drawRoom(m_start_pos, pt);
         }
     }

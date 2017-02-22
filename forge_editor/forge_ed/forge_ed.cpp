@@ -9,8 +9,8 @@
 
 // Settings ctor.
 MySettings::MySettings() :
-    m_tile_mode(TILE_MODE_WALL),
-    m_draw_mode(DRAW_MODE_BOX)
+    m_draw_what(DRAW_WHAT_WALL),
+    m_draw_how(DRAW_HOW_BOX)
 {
 }
 
@@ -38,7 +38,6 @@ MyMainFrame::MyMainFrame() :
     m_game_world = new GameLevel;
 
     myCreateMenuBar();
-    myCreateToolBar();
 
     // A flex grid sizer, one row, three cols, five pixels worth of border.
     wxFlexGridSizer *grid_sizer = new wxFlexGridSizer(3, 5, 5, 5);
@@ -55,16 +54,20 @@ MyMainFrame::MyMainFrame() :
     grid_sizer->Add(m_canvas, 1, wxEXPAND | wxALL);
 
     // Add our list of entities.
-    m_entity_list = new wxListBox(this, ID_ENTITY_LIST);
-    m_entity_list->SetMinSize(wxSize(200, wxEXPAND));
+    m_entity_list = new wxListCtrl(
+        this, ID_ENTITY_LIST, wxDefaultPosition, wxDefaultSize, wxLC_REPORT);
+    m_entity_list->SetMinSize(wxSize(300, wxEXPAND));
     grid_sizer->Add(m_entity_list, 1, wxEXPAND | wxALL);
+
+    // Populate the list.
+    populateEntityList();
 
     // TODO: Keep playing around with this until you like the results.
     SetSizer(grid_sizer);
 
     // Create the default status bar.
     CreateStatusBar();
-    SetStatusText("Welcome to Relics Editor, you Game Devloper, you!");
+    SetStatusText("Welcome to Forge Ahead Editor!");
 
     // Figure out our desired layout from the screen size.
     int screen_width  = wxSystemSettings::GetMetric(wxSYS_SCREEN_X);
@@ -72,6 +75,41 @@ MyMainFrame::MyMainFrame() :
     int border = 100;
     SetSize(border, border, screen_width - (border * 2), screen_height - (border * 2));
 }
+
+
+// Populate the entity list.
+// TODO: Figure out how to make this more dynamic.
+void MyMainFrame::populateEntityList()
+{
+    // Add our columns.
+    wxListItem col0;
+    col0.SetId(0);
+    col0.SetText(wxT("Category"));
+    col0.SetWidth(100);
+    m_entity_list->InsertColumn(0, col0);
+
+    wxListItem col1;
+    col1.SetId(1);
+    col1.SetText(wxT("Name"));
+    col1.SetWidth(175);
+    m_entity_list->InsertColumn(1, col1);
+
+    // Add items.
+    wxListItem item0;
+    item0.SetId(0);
+    int n = m_entity_list->InsertItem(item0);
+    m_entity_list->SetItem(n, 0, wxT("doors"));
+    m_entity_list->SetItem(n, 1, wxT("player_start"));
+
+    wxListItem item1;
+    item1.SetId(1);
+    int n1 = m_entity_list->InsertItem(item1);
+    m_entity_list->SetItem(n1, 0, wxT("doors"));
+    m_entity_list->SetItem(n1, 1, wxT("player_exit"));
+
+    // TODO: CONTINUE HERE. Making progress!
+}
+
 
 
 // Main Frame dtor.
@@ -125,30 +163,6 @@ void MyMainFrame::myCreateMenuBar()
     Bind(wxEVT_MENU, &MyMainFrame::onMenuAbout, this, wxID_ABOUT);
 }
 
-
-// Create our tool bar.
-void MyMainFrame::myCreateToolBar()
-{
-    wxToolBar* toolbar = CreateToolBar(wxTB_HORIZONTAL | wxTB_FLAT | /* wxTB_TEXT | */ wxTB_HORZ_LAYOUT);
-
-    // DEBUG: Apparently you need to add real bitmaps.
-    // NEXT UP! Add resources.
-
-    toolbar->AddRadioTool(
-        ID_TILEMODE_WALL_BTN, wxT("Walls"), *toolbar_bitmap_wall, wxNullBitmap,
-        wxT("Draw Walls"));
-    toolbar->AddRadioTool(
-        ID_TILEMODE_FLOOR_BTN, wxT("Floors"), *toolbar_bitmap_floor, wxNullBitmap,
-        wxT("Draw Floors"));
-    toolbar->AddRadioTool(
-        ID_TILEMODE_ENTITY_BTN, wxT("Entities"), *toolbar_bitmap_entity, wxNullBitmap,
-        wxT("Draw Entities"));
-    toolbar->Realize();
-
-    Bind(wxEVT_TOOL, &MyMainFrame::onTileModeWallPress, this, ID_TILEMODE_WALL_BTN);
-    Bind(wxEVT_TOOL, &MyMainFrame::onTileModeFloorPress, this, ID_TILEMODE_FLOOR_BTN);
-    Bind(wxEVT_TOOL, &MyMainFrame::onTileModeEntityPress, this, ID_TILEMODE_ENTITY_BTN);
-}
 
 
 void MyMainFrame::onMenuNew(wxCommandEvent &evt)

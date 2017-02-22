@@ -155,6 +155,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ed_resources.h" />
+    <ClInclude Include="entity.h" />
     <ClInclude Include="game_world.h" />
     <ClInclude Include="forge_ed.h" />
     <ClInclude Include="Resource.h" />

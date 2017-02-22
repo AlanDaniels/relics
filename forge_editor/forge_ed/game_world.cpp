@@ -91,6 +91,17 @@ BlockType ChangeSet::get(const XYCoord &pt) const
 }
 
 
+// If that doesn't work, check the original canvas.
+BlockType ChangeSet::getUnderneath(const XYCoord &pt) const
+{
+    BlockType block = get(pt);
+    if (block == BLOCK_TYPE_NONE) {
+        block = m_game_level.get(pt);
+    }
+    return block;
+}
+
+
 // Set a block value.
 void ChangeSet::set(const XYCoord &pt, BlockType block_type)
 {
@@ -180,7 +191,7 @@ void ChangeSet::drawLine(const XYCoord &pt1, const XYCoord &pt2, BlockType block
 }
 
 
-// Draw a line.
+// Draw a room.
 void ChangeSet::drawRoom(const XYCoord &pt1, const XYCoord &pt2)
 {
     clear();
@@ -206,9 +217,51 @@ void ChangeSet::drawRoom(const XYCoord &pt1, const XYCoord &pt2)
     }
 
     // First, lay down floor.
-    for (int x = left; x <= right; x++) {
-        for (int y = bottom; y <= top; y++) {
+    for (int x = left + 1; x <= right - 1; x++) {
+        for (int y = bottom + 1; y <= top - 1; y++) {
             set(XYCoord(x, y), BLOCK_TYPE_FLOOR);
         }
+    }
+
+    // Then, march along the edges.
+    // Any floor tile with an empty neighbor gets a wall.
+    for (int x = left; x <= right; x++) {
+        addOutsideWall(XYCoord(x, top));
+        addOutsideWall(XYCoord(x, bottom));
+    }
+
+    for (int y = bottom; y <= top; y++) {
+        addOutsideWall(XYCoord(left, y));
+        addOutsideWall(XYCoord(right, y));
+    }
+}
+
+
+// If a tile is empty, and has any floor neighbors, plant a wall there.
+void ChangeSet::addOutsideWall(const XYCoord &pt)
+{
+    int W = pt.x() - 1;
+    int x = pt.x();
+    int E = pt.x() + 1;
+
+    int N = pt.y() + 1;
+    int y = pt.y();
+    int S = pt.y() - 1;
+
+    bool nothing_underneath = 
+        (getUnderneath(pt) == BLOCK_TYPE_NONE);
+
+    bool adjacent_to_floor = (
+        (getUnderneath(XYCoord(W, N)) == BLOCK_TYPE_FLOOR) ||  // Northwest
+        (getUnderneath(XYCoord(x, N)) == BLOCK_TYPE_FLOOR) ||  // North
+        (getUnderneath(XYCoord(E, N)) == BLOCK_TYPE_FLOOR) ||  // Northeast
+        (getUnderneath(XYCoord(W, y)) == BLOCK_TYPE_FLOOR) ||  // West
+        (getUnderneath(XYCoord(E, y)) == BLOCK_TYPE_FLOOR) ||  // East
+        (getUnderneath(XYCoord(W, S)) == BLOCK_TYPE_FLOOR) ||  // Southwest
+        (getUnderneath(XYCoord(x, S)) == BLOCK_TYPE_FLOOR) ||  // South
+        (getUnderneath(XYCoord(E, S)) == BLOCK_TYPE_FLOOR));   // Southeast
+
+    if (nothing_underneath && adjacent_to_floor) {
+        set(pt, BLOCK_TYPE_WALL);
     }
 }

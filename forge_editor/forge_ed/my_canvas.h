@@ -5,8 +5,8 @@
 #include "game_world.h"
 
 
-enum  DrawMode;
-enum  TileMode;
+enum  DrawHow;
+enum  DrawWhat;
 class MyMainFrame;
 
 
@@ -45,8 +45,8 @@ private:
     void operator=(const MyCanvas &that) = delete;
 
     // Wrapper calls for the parent.
-    DrawMode  getDrawMode() const;
-    TileMode  getTileMode() const;
+    DrawHow  getDrawHow() const;
+    DrawWhat  getDrawWhat() const;
     BlockType getBlockType() const;
 
     // Misc code below here.

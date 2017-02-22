@@ -34,3 +34,4 @@
 #include <wx/wx.h>
 #include <wx/dcbuffer.h>
 #include <wx/tglbtn.h>
+#include <wx/listctrl.h>

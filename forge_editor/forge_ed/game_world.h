@@ -17,6 +17,9 @@
  */
 
 
+class GameLevel;
+
+
 // A point on our game map.
 class XYCoord
 {
@@ -79,12 +82,14 @@ private:
 class ChangeSet
 {
 public:
-    ChangeSet() {}
+    ChangeSet(const GameLevel &level) :
+        m_game_level(level) {}
     ~ChangeSet() { clear(); }
 
     void clear();
     
     BlockType get(const XYCoord &pt) const;
+    BlockType getUnderneath(const XYCoord &pt) const;
     void set(const XYCoord &pt, BlockType content);
 
     // Convenience methods.
@@ -92,16 +97,20 @@ public:
     void drawLine(const XYCoord &pt1, const XYCoord &pt2, BlockType block_type);
     void drawRoom(const XYCoord &pt1, const XYCoord &pt2);
 
+    void addOutsideWall(const XYCoord &pt);
+
     // An expedient hack.
     auto begin() const { return m_data.begin(); }
     auto end()   const { return m_data.end(); }
     auto find (const XYCoord &pt) const { return m_data.find(pt); }
 
 private:
-    // Disallow copying.
+    // Disallow copying, and default ctor.
+    ChangeSet() = delete;
     ChangeSet(const ChangeSet &that) = delete;
     void operator=(const ChangeSet &that) = delete;
 
+    const GameLevel &m_game_level;
     std::map<XYCoord, std::unique_ptr<Block>> m_data;
 };
 

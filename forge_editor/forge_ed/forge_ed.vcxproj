@@ -155,7 +155,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ed_resources.h" />
-    <ClInclude Include="entity.h" />
+    <ClInclude Include="entity_types.h" />
     <ClInclude Include="game_world.h" />
     <ClInclude Include="forge_ed.h" />
     <ClInclude Include="Resource.h" />
@@ -165,6 +165,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ed_resources.cpp" />
+    <ClCompile Include="entity_types.cpp" />
     <ClCompile Include="game_world.cpp" />
     <ClCompile Include="forge_ed.cpp" />
     <ClCompile Include="my_canvas.cpp" />

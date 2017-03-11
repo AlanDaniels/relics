@@ -4,6 +4,7 @@
 
 #include "my_canvas.h"
 #include "ed_resources.h"
+#include "entity_types.h"
 #include "game_world.h"
 
 
@@ -23,9 +24,22 @@ bool MyApp::OnInit()
         return false;
     }
 
+    if (!LoadEntityTypes()) {
+        return false;
+    }
+
     MyMainFrame *frame = new MyMainFrame();
     frame->Show(true);
     return true;
+}
+
+
+// Free up anything we've allocated.
+int MyApp::OnExit()
+{
+    FreeEditorResources();
+    FreeEntityTypes();
+    return 0;
 }
 
 
@@ -94,20 +108,21 @@ void MyMainFrame::populateEntityList()
     col1.SetWidth(175);
     m_entity_list->InsertColumn(1, col1);
 
-    // Add items.
-    wxListItem item0;
-    item0.SetId(0);
-    int n = m_entity_list->InsertItem(item0);
-    m_entity_list->SetItem(n, 0, wxT("doors"));
-    m_entity_list->SetItem(n, 1, wxT("player_start"));
+    // Add all our entity types.
+    int offset = 0;
+    for (const auto &entity_type : g_entity_types) {
+        const char *category = entity_type->getCategory().c_str();
+        const char *name = entity_type->getName().c_str();
 
-    wxListItem item1;
-    item1.SetId(1);
-    int n1 = m_entity_list->InsertItem(item1);
-    m_entity_list->SetItem(n1, 0, wxT("doors"));
-    m_entity_list->SetItem(n1, 1, wxT("player_exit"));
+        wxListItem item;
+        item.SetId(offset);
+        item.SetText(name);
+        offset++;
 
-    // TODO: CONTINUE HERE. Making progress!
+        int n = m_entity_list->InsertItem(item);
+        m_entity_list->SetItem(n, 0, wxString(category));
+        m_entity_list->SetItem(n, 1, wxString(name));
+    }
 }
 
 

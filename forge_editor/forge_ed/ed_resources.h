@@ -3,11 +3,8 @@
 #include "stdafx.h"
 
 
-// Just call this once, and load everything in one fell swoop.
+// Let's keep these around for now, for when we add back a toolbar.
 bool LoadEditorResources();
-void FreeEditorResources();
+bool FreeEditorResources();
 
-// And what gets loaded.
-extern wxBitmap *toolbar_bitmap_wall;
-extern wxBitmap *toolbar_bitmap_floor;
-extern wxBitmap *toolbar_bitmap_entity;
+wxBitmap *LoadPNGBitmap(const std::string &fname);

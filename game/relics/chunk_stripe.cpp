@@ -1,0 +1,218 @@
+
+#include "stdafx.h"
+#include "chunk_stripe.h"
+
+#include "brady.h"
+#include "block.h"
+#include "chunk.h"
+
+
+// Get a block, read-only version.
+const Block *ChunkStripe::getBlock_RO(int z) const
+{
+    assert((z >= 0) && (z < CHUNK_DEPTH_Z));
+    return &m_blocks[z];
+}
+
+
+// Get a block, writeable version.
+Block *ChunkStripe::getBlock_RW(int z)
+{
+    assert((z >= 0) && (z < CHUNK_DEPTH_Z));
+    return &m_blocks[z];
+}
+
+
+// Populate a stripe with a particular block type.
+void ChunkStripe::fillStripe(BlockContent block_type)
+{
+    for (int z = 0; z < CHUNK_DEPTH_Z; z++) {
+        m_blocks[z].setContent(block_type);
+    }
+}
+
+
+// Given a block, recalc its surface.
+BlockSurface ChunkStripe::calcSurfaceForBlock(int local_z, FaceEnum face)
+{
+    const Block *block = getBlock_RO(local_z);
+
+    BlockContent content = block->getContent();
+    switch (content) {
+    case CONTENT_GRASS:   return SURF_GRASS;
+    case CONTENT_DIRT:    return SURF_DIRT;
+    case CONTENT_STONE:   return SURF_STONE;
+    case CONTENT_BEDROCK: return SURF_BEDROCK;
+    default:
+        PrintTheImpossible(__FILE__, __LINE__, content);
+        return SURF_NONE;
+    }
+}
+
+
+// Recalc the exposures, *except* for the beginning and end.
+// Return true if any of the blocks changed.
+void ChunkStripe::recalcExposuresInterior()
+{
+    for (int z = 1; z < (CHUNK_DEPTH_Z - 1); z++) {
+        recalcExposureForBlock(z);
+    }
+}
+
+
+// Recalc the exposed faces for one stripe.
+// Return true if any of the blocks changed.
+void ChunkStripe::recalcExposuresAll()
+{
+    for (int z = 0; z < CHUNK_DEPTH_Z; z++) {
+        recalcExposureForBlock(z);
+    }
+}
+
+
+// Rebuild the vertex list for one stripe.
+// Return the total number of faces added.
+void ChunkStripe::addToVertLists(LandscapeVertLists *pOut)
+{
+    for (int local_z = 0; local_z < CHUNK_DEPTH_Z; local_z++) {
+        addVertsForBlock(pOut, local_z);
+    }
+}
+
+
+// Figure out which faces of a block are exposed.
+// Return true if the faces changed.
+void ChunkStripe::recalcExposureForBlock(int local_z)
+{
+    assert((local_z >= 0) && (local_z < CHUNK_DEPTH_Z));
+    Block &current = m_blocks[local_z];
+
+    current.clearExposureFlags();
+
+    // If this block is empty, it doesn't generate any faces.
+    if (current.isEmpty()) {
+        return;
+    }
+
+    // Check for edge cases.
+    int x = m_local_x;
+    int y = m_local_y;
+    int z = local_z;
+
+    bool west_edge   = (x == 0);
+    bool east_edge   = (x == (CHUNK_WIDTH_X - 1));
+
+    bool south_edge  = (z == 0);
+    bool north_edge  = (z == (CHUNK_DEPTH_Z - 1));
+
+    bool bottom_edge = (y == 0);
+    bool top_edge    = (y == (CHUNK_HEIGHT_Y - 1));
+
+    // Get our six neigbors, straddling across chunk boundaries if necessary.
+    BlockContent west_content = west_edge ?
+        m_pOwner->getNeighborWest()->getBlockLocal_RO(CHUNK_WIDTH_X - 1, y, z)->getContent() :
+        m_pOwner->getBlockLocal_RO(x - 1, y, z)->getContent();
+
+    BlockContent east_content  = east_edge ? 
+        m_pOwner->getNeighborEast()->getBlockLocal_RO(0, y, z)->getContent() :
+        m_pOwner->getBlockLocal_RO(x + 1, y, z)->getContent();
+
+    BlockContent south_content = south_edge ? 
+        m_pOwner->getNeighborSouth()->getBlockLocal_RO(x, y, CHUNK_DEPTH_Z - 1)->getContent() :
+        m_pOwner->getBlockLocal_RO(x, y, z - 1)->getContent();
+
+    BlockContent north_content = north_edge ?
+        m_pOwner->getNeighborNorth()->getBlockLocal_RO(x, y, 0)->getContent() :
+        m_pOwner->getBlockLocal_RO(x, y, z + 1)->getContent();
+
+    BlockContent top_content = top_edge ?
+        CONTENT_AIR : 
+        m_pOwner->getBlockLocal_RO(x, y + 1, z)->getContent();
+
+    BlockContent bottom_content = bottom_edge ?
+        CONTENT_AIR : 
+        m_pOwner->getBlockLocal_RO(x, y - 1, z)->getContent();
+
+    // Check each of the faces.
+    bool west_flag  = IsContentEmpty(west_content);
+    bool east_flag  = IsContentEmpty(east_content);
+
+    bool south_flag  = IsContentEmpty(south_content);
+    bool north_flag  = IsContentEmpty(north_content);
+
+    bool top_flag    = IsContentEmpty(top_content);
+    bool bottom_flag = IsContentEmpty(bottom_content);
+
+    current.setExposure(FACE_SOUTH,  south_flag);
+    current.setExposure(FACE_NORTH,  north_flag);
+    current.setExposure(FACE_WEST,   west_flag);
+    current.setExposure(FACE_EAST,   east_flag);
+    current.setExposure(FACE_TOP,    top_flag);
+    current.setExposure(FACE_BOTTOM, bottom_flag);
+}
+
+
+// Add the quads for a block.
+void ChunkStripe::addVertsForBlock(LandscapeVertLists *pOut, int local_z)
+{
+    const Block &current = m_blocks[local_z];
+
+    // If this block is empty, it doesn't generate any faces.
+    if (current.isEmpty()) {
+        return;
+    }
+
+    int x = m_local_x;
+    int y = m_local_y;
+    int z = local_z;
+
+    MyGridCoord local_coord(x, y, z);
+
+    // Top face.
+    if (current.getExposure(FACE_TOP)) {
+        Brady brady(*m_pOwner, local_coord, FACE_TOP);
+        BlockSurface surf = calcSurfaceForBlock(local_z, FACE_TOP);
+        VertList_PNT *pList = pOut->get_RW(surf);
+        brady.addToVertList_PNT(pList);
+    }
+
+    // Bottom face.
+    if (current.getExposure(FACE_BOTTOM)) {
+        Brady brady(*m_pOwner, local_coord, FACE_BOTTOM);
+        BlockSurface surf = calcSurfaceForBlock(local_z, FACE_BOTTOM);
+        VertList_PNT *pList = pOut->get_RW(surf);
+        brady.addToVertList_PNT(pList);
+    }
+
+    // Southern face.
+    if (current.getExposure(FACE_SOUTH)) {
+        Brady brady(*m_pOwner, local_coord, FACE_SOUTH);
+        BlockSurface surf = calcSurfaceForBlock(local_z, FACE_SOUTH);
+        VertList_PNT *pList = pOut->get_RW(surf);
+        brady.addToVertList_PNT(pList);
+    }
+
+    // Northern face.
+    if (current.getExposure(FACE_NORTH)) {
+        Brady brady(*m_pOwner, local_coord, FACE_NORTH);
+        BlockSurface surf = calcSurfaceForBlock(local_z, FACE_NORTH);
+        VertList_PNT *pList = pOut->get_RW(surf);
+        brady.addToVertList_PNT(pList);
+    }
+
+    // Eastern face.
+    if (current.getExposure(FACE_EAST)) {
+        Brady brady(*m_pOwner, local_coord, FACE_EAST);
+        BlockSurface surf = calcSurfaceForBlock(local_z, FACE_EAST);
+        VertList_PNT *pList = pOut->get_RW(surf);
+        brady.addToVertList_PNT(pList);
+    }
+
+    // Western face.
+    if (current.getExposure(FACE_WEST)) {
+        Brady brady(*m_pOwner, local_coord, FACE_WEST);
+        BlockSurface surf = calcSurfaceForBlock(local_z, FACE_WEST);
+        VertList_PNT *pList = pOut->get_RW(surf);
+        brady.addToVertList_PNT(pList);
+    }
+}

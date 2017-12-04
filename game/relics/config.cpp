@@ -1,0 +1,340 @@
+
+#include "stdafx.h"
+#include "config.h"
+#include "utils.h"
+#include "lua.hpp"
+
+
+static std::string config_fname("relics_config.lua");
+
+
+// Our one global config object.
+static Config g_config;
+
+
+bool LoadConfig() {
+    return g_config.loadFromFile();
+}
+
+
+const Config &GetConfig() {
+    return g_config;
+}
+
+
+// Read our default file.
+// For now, let's be insistent that the config file exists, and is correct.
+bool Config::loadFromFile()
+{
+    bool path_exists = DoesResourcePathExist();
+    if (!path_exists) {
+        PrintDebug(
+            "The resource path \"%s\" doesn't exist. Running the game is hopeless.",
+            RESOURCE_PATH.c_str());
+        return false;
+    }
+
+    std::string data = ReadTextResource(config_fname);
+    if (data.empty()) {
+        PrintDebug("The config file \"%s\" is empty.", config_fname.c_str());
+        return false;
+    }
+
+    lua_State *L = luaL_newstate();
+    if (L == nullptr) {
+        assert(false);
+        return false;
+    }
+
+    luaL_openlibs(L);
+
+    int val;
+    
+    val = luaL_loadbuffer(L, data.c_str(), data.length(), "config");
+    if (val != LUA_OK) {
+        PrintDebug(
+            "Lua error when loading %s: %s, %s\n", 
+            config_fname.c_str(), LuaErrorToString(val), lua_tostring(L, -1));
+        lua_close(L);
+        return false;
+    }
+
+    val = lua_pcall(L, 0, 0, 0);
+    if (val != LUA_OK) {
+        PrintDebug(
+            "Lua error when running %s: %s, %s\n",
+            config_fname.c_str(), LuaErrorToString(val), lua_tostring(L, -1));
+        lua_close(L);
+        return false;
+    }
+
+    // Read the "debug" table.
+    lua_getglobal(L, "debug");
+    if (lua_istable(L, -1)) {
+        debug.opengl          = getBoolField(L, "opengl", false);
+        debug.show_camera     = getBoolField(L, "show_camera", false);
+        debug.show_framerate  = getBoolField(L, "show_framerate", false);
+        debug.show_game_clock = getBoolField(L, "show_game_clock", false);
+        debug.show_hit_test   = getBoolField(L, "show_hit_test", false);
+        debug.show_mouse_pos  = getBoolField(L, "show_mouse_pos", false);
+
+        debug.show_render_stats = getBoolField(L, "show_render_stats", false);
+        debug.show_eval_region  = getBoolField(L, "show_eval_region",  false);
+        debug.show_chunk_stats  = getBoolField(L, "show_chunk_stats", false);
+
+        debug.print_draw_state     = getBoolField(L, "print_draw_state", false);
+        debug.print_window_context = getBoolField(L, "print_window_context", false);
+
+        lua_getfield(L, -1, "noclip_flight_speed");
+        if (lua_isnumber(L, -1)) {
+            debug.noclip_flight_speed = static_cast<GLfloat>(lua_tonumber(L, -1));
+        }
+    }
+    lua_pop(L, 1);
+
+    // Read the "window" table.
+    lua_getglobal(L, "window");
+    if (lua_istable(L, -1)) {
+        window.fullscreen    = getBoolField(L, "fullscreen", false);
+        window.vertical_sync = getBoolField(L, "vertical_sync", true);
+
+        // Clamp the "mouse degrees per pixel" to reasonable values.
+        lua_getfield(L, -1, "mouse_degrees_per_pixel");
+        if (lua_isnumber(L, -1)) {
+            GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
+            window.mouse_degrees_per_pixel = clampFloat(val, 0.01f, 0.5f);
+        }
+    }
+    lua_pop(L, 1);
+
+    // Read the "render" table.
+    lua_getglobal(L, "render");
+    if (lua_istable(L, -1)) {
+        render.cull_backfaces    = getBoolField(L, "cull_backfaces", true);
+        render.cull_view_frustum = getBoolField(L, "cull_view_frustum", true);
+
+        // Clamp the field of view from 45 degrees to 180 degrees.
+        lua_getfield(L, -1, "field_of_view");
+        if (lua_isnumber(L, -1)) {
+            GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
+            render.field_of_view = clampFloat(val, 45.0f, 180.0f);
+        }
+        lua_pop(L, 1);
+
+        // Clamp the near plane from 5 cm to 1 meter.
+        lua_getfield(L, -1, "near_plane");
+        if (lua_isnumber(L, -1)) {
+            GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
+            render.near_plane_meters = clampFloat(val, 0.05f, 1.0f);
+        }
+        lua_pop(L, 1);
+
+        // Clamp the far plane from 10 meters to 1000 meters.
+        lua_getfield(L, -1, "far_plane");
+        if (lua_isnumber(L, -1)) {
+            GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
+            render.far_plane_meters = clampFloat(val, 10.0f, 1000.0f);
+        }
+        lua_pop(L, 1);
+
+        // Clamp the fade distance to be greater than zero.
+        lua_getfield(L, -1, "fade_distance");
+        if (lua_isnumber(L, -1)) {
+            render.fade_distance_meters = static_cast<GLfloat>(lua_tonumber(L, -1));
+            if (render.fade_distance_meters < 0.0f) {
+                render.fade_distance_meters = 0.0f;
+            }
+        }
+        lua_pop(L, 1);
+
+        // Clamp the fade distance to at least five meters.
+        lua_getfield(L, -1, "draw_distance");
+        if (lua_isnumber(L, -1)) {
+            render.draw_distance_meters = static_cast<GLfloat>(lua_tonumber(L, -1));
+            if (render.draw_distance_meters < 5.0f) {
+                render.draw_distance_meters = 5.0f;
+            }
+        }
+        lua_pop(L, 1);
+
+        // Read the "landscape" settings.
+        lua_getfield(L, -1, "landscape");
+        if (lua_istable(L, -1)) {
+            render.landscape.vert_shader = getStringField(L, "vert_shader");
+            render.landscape.frag_shader = getStringField(L, "frag_shader");
+
+            render.landscape.grass_texture   = getStringField(L, "grass_texture");
+            render.landscape.dirt_texture    = getStringField(L, "dirt_texture");
+            render.landscape.stone_texture   = getStringField(L, "stone_texture");
+            render.landscape.bedrock_texture = getStringField(L, "bedrock_texture");
+        }
+        lua_pop(L, 1);
+
+        // Read the "sky" settings.
+        lua_getfield(L, -1, "sky");
+        if (lua_istable(L, -1)) {
+            render.sky.vert_shader = getStringField(L, "vert_shader");
+            render.sky.frag_shader = getStringField(L, "frag_shader");
+
+            render.sky.north_texture  = getStringField(L, "north_texture");
+            render.sky.south_texture  = getStringField(L, "south_texture");
+            render.sky.east_texture   = getStringField(L, "east_texture");
+            render.sky.west_texture   = getStringField(L, "west_texture");
+            render.sky.top_texture    = getStringField(L, "top_texture");
+            render.sky.bottom_texture = getStringField(L, "bottom_texture");
+        }
+        lua_pop(L, 1);
+
+        // Read the "hit test" settings.
+        lua_getfield(L, -1, "hit_test");
+        if (lua_istable(L, -1)) {
+            render.hit_test.vert_shader = getStringField(L, "vert_shader");
+            render.hit_test.frag_shader = getStringField(L, "frag_shader");
+        }
+        lua_pop(L, 1);
+    }
+    lua_pop(L, 1);
+
+    // Read the "logic" table.
+    lua_getglobal(L, "logic");
+    if (lua_istable(L, -1)) {
+
+        // Clamp the eval distance from 10 meters to 500 meters.
+        // If we go much bigger than that, we're asking to run out of memory.
+        lua_getfield(L, -1, "eval_distance");
+        if (lua_isnumber(L, -1)) {
+            GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
+            logic.eval_distance_meters = clampFloat(val, 10.0f, 500.f);
+        }
+        lua_pop(L, 1);
+
+        // Clamp the hit-test distance to one meter, to 500 meters.
+        lua_getfield(L, -1, "hit_test_distance");
+        if (lua_isnumber(L, -1)) {
+            GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
+            logic.hit_test_distance_meters = clampFloat(val, 1.0f, 500.f);
+        }
+        lua_pop(L, 1);
+
+        // Clamp the landscape noise to nothing, to 50 cm.
+        lua_getfield(L, -1, "landscape_noise");
+        if (lua_isnumber(L, -1)) {
+            GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
+            logic.landscape_noise_meters = clampFloat(val, 0.0f, 0.5f);
+        }
+        lua_pop(L, 1);
+    }
+    lua_pop(L, 1);
+
+    lua_close(L);
+
+    // Now that we're done, validate our contents.
+    return validate();
+}
+
+
+// Wrap some of the Lua stuff.
+bool Config::getBoolField(lua_State *L, const char *field_name, bool default_val)
+{
+    bool result = default_val;
+    lua_getfield(L, -1, field_name);
+    if (lua_isboolean(L, -1)) {
+        result = (lua_toboolean(L, -1) != 0);
+    }
+    lua_pop(L, 1);
+    return result;
+}
+
+
+// Wrap some of the Lua stuff.
+std::string Config::getStringField(lua_State *L, const char *field_name)
+{
+    std::string result = "";
+    lua_getfield(L, -1, field_name);
+    if (lua_isstring(L, -1)) {
+        result = lua_tostring(L, -1);
+    }
+    lua_pop(L, 1);
+    return result;
+}
+
+
+// Make sure a float stays within reasonable values.
+GLfloat Config::clampFloat(GLfloat val, GLfloat min_val, GLfloat max_val)
+{
+    if (val < min_val) {
+        return min_val;
+    }
+    else if (val > max_val) {
+        return max_val;
+    }
+    else {
+        return val;
+    }
+}
+
+
+// Validate that a particular resource was loaded.
+bool Config::validateResource(const std::string &field_name, const std::string &val) const 
+{
+    if (val.empty()) {
+        PrintDebug("Config field '%s' is not set.\n", field_name.c_str());
+        return false;
+    }
+
+    if (!IsResource(val)) {
+        PrintDebug(
+            "Config field '%s' is set to '%s', which is not a valid resource.\n", 
+            field_name.c_str(), val.c_str());
+        return false;
+    }
+
+    return true;
+}
+
+
+// After we're loaded, validate everything.
+bool Config::validate() const 
+{
+    bool success = true;
+
+    // Landscape resources.
+    if (!validateResource("render.landscape.vert_shader", render.landscape.vert_shader)) { success = false; }
+    if (!validateResource("render.landscape.frag_shader", render.landscape.frag_shader)) { success = false; }
+
+    if (!validateResource("render.landscape.grass_texture",   render.landscape.grass_texture)) { success = false; }
+    if (!validateResource("render.landscape.dirt_texture",    render.landscape.dirt_texture))  { success = false; }
+    if (!validateResource("render.landscape.stone_texture",   render.landscape.stone_texture)) { success = false; }
+    if (!validateResource("render.landscape.bedrock_texture", render.landscape.bedrock_texture)) { success = false; }
+
+    // Sky resources.
+    if (!validateResource("render.sky.vert_shader", render.sky.vert_shader)) { success = false; }
+    if (!validateResource("render.sky.frag_shader", render.sky.frag_shader)) { success = false; }
+
+    if (!validateResource("render.sky.north_texture",  render.sky.north_texture))  { success = false; }
+    if (!validateResource("render.sky.south_texture",  render.sky.south_texture))  { success = false; }
+    if (!validateResource("render.sky.east_texture",   render.sky.east_texture))   { success = false; }
+    if (!validateResource("render.sky.west_texture",   render.sky.west_texture))   { success = false; }
+    if (!validateResource("render.sky.top_texture",    render.sky.top_texture))    { success = false; }
+    if (!validateResource("render.sky.bottom_texture", render.sky.bottom_texture)) { success = false; }
+
+    // Hit-test resources.
+    if (!validateResource("render.hit_test.vert_shader", render.hit_test.vert_shader)) { success = false; }
+    if (!validateResource("render.hit_test.frag_shader", render.hit_test.frag_shader)) { success = false; }
+
+
+    // Logical tests.
+    if (logic.hit_test_distance_meters >= logic.eval_distance_meters) {
+        PrintDebug(
+            "The setting for \"logic.hit_test_distance\" (%.1f) "
+            "cannot be greater than the \"logic.eval_distance\" (%.1f).\n",
+            logic.hit_test_distance_meters, logic.eval_distance_meters);
+        success = false;
+    }
+
+    if (!success) {
+        PrintDebug("File '%s' has errors. Fix these and try again.\n", config_fname.c_str());
+    }
+
+    return success;
+}

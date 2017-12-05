@@ -214,10 +214,10 @@ bool Renderer::loadShaders()
 // Get the list of all the chunks we want to render.
 void Renderer::getChunksToRender(std::vector<const Chunk *> *pOut_list, RenderStats *pOut_stats)
 {
-    bool cull_view_frustum = GetConfig().render.cull_view_frustum;
-    GLfloat field_of_view = GetConfig().render.field_of_view;
-    GLfloat draw_distance = GetConfig().render.getDrawDistanceCm();
-    GLfloat eval_distance = GetConfig().logic.getEvalDistanceCm();
+    bool    cull_view_frustum = GetConfig().render.cull_view_frustum;
+    GLfloat field_of_view     = GetConfig().render.field_of_view;
+    GLfloat draw_distance     = GetConfig().render.getDrawDistanceCm();
+    int     eval_blocks       = GetConfig().logic.eval_blocks;
 
     const MyVec4 &camera_pos = m_world.getCameraPos();
     const GLfloat camera_yaw = m_world.getCameraYaw();
@@ -246,31 +246,30 @@ void Renderer::getChunksToRender(std::vector<const Chunk *> *pOut_list, RenderSt
     MyPlane far_clip_plane = MyRay(far_start, far_dir).toPlane();
 
     // Look up every chunk within our eval region.
-    MyEvalRegion region = WorldToEvalRegion(camera_pos, eval_distance);
+    EvalRegion region = WorldToEvalRegion(camera_pos, eval_blocks);
 
     for     (int x = region.west();  x < region.east();  x += CHUNK_WIDTH_X) {
         for (int z = region.south(); z < region.north(); z += CHUNK_DEPTH_Z) {
             pOut_stats->chunks_considered++;
 
-            MyChunkOrigin origin(x, z);
-            const Chunk *pChunk = m_world.getChunk(origin);
-            if (pChunk != nullptr) {
-                // Only keep the chunks within the view frustum (if we want that sort of thing).
-                bool keep;
-                if (cull_view_frustum) {
-                    keep = pChunk->isAbovePlane(left_clip_plane) &&
-                           pChunk->isAbovePlane(right_clip_plane);
-                           // DEBUG: This is broken. Fix it later.
-                           // pChunk->isAbovePlane(far_clip_plane);
-                }
-                else {
-                    keep = true;
-                }
+            ChunkOrigin origin(x, z);
+            const Chunk *pChunk = m_world.getRequiredChunk(origin);
 
-                if (keep) {
-                    pOut_list->emplace_back(pChunk);
-                    pOut_stats->chunks_rendered++;
-                }
+            // Only keep the chunks within the view frustum (if we want that sort of thing).
+            bool keep;
+            if (cull_view_frustum) {
+                keep = pChunk->isAbovePlane(left_clip_plane) &&
+                       pChunk->isAbovePlane(right_clip_plane);
+                       // DEBUG: This is broken. Fix it later.
+                       // pChunk->isAbovePlane(far_clip_plane);
+            }
+            else {
+                keep = true;
+            }
+
+            if (keep) {
+                pOut_list->emplace_back(pChunk);
+                pOut_stats->chunks_rendered++;
             }
         }
     }

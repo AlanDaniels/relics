@@ -413,7 +413,7 @@ MyGridCoord WorldToGridCoord(const MyVec4 &pos, NudgeEnum nudge)
 
 
 // Chunk eval region ctor.
-MyEvalRegion::MyEvalRegion(int west, int east, int south, int north) :
+EvalRegion::EvalRegion(int west, int east, int south, int north) :
     m_west(west),   m_east(east),
     m_south(south), m_north(north)
 {
@@ -430,7 +430,7 @@ MyEvalRegion::MyEvalRegion(int west, int east, int south, int north) :
 
 
 // See if two eval regions are the same.
-bool MyEvalRegion::operator==(const MyEvalRegion &that) const
+bool EvalRegion::operator==(const EvalRegion &that) const
 {
     return (
         (m_west  == that.m_west)  &&
@@ -441,7 +441,7 @@ bool MyEvalRegion::operator==(const MyEvalRegion &that) const
 
 
 // See if two eval regions are *not* the same.
-bool MyEvalRegion::operator!=(const MyEvalRegion &that) const
+bool EvalRegion::operator!=(const EvalRegion &that) const
 {
     return (
         (m_west  != that.m_west)  ||
@@ -452,7 +452,7 @@ bool MyEvalRegion::operator!=(const MyEvalRegion &that) const
 
 
 // Return true if an eval region contains a chunk origin.
-bool MyEvalRegion::containsOrigin(const MyChunkOrigin &origin) const
+bool EvalRegion::containsOrigin(const ChunkOrigin &origin) const
 {
     int x = origin.x();
     int z = origin.z();
@@ -463,9 +463,9 @@ bool MyEvalRegion::containsOrigin(const MyChunkOrigin &origin) const
 
 
 // Grow the eval region by one chunk size.
-MyEvalRegion MyEvalRegion::expand() const 
+EvalRegion EvalRegion::expand() const 
 {
-    return MyEvalRegion(
+    return EvalRegion(
         m_west  - CHUNK_WIDTH_X,
         m_east  + CHUNK_WIDTH_X,
         m_south - CHUNK_DEPTH_Z,
@@ -473,28 +473,17 @@ MyEvalRegion MyEvalRegion::expand() const
 }
 
 
-// Given a position and a radius, calc the "eval region".
-// That is, what's the min and max for X and Z, giving us all the chunks that fall within this range.
-MyEvalRegion WorldToEvalRegion(const MyVec4 &pos, GLfloat distance)
+// Given a position and aneval block count, calc the "eval region".
+// That is, what's the min and max for X and Z, giving us all the chunks
+// that fall within this range. This should always be a 3x3 grid, 5x5, etc.
+EvalRegion WorldToEvalRegion(const MyVec4 &pos, int block_count)
 {
-    GLfloat x = pos.x();
-    GLfloat z = pos.z();
+    ChunkOrigin origin = WorldToChunkOrigin(pos);
 
-    GLfloat world_west_x  = x - (distance + NUDGE_AMOUNT);
-    GLfloat world_east_x  = x + (distance + NUDGE_AMOUNT);
-    GLfloat world_south_z = z - (distance + NUDGE_AMOUNT);
-    GLfloat world_north_z = z + (distance + NUDGE_AMOUNT);
+    int east  = origin.x() + (block_count * CHUNK_WIDTH_X) + CHUNK_WIDTH_X;
+    int west  = origin.x() - (block_count * CHUNK_WIDTH_X);
+    int north = origin.z() + (block_count * CHUNK_DEPTH_Z) + CHUNK_DEPTH_Z;
+    int south = origin.z() - (block_count * CHUNK_DEPTH_Z);
 
-    int grid_west_x  = static_cast<int>(floor(world_west_x  / BLOCK_SCALE));
-    int grid_east_x  = static_cast<int>(floor(world_east_x  / BLOCK_SCALE));
-    int grid_south_z = static_cast<int>(floor(world_south_z / BLOCK_SCALE));
-    int grid_north_z = static_cast<int>(floor(world_north_z / BLOCK_SCALE));
-
-    // Floor to origin boundaries, plus the range-exclusive thing.
-    int west  = RoundDownInt(grid_west_x,  CHUNK_WIDTH_X);
-    int east  = RoundUpInt(grid_east_x,  CHUNK_WIDTH_X);
-    int south = RoundDownInt(grid_south_z, CHUNK_DEPTH_Z);
-    int north = RoundUpInt(grid_north_z, CHUNK_DEPTH_Z);
-
-    return MyEvalRegion(west, east, south, north);
+    return EvalRegion(west, east, south, north);
 }

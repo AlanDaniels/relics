@@ -130,15 +130,14 @@ struct ConfigRender
 struct ConfigLogic
 {
     ConfigLogic() :
-        eval_distance_meters(100.0f),
+        eval_blocks(5),
         hit_test_distance_meters(10.0f),
         landscape_noise_meters(0.1f) {}
 
-    GLfloat eval_distance_meters;
+    int     eval_blocks;
     GLfloat hit_test_distance_meters;
     GLfloat landscape_noise_meters;
 
-    GLfloat getEvalDistanceCm()    const { return eval_distance_meters     * 100.0f; }
     GLfloat getHitTestDistanceCm() const { return hit_test_distance_meters * 100.0f; }
     GLfloat getLandscapeNoiseCm()  const { return landscape_noise_meters   * 100.0f; }
 };
@@ -161,6 +160,7 @@ private:
     Config(const Config &that) = delete;
     void operator=(const Config &that) = delete;
 
+    int clampInt(int val, int min_val, int max_val);
     GLfloat clampFloat(GLfloat val, GLfloat min_val, GLfloat max_val);
 
     bool getBoolField(lua_State *L, const char *field_name, bool default_val);

@@ -312,7 +312,7 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
     }
 
     // All done. Draw the winner.
-    const MyChunkOrigin &origin = chunk.getOrigin();
+    const ChunkOrigin &origin = chunk.getOrigin();
 
     switch (winner) {
     case FACE_NONE:

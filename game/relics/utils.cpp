@@ -6,49 +6,49 @@
 
 
 // TODO: One day, turn this into a zip file or something.
-static const std::string RESOURCE_PATH = "D:\\relics\\resources\\";
+const char *RESOURCE_PATH = "D:\\relics\\resources\\";
 
 
 // Convert a face enum to a string.
-std::string FaceEnumToString(FaceEnum face)
+const char *FaceEnumToString(FaceEnum face)
 {
     switch (face) {
-    case FACE_NONE:   return std::string("none");
-    case FACE_SOUTH:  return std::string("south");
-    case FACE_NORTH:  return std::string("north");
-    case FACE_WEST:   return std::string("west");
-    case FACE_EAST:   return std::string("east");
-    case FACE_TOP:    return std::string("top");
-    case FACE_BOTTOM: return std::string("bottom");
-    default: return std::string("unknown");
+    case FACE_NONE:   return "none";
+    case FACE_SOUTH:  return "south";
+    case FACE_NORTH:  return "north";
+    case FACE_WEST:   return "west";
+    case FACE_EAST:   return "east";
+    case FACE_TOP:    return "top";
+    case FACE_BOTTOM: return "bottom";
+    default: return "unknown";
     }
 }
 
 
 // Convert an edge enum to a string.
-std::string EdgeEnumToString(EdgeEnum edge)
+const char *EdgeEnumToString(EdgeEnum edge)
 {
     switch (edge) {
-    case EDGE_NONE:  return std::string("none");
-    case EDGE_UPPER: return std::string("upper");
-    case EDGE_LOWER: return std::string("lower");
-    case EDGE_LEFT:  return std::string("left");
-    case EDGE_RIGHT: return std::string("right");
-    default: return std::string("unknown");
+    case EDGE_NONE:  return "none";
+    case EDGE_UPPER: return "upper";
+    case EDGE_LOWER: return "lower";
+    case EDGE_LEFT:  return "left";
+    case EDGE_RIGHT: return "right";
+    default: return "unknown";
     }
 }
 
 
 // Convert a corner enum to a string.
-std::string CornerEnumToString(CornerEnum corner)
+const char *CornerEnumToString(CornerEnum corner)
 {
     switch (corner) {
-    case CORNER_NONE:        return std::string("none");
-    case CORNER_LOWER_LEFT:  return std::string("lower-left");
-    case CORNER_LOWER_RIGHT: return std::string("lower-right");
-    case CORNER_UPPER_LEFT:  return std::string("upper-left");
-    case CORNER_UPPER_RIGHT: return std::string("upper-right");
-    default: return std::string("unknown");
+    case CORNER_NONE:        return "none";
+    case CORNER_LOWER_LEFT:  return "lower-left";
+    case CORNER_LOWER_RIGHT: return "lower-right";
+    case CORNER_UPPER_LEFT:  return "upper-left";
+    case CORNER_UPPER_RIGHT: return "upper-right";
+    default: return "unknown";
     }
 }
 
@@ -199,7 +199,7 @@ const char *LuaErrorToString(int val)
 // Only do this once, when we're first loading the config file.
 bool DoesResourcePathExist() {
     struct stat info;
-    int got_stats = stat(RESOURCE_PATH.c_str(), &info);
+    int got_stats = stat(RESOURCE_PATH, &info);
     if (got_stats != 0) {
         return false;
     }

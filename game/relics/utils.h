@@ -58,9 +58,9 @@ enum CornerEnum
 };
 
 
-std::string FaceEnumToString(FaceEnum face);
-std::string EdgeEnumToString(EdgeEnum edge);
-std::string CornerEnumToString(CornerEnum corner);
+const char *FaceEnumToString(FaceEnum face);
+const char *EdgeEnumToString(EdgeEnum edge);
+const char *CornerEnumToString(CornerEnum corner);
 
 GLfloat GridToWorld(int grid);
 
@@ -77,7 +77,7 @@ void  PrintOpenglEnabledState(const char *title, bool details);
 
 const char *LuaErrorToString(int error);
 
-extern const std::string RESOURCE_PATH;
+extern const char *RESOURCE_PATH;
 bool DoesResourcePathExist();
 bool IsResource(const std::string &fname);
 std::string ReadTextResource(const std::string &fname);

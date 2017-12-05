@@ -9,7 +9,7 @@
 class DrawState_PCT;
 class DrawState_PT;
 class EventStateMsg;
-class MyChunkOrigin;
+class ChunkOrigin;
 
 
 // Our game state.
@@ -24,16 +24,17 @@ public:
 
     void onGameTick(int elapsed_msec, const EventStateMsg &msg);
 
-    int getTimeMsecs() const { return m_time_msec; }
+    int     getTimeMsecs() const { return m_time_msec; }
     GLfloat getTimeSecs()  const { return m_time_msec / 1000.0f; }
 
     GLfloat getCameraPitch() const { return m_camera_pitch; }
-    GLfloat getCameraYaw() const { return m_camera_yaw; }
+    GLfloat getCameraYaw()   const { return m_camera_yaw; }
     const MyVec4 &getCameraPos() const { return m_camera_pos; }
 
     const Chunk *getPlayersChunk() const;
-    const Chunk *getChunk(const MyChunkOrigin origin) const;
-    int getChunkCount() const { return m_chunk_map.size(); }
+    const Chunk *getRequiredChunk(const ChunkOrigin &origin) const;
+    const Chunk *getOptionalChunk(const ChunkOrigin &origin) const;
+    int getChunksInMemoryCount() const { return m_chunk_map.size(); }
 
     bool getHitTestSuccess() const { return m_hit_test_success; }
     const ChunkHitTestDetail &getHitTestDetail() const { return m_hit_test_detail; }
@@ -71,12 +72,12 @@ private:
     GLfloat m_camera_yaw;
 
     MyGridCoord  m_current_location;
-    MyEvalRegion m_current_eval_region;
+    EvalRegion m_current_eval_region;
 
-    std::map<MyChunkOrigin, Chunk *> m_chunk_map;
+    std::map<ChunkOrigin, Chunk *> m_chunk_map;
     bool m_hit_test_success;
     ChunkHitTestDetail m_hit_test_detail;
     VertList_PT m_hit_test_vert_list;
 
-    std::map<MyChunkOrigin, t_chunk_future> m_load_future_map;
+    std::map<ChunkOrigin, t_chunk_future> m_load_future_map;
 };

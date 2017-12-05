@@ -30,7 +30,7 @@ bool Config::loadFromFile()
     if (!path_exists) {
         PrintDebug(
             "The resource path \"%s\" doesn't exist. Running the game is hopeless.",
-            RESOURCE_PATH.c_str());
+            RESOURCE_PATH);
         return false;
     }
 
@@ -199,12 +199,14 @@ bool Config::loadFromFile()
     lua_getglobal(L, "logic");
     if (lua_istable(L, -1)) {
 
-        // Clamp the eval distance from 10 meters to 500 meters.
+        // Clamp the eval blocks count. We'll clamp from 1 to 6 for now.
+        //   A value of 1 => (1 + 2x) ** 2 =>  3 ** 2 =>   9 blocks.
+        //   A value of 6 => (1 + 2x) ** 2 => 13 ** 2 => 169 blocks.
         // If we go much bigger than that, we're asking to run out of memory.
-        lua_getfield(L, -1, "eval_distance");
+        lua_getfield(L, -1, "eval_blocks");
         if (lua_isnumber(L, -1)) {
-            GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
-            logic.eval_distance_meters = clampFloat(val, 10.0f, 500.f);
+            int val = static_cast<int>(lua_tointeger(L, -1));
+            logic.eval_blocks = clampInt(val, 1, 6);
         }
         lua_pop(L, 1);
 
@@ -256,6 +258,21 @@ std::string Config::getStringField(lua_State *L, const char *field_name)
     }
     lua_pop(L, 1);
     return result;
+}
+
+
+// Make sure an int stays within reasonable values.
+int Config::clampInt(int val, int min_val, int max_val)
+{
+    if (val < min_val) {
+        return min_val;
+    }
+    else if (val > max_val) {
+        return max_val;
+    }
+    else {
+        return val;
+    }
 }
 
 
@@ -321,16 +338,6 @@ bool Config::validate() const
     // Hit-test resources.
     if (!validateResource("render.hit_test.vert_shader", render.hit_test.vert_shader)) { success = false; }
     if (!validateResource("render.hit_test.frag_shader", render.hit_test.frag_shader)) { success = false; }
-
-
-    // Logical tests.
-    if (logic.hit_test_distance_meters >= logic.eval_distance_meters) {
-        PrintDebug(
-            "The setting for \"logic.hit_test_distance\" (%.1f) "
-            "cannot be greater than the \"logic.eval_distance\" (%.1f).\n",
-            logic.hit_test_distance_meters, logic.eval_distance_meters);
-        success = false;
-    }
 
     if (!success) {
         PrintDebug("File '%s' has errors. Fix these and try again.\n", config_fname.c_str());

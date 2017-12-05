@@ -139,7 +139,7 @@ void LandscapeVertLists::update()
 
 
 // Turn a world coord into a chunk origin.
-MyChunkOrigin WorldToChunkOrigin(const MyVec4 &pos)
+ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos)
 {
     int grid_x = static_cast<int>(floor(pos.x() / BLOCK_SCALE));
     int grid_z = static_cast<int>(floor(pos.z() / BLOCK_SCALE));
@@ -147,12 +147,12 @@ MyChunkOrigin WorldToChunkOrigin(const MyVec4 &pos)
     int x = RoundDownInt(grid_x, CHUNK_WIDTH_X);
     int z = RoundDownInt(grid_z, CHUNK_DEPTH_Z);
 
-    return MyChunkOrigin(x, z);
+    return ChunkOrigin(x, z);
 }
 
 
 // Chunk values ctor.
-Chunk::Chunk(const GameWorld *pWorld, const MyChunkOrigin &origin) :
+Chunk::Chunk(const GameWorld *pWorld, const ChunkOrigin &origin) :
     m_pWorld(pWorld),
     m_origin(origin),
     m_load_status(LOAD_STATUS_NONE)
@@ -371,7 +371,7 @@ const Chunk *Chunk::getNeighborNorth() const
 {
     int x = m_origin.x();
     int z = m_origin.z() + CHUNK_DEPTH_Z;
-    return m_pWorld->getChunk(MyChunkOrigin(x, z));
+    return m_pWorld->getOptionalChunk(ChunkOrigin(x, z));
 }
 
 
@@ -380,7 +380,7 @@ const Chunk *Chunk::getNeighborSouth() const
 {
     int x = m_origin.x();
     int z = m_origin.z() - CHUNK_DEPTH_Z;
-    return m_pWorld->getChunk(MyChunkOrigin(x, z));
+    return m_pWorld->getOptionalChunk(ChunkOrigin(x, z));
 }
 
 
@@ -389,7 +389,7 @@ const Chunk *Chunk::getNeighborEast() const
 {
     int x = m_origin.x() + CHUNK_WIDTH_X;
     int z = m_origin.z();
-    return m_pWorld->getChunk(MyChunkOrigin(x, z));
+    return m_pWorld->getOptionalChunk(ChunkOrigin(x, z));
 }
 
 
@@ -398,7 +398,7 @@ const Chunk *Chunk::getNeighborWest() const
 {
     int x = m_origin.x() - CHUNK_WIDTH_X;
     int z = m_origin.z();
-    return m_pWorld->getChunk(MyChunkOrigin(x, z));
+    return m_pWorld->getOptionalChunk(ChunkOrigin(x, z));
 }
 
 

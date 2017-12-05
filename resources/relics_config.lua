@@ -14,8 +14,8 @@ debug = {
     show_eval_region = true,
     show_chunk_stats = true,
 
-    print_draw_state = false,
-    print_window_context = false,
+    print_draw_state = true,
+    print_window_context = true,
     
     noclip_flight_speed = 5.0
 }
@@ -71,7 +71,7 @@ render = {
 -- Game logic.
 -- Now, *this* will. Mess with at your own peril.
 logic = {
-    eval_distance     = 100.0,
+    eval_blocks       = 1,
     hit_test_distance = 25.0,
     landscape_noise   = 0.1
 }

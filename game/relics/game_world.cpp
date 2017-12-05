@@ -27,9 +27,10 @@ GameWorld::GameWorld() :
     m_camera_pitch(0.0f),
     m_camera_yaw(0.0f)
 {
-    GLfloat eval_distance = GetConfig().logic.getEvalDistanceCm();
-    MyEvalRegion draw_region = WorldToEvalRegion(m_camera_pos, eval_distance);
-    MyEvalRegion load_region = draw_region.expand();
+    int eval_blocks = GetConfig().logic.eval_blocks;
+
+    EvalRegion draw_region = WorldToEvalRegion(m_camera_pos, eval_blocks);
+    EvalRegion load_region = draw_region.expand();
 
     // Fire off a thread to load each chunk we need. 
     // Basically, one border larger than what we'll evaluate.
@@ -37,7 +38,7 @@ GameWorld::GameWorld() :
 
     for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH_X) {
         for (int z = load_region.south(); z < load_region.north(); z += CHUNK_DEPTH_Z) {
-            t_chunk_future fut = std::async(std::launch::async, LoadChunkAsync, this, MyChunkOrigin(x, z));
+            t_chunk_future fut = std::async(std::launch::async, LoadChunkAsync, this, ChunkOrigin(x, z));
             future_list.emplace_back(std::move(fut));
         }
     }
@@ -46,8 +47,9 @@ GameWorld::GameWorld() :
     int count = 0;
     for (auto iter = future_list.begin(); iter != future_list.end(); iter++) {
         Chunk *pChunk = iter->get();
-        MyChunkOrigin origin = pChunk->getOrigin();
+        ChunkOrigin origin = pChunk->getOrigin();
         m_chunk_map[origin] = pChunk;
+        count++;
     }
 
     PrintDebug("Created %d chunks.\n", count);
@@ -56,11 +58,10 @@ GameWorld::GameWorld() :
     // This leaves a border of out-of-date chunks, and that's okay.
     for     (int x = draw_region.west();  x <= draw_region.east();  x += CHUNK_WIDTH_X) {
         for (int z = draw_region.south(); z <= draw_region.north(); z += CHUNK_DEPTH_Z) {
-            MyChunkOrigin origin(x, z);
+            ChunkOrigin origin(x, z);
             Chunk *pChunk = m_chunk_map[origin];
             assert(pChunk->getLoadStatus() == LOAD_STATUS_INTERIOR);
             pChunk->recalcEdges();
-            count++;
         }
     }
 }
@@ -98,7 +99,7 @@ void GameWorld::resetCamera()
 // This should never be null. Otherwise, how would we be here?
 const Chunk *GameWorld::getPlayersChunk() const
 {
-    MyChunkOrigin origin = WorldToChunkOrigin(m_camera_pos);
+    ChunkOrigin origin = WorldToChunkOrigin(m_camera_pos);
     auto iter = m_chunk_map.find(origin);
     assert(iter != m_chunk_map.end());
 
@@ -108,9 +109,22 @@ const Chunk *GameWorld::getPlayersChunk() const
 }
 
 
-// Look up a particular chunk.
-// For us to not *have* it, is fine, but we should never keep nulls in our map.
-const Chunk *GameWorld::getChunk(const MyChunkOrigin origin) const
+// Look up a chunk that absolutely must have been loaded already,
+// such as the player position, or the current drawing area.
+const Chunk *GameWorld::getRequiredChunk(const ChunkOrigin &origin) const
+{
+    auto iter = m_chunk_map.find(origin);
+    assert(iter != m_chunk_map.end());
+
+    const Chunk *pResult = iter->second;
+    assert(pResult != nullptr);
+    return pResult;
+}
+
+
+
+// Look up a chunk that may or may not be loaded.
+const Chunk *GameWorld::getOptionalChunk(const ChunkOrigin &origin) const
 {
     auto iter = m_chunk_map.find(origin);
     if (iter == m_chunk_map.end()) {
@@ -209,8 +223,8 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
     // Since our camera moved, see if we need to update the world.
     MyGridCoord  new_location = WorldToGridCoord(m_camera_pos, NUDGE_NONE);
 
-    GLfloat eval_distance = GetConfig().logic.getEvalDistanceCm();
-    MyEvalRegion new_eval_region = WorldToEvalRegion(m_camera_pos, eval_distance);
+    int eval_blocks = GetConfig().logic.eval_blocks;
+    EvalRegion new_eval_region = WorldToEvalRegion(m_camera_pos, eval_blocks);
     if (new_eval_region != m_current_eval_region) {
         updateWorld();
     }
@@ -239,16 +253,16 @@ MyRay GameWorld::getCameraEyeRay() const
 // Update the world.
 void GameWorld::updateWorld()
 {
-    GLfloat eval_distance = GetConfig().logic.getEvalDistanceCm();
-    MyEvalRegion draw_region = WorldToEvalRegion(m_camera_pos, eval_distance);
-    MyEvalRegion load_region = draw_region.expand();
+    int eval_blocks = GetConfig().logic.eval_blocks;
+    EvalRegion draw_region = WorldToEvalRegion(m_camera_pos, eval_blocks);
+    EvalRegion load_region = draw_region.expand();
 
     // Spawn new worker threads to load the chunks we don't have already.
     for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH_X) {
         for (int z = load_region.south(); z < load_region.north(); z += CHUNK_DEPTH_Z) {
 
             // Ignore chunks that are already in the draw region. We should have them already.
-            MyChunkOrigin origin(x, z);
+            ChunkOrigin origin(x, z);
             if (!draw_region.containsOrigin(origin)) {
                 // See if we have the chunk loaded yet.
                 if (m_chunk_map.find(origin) == m_chunk_map.end()) {
@@ -268,7 +282,7 @@ void GameWorld::updateWorld()
         for (int z = draw_region.south(); z < draw_region.north(); z += CHUNK_DEPTH_Z) {
             // If the chunk hasn't loaded yet, then alas, wait for it's loaded to complete.
             // Needless to say, this isn't ideal (stutter!), so avoid this as much as possible.
-            MyChunkOrigin origin(x, z);
+            ChunkOrigin origin(x, z);
             if (m_chunk_map.find(origin) == m_chunk_map.end()) {
                 // Also, we damn well better have a thread going for this already.
                 auto future_iter = m_load_future_map.find(origin);
@@ -317,12 +331,13 @@ void GameWorld::calcHitTest()
     Chunk *best_chunk = nullptr;
     ChunkHitTestDetail best_detail;
 
-    GLfloat hit_test_distance = GetConfig().logic.getHitTestDistanceCm();
-    MyEvalRegion region = WorldToEvalRegion(m_camera_pos, hit_test_distance);
+    // TODO: HACK.
+    int hit_test_distance = static_cast<int>(GetConfig().logic.hit_test_distance_meters) / CHUNK_WIDTH_X;
+    EvalRegion region = WorldToEvalRegion(m_camera_pos, hit_test_distance);
 
     for     (int x = region.west();  x < region.east();  x += CHUNK_WIDTH_X) {
         for (int z = region.south(); z < region.north(); z += CHUNK_DEPTH_Z) {
-            MyChunkOrigin origin(x, z);
+            ChunkOrigin origin(x, z);
             Chunk *pChunk = m_chunk_map[origin];
 
             ChunkHitTestDetail detail;
@@ -364,7 +379,7 @@ void GameWorld::calcHitTest()
 void GameWorld::deleteBlockInFrontOfUs()
 {
     if (m_hit_test_success) {
-        MyChunkOrigin origin = m_hit_test_detail.getChunkOrigin();
+        ChunkOrigin origin = m_hit_test_detail.getChunkOrigin();
         MyGridCoord   coord  = m_hit_test_detail.getGlobalCoord();
 
         const auto &iter = m_chunk_map.find(origin);
@@ -391,7 +406,7 @@ void GameWorld::cashInWorkerThread()
     for (auto iter = m_load_future_map.begin(); iter != m_load_future_map.end(); iter++) {
         if (IsFutureReady<Chunk *>(iter->second)) {
             Chunk *pFreshChunk = iter->second.get();
-            MyChunkOrigin origin = pFreshChunk->getOrigin();
+            ChunkOrigin origin = pFreshChunk->getOrigin();
             m_chunk_map[origin] = pFreshChunk;
             m_load_future_map.erase(origin);
             PrintDebug("Thead to load chunk [%d, %d] is complete.\n", origin.x(), origin.z());

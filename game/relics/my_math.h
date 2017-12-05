@@ -3,7 +3,7 @@
 #include "stdafx.h"
 
 
-class MyChunkOrigin;
+class ChunkOrigin;
 class MyPlane;
 
 
@@ -330,28 +330,28 @@ MyGridCoord WorldToGridCoord(const MyVec4 &pos, NudgeEnum nudge_type);
 // Chunk eval region.
 // The four values always align along chunk boundaries.
 // The north and east values are range exclusive (that is, "0 through 9" kind of logic).
-struct MyEvalRegion
+struct EvalRegion
 {
 public:
-    MyEvalRegion() :
+    EvalRegion() :
         m_west(0),  m_east(0), 
         m_south(0), m_north(0) {}
-    MyEvalRegion(const MyEvalRegion & that) :
+    EvalRegion(const EvalRegion & that) :
         m_west(that.m_west),   m_east(that.m_east),
         m_south(that.m_south), m_north(that.m_north) {}
 
-    MyEvalRegion(int west, int east, int south, int north);
+    EvalRegion(int west, int east, int south, int north);
 
-    bool operator==(const MyEvalRegion &that) const;
-    bool operator!=(const MyEvalRegion &that) const;
+    bool operator==(const EvalRegion &that) const;
+    bool operator!=(const EvalRegion &that) const;
 
     inline int west()  const { return m_west; }
     inline int east()  const { return m_east; }
     inline int south() const { return m_south; }
     inline int north() const { return m_north; }
 
-    bool containsOrigin(const MyChunkOrigin &origin) const;
-    MyEvalRegion expand() const;
+    bool containsOrigin(const ChunkOrigin &origin) const;
+    EvalRegion expand() const;
 
 private:
     int m_west;
@@ -361,5 +361,5 @@ private:
 };
 
 
-// Given a position, figure our our eval region.
-MyEvalRegion WorldToEvalRegion(const MyVec4 &pos, GLfloat distance);
+// Given a chunk origin, figure our our eval region.
+EvalRegion WorldToEvalRegion(const MyVec4 &pos, int block_count);

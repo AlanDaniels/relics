@@ -124,12 +124,12 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     // Print our eval region.
     if (config.debug.show_eval_region) {
         MyVec4  pos = game_world.getCameraPos();
-        GLfloat eval_distance = config.logic.getEvalDistanceCm();
-        MyEvalRegion region = WorldToEvalRegion(pos, eval_distance);
+        int eval_blocks = config.logic.eval_blocks;
+        EvalRegion region = WorldToEvalRegion(pos, eval_blocks);
 
         sprintf(blah,
-            "Eval distance: %.2f meters, W=%d, E=%d, S=%d, N=%d", 
-            eval_distance / 100, region.west(), region.east(), region.south(), region.north());
+            "Eval distance: %d meters, W=%d, E=%d, S=%d, N=%d", 
+            eval_blocks * CHUNK_WIDTH_X, region.west(), region.east(), region.south(), region.north());
         m_text.setString(blah);
         m_window.draw(m_text);
         m_text.move(0.0f, text_down);
@@ -137,7 +137,7 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
 
     // Print out our chunk stats.
     if (config.debug.show_chunk_stats) {
-        int in_memory  = game_world.getChunkCount();
+        int in_memory  = game_world.getChunksInMemoryCount();
         int considered = stats.chunks_considered;
         int rendered   = stats.chunks_rendered;
         sprintf(blah,

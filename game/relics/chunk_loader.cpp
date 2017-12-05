@@ -64,7 +64,7 @@ int SampleHeightMap(int x, int y)
 
 
 // Load a chunk. This should ideally be called via "std::async".
-Chunk *LoadChunkAsync(const GameWorld *pWorld, const MyChunkOrigin &origin)
+Chunk *LoadChunkAsync(const GameWorld *pWorld, const ChunkOrigin &origin)
 {
     if (!s_initialized) {
         if (!Init()) {

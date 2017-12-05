@@ -186,7 +186,7 @@ std::string Brady::toString() const
     sprintf(buffer,
         "Brady for [%d %d %d], face %s\n",
         m_local_coord.x(), m_local_coord.y(), m_local_coord.z(),
-        FaceEnumToString(m_face).c_str());
+        FaceEnumToString(m_face));
     result += buffer;
 
     sprintf(buffer, "Points:\n");

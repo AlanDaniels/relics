@@ -36,31 +36,31 @@ private:
 
 
 // The starting X and Z grid coords for a chunk.
-class MyChunkOrigin
+class ChunkOrigin
 {
 public:
-    MyChunkOrigin() :
+    ChunkOrigin() :
         m_x(0), m_z(0) {}
 
     // Chunks always have to start at regular boundaries.
-    MyChunkOrigin(int x, int z) :
+    ChunkOrigin(int x, int z) :
         m_x(x), m_z(z) {
         assert((x % CHUNK_WIDTH_X) == 0);
         assert((z % CHUNK_DEPTH_Z) == 0);
     }
 
-    MyChunkOrigin(const MyChunkOrigin &that) :
+    ChunkOrigin(const ChunkOrigin &that) :
         m_x(that.m_x),
         m_z(that.m_z) {}
 
-    inline MyChunkOrigin &operator=(const MyChunkOrigin &that) {
+    inline ChunkOrigin &operator=(const ChunkOrigin &that) {
         m_x = that.m_x;
         m_z = that.m_z;
         return *this;
     }
 
     // Less than operator, since we use this as a map key.
-    inline bool operator<(const MyChunkOrigin &that) const {
+    inline bool operator<(const ChunkOrigin &that) const {
         if      (m_x < that.m_x) { return true;  }
         else if (m_x > that.m_x) { return false; }
         else if (m_z < that.m_z) { return true;  }
@@ -77,7 +77,7 @@ private:
 };
 
 
-MyChunkOrigin WorldToChunkOrigin(const MyVec4 &pos);
+ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos);
 
 
 enum ChunkLoadStatus
@@ -92,7 +92,7 @@ enum ChunkLoadStatus
 class Chunk
 {
 public:
-    Chunk(const GameWorld *pWorld, const MyChunkOrigin &origin);
+    Chunk(const GameWorld *pWorld, const ChunkOrigin &origin);
 
     bool isCoordWithin(const MyGridCoord &coord) const;
 
@@ -113,7 +113,7 @@ public:
 
     bool isAbovePlane(const MyPlane &plane) const;
 
-    const MyChunkOrigin getOrigin() const { return m_origin; }
+    const ChunkOrigin getOrigin() const { return m_origin; }
 
     const LandscapeVertLists &getLandscapeVertLists() const { return m_landscape_vert_lists; }
 
@@ -133,7 +133,7 @@ private:
     ChunkStripe *getStripeLocal_RW(int local_x, int local_y);
 
     const GameWorld *m_pWorld;
-    MyChunkOrigin m_origin;
+    ChunkOrigin m_origin;
 
     ChunkLoadStatus m_load_status;
     ChunkStripe *m_pStripes[CHUNK_WIDTH_X][CHUNK_HEIGHT_Y];

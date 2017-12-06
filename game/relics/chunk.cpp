@@ -35,7 +35,6 @@ LandscapeVertLists::~LandscapeVertLists()
 
 
 // Return the count for a particular surface type.
-// If the list hasn't been realized yet, just return zero.
 int LandscapeVertLists::getCount(BlockSurface surf) const 
 {
     switch (surf) {
@@ -103,7 +102,7 @@ VertList_PNT *LandscapeVertLists::get_RW(BlockSurface surf)
 
 
 // Reset all out our lists.
-void LandscapeVertLists::clear() 
+void LandscapeVertLists::resetLists() 
 {
     if (m_grass_list != nullptr) { 
         m_grass_list->reset(); 
@@ -120,8 +119,8 @@ void LandscapeVertLists::clear()
 }
 
 
-// Update any lists we've realized so far.
-void LandscapeVertLists::update() 
+// Realize any lists we've created so far.
+void LandscapeVertLists::realizeLists() 
 {
     if (m_grass_list != nullptr) {
         m_grass_list->realize();
@@ -138,6 +137,27 @@ void LandscapeVertLists::update()
 }
 
 
+// Return true if all existing lists are realized.
+// TODO: I hate unrolling these loops by hand. Let's see if this is faster.
+bool LandscapeVertLists::areListsRealized() const
+{
+    std::vector<VertList_PNT *> all_lists = {
+        m_grass_list, m_dirt_list, m_stone_list, m_bedrock_list
+    };
+
+    for (const auto &iter : all_lists) {
+        if (iter != nullptr) {
+            if (NOT(iter->isRealized())) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+
+
 // Turn a world coord into a chunk origin.
 ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos)
 {
@@ -152,14 +172,14 @@ ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos)
 
 
 // Chunk values ctor.
+// We have to use an array of pointers here, since we want each stripe to be aware
+// of its owner and position. So, we can't use references since that would get all circular.
+// Once that's done, feel free to use "getStripe" everywhere else.
 Chunk::Chunk(const GameWorld *pWorld, const ChunkOrigin &origin) :
     m_pWorld(pWorld),
     m_origin(origin),
-    m_load_status(LOAD_STATUS_NONE)
+    m_is_current(false)
 {
-    // We have to use an array of pointers here, since we want each stripe to be aware
-    // of its owner and position. So, we can't use references since that would get all circular.
-    // Once that's done, feel free to use "getStripe" everywhere else.
     for (int x = 0; x < CHUNK_WIDTH_X; x++) {
         for (int y = 0; y < CHUNK_HEIGHT_Y; y++) {
             m_pStripes[x][y] = new ChunkStripe(this, x, y);
@@ -251,69 +271,32 @@ Block *Chunk::getBlockLocal_RW(int local_x, int local_y, int local_z)
 }
 
 
-// Recalc our internals, so we don't have to worry about neighboring chunks yet.
-// This should only be called from one of the loading worker threads.
-void Chunk::recalcInterior()
-{
-    assert(m_load_status == LOAD_STATUS_NONE);
-
-    // Recalc all our exposed faces.
-    for (int x = 1; x < (CHUNK_WIDTH_X - 1); x++) {
-        for (int y = 0; y < CHUNK_HEIGHT_Y; y++) {
-            getStripeLocal_RW(x, y)->recalcExposuresInterior();
-        }
-    }
-
-    // Clear our vert lists, and add to them, but don't update them yet.
-    m_landscape_vert_lists.clear();
-
-    for (int x = 0; x < CHUNK_WIDTH_X; x++) {
-        for (int y = 0; y < CHUNK_HEIGHT_Y; y++) {
-            getStripeLocal_RW(x, y)->addToVertLists(&m_landscape_vert_lists);
-        }
-    }
-
-    m_load_status = LOAD_STATUS_INTERIOR;
-}
-
-
-// DEBUG: Punt for now. Test the interior part first.
-void Chunk::recalcEdges()
-{
-    m_landscape_vert_lists.update();
-    m_load_status = LOAD_STATUS_COMPLETE;
-}
-
-
 // Recalc the entire chunk from scratch.
-void Chunk::recalcAll()
+// Note that this is a separate step from realizing our vert lists!
+void Chunk::recalcLandscape()
 {
-    // For this to work cleanly, all of our neighbors need to be loaded as well.
-    assert(getNeighborWest()  != nullptr);
-    assert(getNeighborEast()  != nullptr);
-    assert(getNeighborNorth() != nullptr);
-    assert(getNeighborSouth() != nullptr);
-    
-    // Recalc all our exposed faces.
     for (int x = 0; x < CHUNK_WIDTH_X; x++) {
         for (int y = 0; y < CHUNK_HEIGHT_Y; y++) {
-            getStripeLocal_RW(x, y)->recalcExposuresAll();
+            getStripeLocal_RW(x, y)->recalcExposures();
         }
     }
 
-    // Rebuild our vert lists.
-    m_landscape_vert_lists.clear();
+    m_is_current = true;
+}
+
+
+//  Realize all our vertt lists.
+void Chunk::realizeLandscape()
+{
+    m_vert_lists.resetLists();
 
     for (int x = 0; x < CHUNK_WIDTH_X; x++) {
         for (int y = 0; y < CHUNK_HEIGHT_Y; y++) {
-            getStripeLocal_RW(x, y)->addToVertLists(&m_landscape_vert_lists);
+            getStripeLocal_RW(x, y)->addToVertLists(&m_vert_lists);
         }
     }
 
-    m_landscape_vert_lists.update();
-
-    // And we're done.
-    m_load_status = LOAD_STATUS_COMPLETE;
+    m_vert_lists.realizeLists();
 }
 
 
@@ -367,6 +350,7 @@ MyGridCoord Chunk::globalToLocalCoord(const MyGridCoord &global_coord) const
 
 
 // Get our neigbor to the north (positive Z).
+// This may not be loaded into the game world yet.
 const Chunk *Chunk::getNeighborNorth() const
 {
     int x = m_origin.x();
@@ -376,6 +360,7 @@ const Chunk *Chunk::getNeighborNorth() const
 
 
 // Get our neighbor to the south (negative Z).
+// This may not be loaded into the game world yet.
 const Chunk *Chunk::getNeighborSouth() const
 {
     int x = m_origin.x();
@@ -385,6 +370,7 @@ const Chunk *Chunk::getNeighborSouth() const
 
 
 // Get our neighbor to the east (positive X).
+// This may not be loaded into the game world yet.
 const Chunk *Chunk::getNeighborEast() const
 {
     int x = m_origin.x() + CHUNK_WIDTH_X;
@@ -394,6 +380,7 @@ const Chunk *Chunk::getNeighborEast() const
 
 
 // Get our neighbor to the west (negative X).
+// This may not be loaded into the game world yet.
 const Chunk *Chunk::getNeighborWest() const
 {
     int x = m_origin.x() - CHUNK_WIDTH_X;
@@ -425,9 +412,9 @@ std::string Chunk::getDescription() const
     }
 
     // Count our exposures.
-    int grass_surfaces = m_landscape_vert_lists.getCount(SURF_GRASS);
-    int dirt_surfaces  = m_landscape_vert_lists.getCount(SURF_DIRT);
-    int stone_surfaces = m_landscape_vert_lists.getCount(SURF_STONE);
+    int grass_surfaces = m_vert_lists.getCount(SURF_GRASS);
+    int dirt_surfaces  = m_vert_lists.getCount(SURF_DIRT);
+    int stone_surfaces = m_vert_lists.getCount(SURF_STONE);
 
     char msg[64];
     sprintf(msg, "Description of chunk at [%d, %d]\n", m_origin.x(), m_origin.z()); result += msg;

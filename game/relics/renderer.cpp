@@ -333,7 +333,7 @@ void Renderer::renderLandscapeList(
 {
     bool worth_doing = false;
     for (const Chunk *pChunk : chunk_list) {
-        if (pChunk->getLandscapeVertLists().getCount(surf) > 0) {
+        if (pChunk->getVertLists().getCount(surf) > 0) {
             worth_doing = true;
             break;
         }
@@ -362,7 +362,7 @@ void Renderer::renderLandscapeList(
     m_landscape_DS->updateUniformTexture(0, tex);
 
     for (const Chunk *pChunk : chunk_list) {
-        const VertList_PNT *vert_list = pChunk->getLandscapeVertLists().get_RO(surf);
+        const VertList_PNT *vert_list = pChunk->getVertLists().get_RO(surf);
         if (vert_list != nullptr) {
             int item_count = vert_list->getItemCount();
             if (item_count > 0) {

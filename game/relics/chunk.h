@@ -20,8 +20,10 @@ public:
     int getCount(BlockSurface surf) const;
     const VertList_PNT *get_RO(BlockSurface surf) const;
     VertList_PNT *get_RW(BlockSurface surf);
-    void clear();
-    void update();
+
+    void resetLists();
+    void realizeLists();
+    bool areListsRealized() const;
 
 private:
     // Forbid copies.
@@ -59,6 +61,18 @@ public:
         return *this;
     }
 
+    // Equals operator, for fast comparisons.
+    inline bool operator==(const ChunkOrigin &that) const {
+        return ((m_x == that.m_x) && 
+                (m_z == that.m_z));
+    }
+
+    // And a not-equals operator. God, C++ is picky.
+    inline bool operator!=(const ChunkOrigin &that) const {
+        return ((m_x != that.m_x) || 
+                (m_z != that.m_z));
+    }
+
     // Less than operator, since we use this as a map key.
     inline bool operator<(const ChunkOrigin &that) const {
         if      (m_x < that.m_x) { return true;  }
@@ -80,14 +94,6 @@ private:
 ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos);
 
 
-enum ChunkLoadStatus
-{
-    LOAD_STATUS_NONE,
-    LOAD_STATUS_INTERIOR,
-    LOAD_STATUS_COMPLETE
-};
-
-
 // TODO: We need to clean up the whole global vs. local coords thing.
 class Chunk
 {
@@ -105,17 +111,17 @@ public:
     MyVec4 localToWorldCoord(int local_x, int local_y, int local_z) const;
     MyGridCoord globalToLocalCoord(const MyGridCoord &global_coord) const;
 
-    ChunkLoadStatus getLoadStatus() const { return m_load_status; }
+    void recalcLandscape();
+    void realizeLandscape();
 
-    void recalcInterior();
-    void recalcEdges();
-    void recalcAll();
+    bool isLandscapeCurrent() const { return m_is_current; }
+    bool isLandcsapeRealized() const { return m_vert_lists.areListsRealized();  }
 
     bool isAbovePlane(const MyPlane &plane) const;
 
     const ChunkOrigin getOrigin() const { return m_origin; }
 
-    const LandscapeVertLists &getLandscapeVertLists() const { return m_landscape_vert_lists; }
+    const LandscapeVertLists &getVertLists() const { return m_vert_lists; }
 
     const Chunk *getNeighborNorth() const;
     const Chunk *getNeighborSouth() const;
@@ -135,7 +141,7 @@ private:
     const GameWorld *m_pWorld;
     ChunkOrigin m_origin;
 
-    ChunkLoadStatus m_load_status;
+    bool m_is_current;
     ChunkStripe *m_pStripes[CHUNK_WIDTH_X][CHUNK_HEIGHT_Y];
-    LandscapeVertLists m_landscape_vert_lists;
+    LandscapeVertLists m_vert_lists;
 };

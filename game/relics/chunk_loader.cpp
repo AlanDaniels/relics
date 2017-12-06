@@ -64,6 +64,7 @@ int SampleHeightMap(int x, int y)
 
 
 // Load a chunk. This should ideally be called via "std::async".
+// This just deals with the block data. The landscape is are dealt with later.
 Chunk *LoadChunkAsync(const GameWorld *pWorld, const ChunkOrigin &origin)
 {
     if (!s_initialized) {
@@ -99,7 +100,5 @@ Chunk *LoadChunkAsync(const GameWorld *pWorld, const ChunkOrigin &origin)
         }
     }
 
-    // Recalc the interior, and with that, we're ready to hand this back to the main thread.
-    result->recalcInterior();
     return result;
 }

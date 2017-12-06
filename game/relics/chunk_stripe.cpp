@@ -50,19 +50,9 @@ BlockSurface ChunkStripe::calcSurfaceForBlock(int local_z, FaceEnum face)
 }
 
 
-// Recalc the exposures, *except* for the beginning and end.
-// Return true if any of the blocks changed.
-void ChunkStripe::recalcExposuresInterior()
-{
-    for (int z = 1; z < (CHUNK_DEPTH_Z - 1); z++) {
-        recalcExposureForBlock(z);
-    }
-}
-
-
 // Recalc the exposed faces for one stripe.
 // Return true if any of the blocks changed.
-void ChunkStripe::recalcExposuresAll()
+void ChunkStripe::recalcExposures()
 {
     for (int z = 0; z < CHUNK_DEPTH_Z; z++) {
         recalcExposureForBlock(z);
@@ -99,31 +89,68 @@ void ChunkStripe::recalcExposureForBlock(int local_z)
     int y = m_local_y;
     int z = local_z;
 
-    bool west_edge   = (x == 0);
-    bool east_edge   = (x == (CHUNK_WIDTH_X - 1));
+    bool west_edge = (x == 0);
 
-    bool south_edge  = (z == 0);
-    bool north_edge  = (z == (CHUNK_DEPTH_Z - 1));
+    bool east_edge = (x == (CHUNK_WIDTH_X - 1));
+
+    bool south_edge = (z == 0);
+    bool north_edge = (z == (CHUNK_DEPTH_Z - 1));
 
     bool bottom_edge = (y == 0);
     bool top_edge    = (y == (CHUNK_HEIGHT_Y - 1));
 
     // Get our six neigbors, straddling across chunk boundaries if necessary.
-    BlockContent west_content = west_edge ?
-        m_pOwner->getNeighborWest()->getBlockLocal_RO(CHUNK_WIDTH_X - 1, y, z)->getContent() :
-        m_pOwner->getBlockLocal_RO(x - 1, y, z)->getContent();
+    BlockContent west_content = CONTENT_AIR;
+    if (west_edge) {
+        const Chunk *neighbor = m_pOwner->getNeighborWest();
+        if (neighbor != nullptr) {
+            const Block *block = neighbor->getBlockLocal_RO(CHUNK_WIDTH_X - 1, y, z);
+            west_content = block->getContent();
+        }
+    }
+    else {
+        const Block *block = m_pOwner->getBlockLocal_RO(x - 1, y, z);
+        west_content = block->getContent();
+    }
 
-    BlockContent east_content  = east_edge ? 
-        m_pOwner->getNeighborEast()->getBlockLocal_RO(0, y, z)->getContent() :
-        m_pOwner->getBlockLocal_RO(x + 1, y, z)->getContent();
+    BlockContent east_content = CONTENT_AIR;
+    if (east_edge) {
+        const Chunk *neighbor = m_pOwner->getNeighborEast();
+        if (neighbor != nullptr) {
+            const Block * block = neighbor->getBlockLocal_RO(0, y, z);
+            east_content = block->getContent();
+        }
+    }
+    else {
+        const Block *block = m_pOwner->getBlockLocal_RO(x + 1, y, z);
+        east_content = block->getContent();
+    }
 
-    BlockContent south_content = south_edge ? 
-        m_pOwner->getNeighborSouth()->getBlockLocal_RO(x, y, CHUNK_DEPTH_Z - 1)->getContent() :
-        m_pOwner->getBlockLocal_RO(x, y, z - 1)->getContent();
+    BlockContent south_content = CONTENT_AIR;
+    if (south_edge) {
+        const Chunk *neighbor = m_pOwner->getNeighborSouth();
+        if (neighbor != nullptr) {
+            const Block *block = neighbor->getBlockLocal_RO(x, y, CHUNK_DEPTH_Z - 1);
+            south_content = block->getContent();
+        }
+    }
+    else {
+        const Block *block = m_pOwner->getBlockLocal_RO(x, y, z - 1);
+        south_content = block->getContent();
+    }
 
-    BlockContent north_content = north_edge ?
-        m_pOwner->getNeighborNorth()->getBlockLocal_RO(x, y, 0)->getContent() :
-        m_pOwner->getBlockLocal_RO(x, y, z + 1)->getContent();
+    BlockContent north_content = CONTENT_AIR;
+    if (north_edge) {
+        const Chunk *neighbor = m_pOwner->getNeighborNorth();
+        if (neighbor != nullptr) {
+            const Block *block = neighbor->getBlockLocal_RO(x, y, 0);
+            north_content = block->getContent();
+        }
+    }
+    else {
+        const Block *block = m_pOwner->getBlockLocal_RO(x, y, z + 1);
+        north_content = block->getContent();
+    }
 
     BlockContent top_content = top_edge ?
         CONTENT_AIR : 

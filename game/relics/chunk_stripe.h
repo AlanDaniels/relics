@@ -20,10 +20,7 @@ public:
     Block *getBlock_RW(int local_z);
 
     void fillStripe(BlockContent block_type);
-
-    void recalcExposuresInterior();
-    void recalcExposuresAll();
-
+    void recalcExposures();
     void addToVertLists(LandscapeVertLists *pOut);
 
 private:

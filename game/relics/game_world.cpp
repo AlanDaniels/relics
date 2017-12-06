@@ -33,7 +33,7 @@ GameWorld::GameWorld() :
     EvalRegion load_region = draw_region.expand();
 
     // Fire off a thread to load each chunk we need. 
-    // Basically, one border larger than what we'll evaluate.
+    // Basically, one border larger than what we'll actually draw.
     std::vector<t_chunk_future> future_list;
 
     for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH_X) {
@@ -54,14 +54,22 @@ GameWorld::GameWorld() :
 
     PrintDebug("Created %d chunks.\n", count);
 
-    // And then, only recalc the ones within our draw region.
-    // This leaves a border of out-of-date chunks, and that's okay.
+    // Recalc every chunk that we've loaded.
+    for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH_X) {
+        for (int z = load_region.south(); z < load_region.north(); z += CHUNK_DEPTH_Z) {
+            ChunkOrigin origin(x, z);
+            Chunk *pChunk = m_chunk_map[origin];
+            pChunk->recalcLandscape();
+        }
+    }
+
+    // But then, only realize the ones within our draw region.
+    // This leaves a "ring" of unrealized chunks around us, and that's okay.
     for     (int x = draw_region.west();  x <= draw_region.east();  x += CHUNK_WIDTH_X) {
         for (int z = draw_region.south(); z <= draw_region.north(); z += CHUNK_DEPTH_Z) {
             ChunkOrigin origin(x, z);
             Chunk *pChunk = m_chunk_map[origin];
-            assert(pChunk->getLoadStatus() == LOAD_STATUS_INTERIOR);
-            pChunk->recalcEdges();
+            pChunk->realizeLandscape();
         }
     }
 }
@@ -224,13 +232,13 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
     MyGridCoord  new_location = WorldToGridCoord(m_camera_pos, NUDGE_NONE);
 
     int eval_blocks = GetConfig().logic.eval_blocks;
-    EvalRegion new_eval_region = WorldToEvalRegion(m_camera_pos, eval_blocks);
-    if (new_eval_region != m_current_eval_region) {
+    ChunkOrigin new_chunk_origin = WorldToChunkOrigin(m_camera_pos);
+    if (new_chunk_origin != m_current_chunk_origin) {
         updateWorld();
     }
 
-    m_current_location    = new_location;
-    m_current_eval_region = new_eval_region;
+    m_current_location = new_location;
+    m_current_chunk_origin = new_chunk_origin;
 
     // Recalc our hit test, and we're done.
     calcHitTest();
@@ -293,9 +301,13 @@ void GameWorld::updateWorld()
                 m_chunk_map[origin] = pFreshChunk;
             }
 
+            // TODO: COME BACK TO THIS.
             Chunk *pChunk = m_chunk_map[origin];
-            if (!pChunk->getLoadStatus() != LOAD_STATUS_INTERIOR) {
-                pChunk->recalcEdges();
+            if (NOT(pChunk->isLandscapeCurrent())) {
+                pChunk->recalcLandscape();
+            }
+            if (NOT(pChunk->isLandcsapeRealized())) {
+                pChunk->realizeLandscape();
             }
         }
     }
@@ -389,7 +401,8 @@ void GameWorld::deleteBlockInFrontOfUs()
         assert(pChunk->isCoordWithin(coord));
 
         pChunk->getBlockGlobal_RW(coord)->setContent(CONTENT_AIR);
-        pChunk->recalcAll();
+        pChunk->recalcLandscape();
+        pChunk->realizeLandscape();
     }
 }
 

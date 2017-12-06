@@ -37,7 +37,7 @@ render = {
     field_of_view  = 90.0,
     near_plane     = 0.1,
     far_plane      = 1000.0,
-    fade_distance  =  20.0,
+    fade_distance  = 5.0,
 
     landscape = {
         vert_shader   = 'shaders/landscape_PNT.vert',

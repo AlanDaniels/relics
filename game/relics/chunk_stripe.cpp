@@ -10,7 +10,7 @@
 // Get a block, read-only version.
 const Block *ChunkStripe::getBlock_RO(int z) const
 {
-    assert((z >= 0) && (z < CHUNK_DEPTH_Z));
+    assert((z >= 0) && (z < CHUNK_WIDTH));
     return &m_blocks[z];
 }
 
@@ -18,7 +18,7 @@ const Block *ChunkStripe::getBlock_RO(int z) const
 // Get a block, writeable version.
 Block *ChunkStripe::getBlock_RW(int z)
 {
-    assert((z >= 0) && (z < CHUNK_DEPTH_Z));
+    assert((z >= 0) && (z < CHUNK_WIDTH));
     return &m_blocks[z];
 }
 
@@ -26,7 +26,7 @@ Block *ChunkStripe::getBlock_RW(int z)
 // Populate a stripe with a particular block type.
 void ChunkStripe::fillStripe(BlockContent block_type)
 {
-    for (int z = 0; z < CHUNK_DEPTH_Z; z++) {
+    for (int z = 0; z < CHUNK_WIDTH; z++) {
         m_blocks[z].setContent(block_type);
     }
 }
@@ -54,7 +54,7 @@ BlockSurface ChunkStripe::calcSurfaceForBlock(int local_z, FaceEnum face)
 // Return true if any of the blocks changed.
 void ChunkStripe::recalcExposures()
 {
-    for (int z = 0; z < CHUNK_DEPTH_Z; z++) {
+    for (int z = 0; z < CHUNK_WIDTH; z++) {
         recalcExposureForBlock(z);
     }
 }
@@ -64,7 +64,7 @@ void ChunkStripe::recalcExposures()
 // Return the total number of faces added.
 void ChunkStripe::addToVertLists(LandscapeVertLists *pOut)
 {
-    for (int local_z = 0; local_z < CHUNK_DEPTH_Z; local_z++) {
+    for (int local_z = 0; local_z < CHUNK_WIDTH; local_z++) {
         addVertsForBlock(pOut, local_z);
     }
 }
@@ -74,7 +74,7 @@ void ChunkStripe::addToVertLists(LandscapeVertLists *pOut)
 // Return true if the faces changed.
 void ChunkStripe::recalcExposureForBlock(int local_z)
 {
-    assert((local_z >= 0) && (local_z < CHUNK_DEPTH_Z));
+    assert((local_z >= 0) && (local_z < CHUNK_WIDTH));
     Block &current = m_blocks[local_z];
 
     current.clearExposureFlags();
@@ -91,20 +91,20 @@ void ChunkStripe::recalcExposureForBlock(int local_z)
 
     bool west_edge = (x == 0);
 
-    bool east_edge = (x == (CHUNK_WIDTH_X - 1));
+    bool east_edge = (x == (CHUNK_WIDTH - 1));
 
     bool south_edge = (z == 0);
-    bool north_edge = (z == (CHUNK_DEPTH_Z - 1));
+    bool north_edge = (z == (CHUNK_WIDTH - 1));
 
     bool bottom_edge = (y == 0);
-    bool top_edge    = (y == (CHUNK_HEIGHT_Y - 1));
+    bool top_edge    = (y == (CHUNK_HEIGHT - 1));
 
     // Get our six neigbors, straddling across chunk boundaries if necessary.
     BlockContent west_content = CONTENT_AIR;
     if (west_edge) {
         const Chunk *neighbor = m_pOwner->getNeighborWest();
         if (neighbor != nullptr) {
-            const Block *block = neighbor->getBlockLocal_RO(CHUNK_WIDTH_X - 1, y, z);
+            const Block *block = neighbor->getBlockLocal_RO(CHUNK_WIDTH - 1, y, z);
             west_content = block->getContent();
         }
     }
@@ -130,7 +130,7 @@ void ChunkStripe::recalcExposureForBlock(int local_z)
     if (south_edge) {
         const Chunk *neighbor = m_pOwner->getNeighborSouth();
         if (neighbor != nullptr) {
-            const Block *block = neighbor->getBlockLocal_RO(x, y, CHUNK_DEPTH_Z - 1);
+            const Block *block = neighbor->getBlockLocal_RO(x, y, CHUNK_WIDTH - 1);
             south_content = block->getContent();
         }
     }

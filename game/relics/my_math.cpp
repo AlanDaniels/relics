@@ -418,14 +418,14 @@ EvalRegion::EvalRegion(int west, int east, int south, int north) :
     m_south(south), m_north(north)
 {
     // Maxes are greater than or equal to mins.
-    assert(west  <= (east  + CHUNK_WIDTH_X));
-    assert(south <= (north + CHUNK_DEPTH_Z));
+    assert(west  <= (east  + CHUNK_WIDTH));
+    assert(south <= (north + CHUNK_WIDTH));
 
     // Make sure it always aligns along origons.
-    assert((m_west  % CHUNK_WIDTH_X) == 0);
-    assert((m_east  % CHUNK_WIDTH_X) == 0);
-    assert((m_south % CHUNK_DEPTH_Z) == 0);
-    assert((m_north % CHUNK_DEPTH_Z) == 0);
+    assert((m_west  % CHUNK_WIDTH) == 0);
+    assert((m_east  % CHUNK_WIDTH) == 0);
+    assert((m_south % CHUNK_WIDTH) == 0);
+    assert((m_north % CHUNK_WIDTH) == 0);
 }
 
 
@@ -466,10 +466,10 @@ bool EvalRegion::containsOrigin(const ChunkOrigin &origin) const
 EvalRegion EvalRegion::expand() const 
 {
     return EvalRegion(
-        m_west  - CHUNK_WIDTH_X,
-        m_east  + CHUNK_WIDTH_X,
-        m_south - CHUNK_DEPTH_Z,
-        m_north + CHUNK_DEPTH_Z);
+        m_west  - CHUNK_WIDTH,
+        m_east  + CHUNK_WIDTH,
+        m_south - CHUNK_WIDTH,
+        m_north + CHUNK_WIDTH);
 }
 
 
@@ -480,10 +480,10 @@ EvalRegion WorldToEvalRegion(const MyVec4 &pos, int block_count)
 {
     ChunkOrigin origin = WorldToChunkOrigin(pos);
 
-    int east  = origin.x() + (block_count * CHUNK_WIDTH_X) + CHUNK_WIDTH_X;
-    int west  = origin.x() - (block_count * CHUNK_WIDTH_X);
-    int north = origin.z() + (block_count * CHUNK_DEPTH_Z) + CHUNK_DEPTH_Z;
-    int south = origin.z() - (block_count * CHUNK_DEPTH_Z);
+    int east  = origin.x() + (CHUNK_WIDTH * (block_count + 1));
+    int west  = origin.x() - (CHUNK_WIDTH *  block_count);
+    int north = origin.z() + (CHUNK_WIDTH * (block_count + 1));
+    int south = origin.z() - (CHUNK_WIDTH *  block_count);
 
     return EvalRegion(west, east, south, north);
 }

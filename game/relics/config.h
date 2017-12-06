@@ -139,7 +139,7 @@ struct ConfigLogic
     GLfloat getLandscapeNoiseCm()  const { return landscape_noise_meters   * 100.0f; }
 
     // Note that our OpenGL drawing distance can't be more than what's loaded in the world.
-    GLfloat getDrawDistanceCm()    const { return eval_blocks * CHUNK_WIDTH_X * 100.0f; }
+    GLfloat getDrawDistanceCm()    const { return eval_blocks * CHUNK_WIDTH * 100.0f; }
 };
 
 

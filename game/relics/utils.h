@@ -10,10 +10,11 @@ const int FRAME_DELTA_MSECS = 25;
 // The world units are centimeters.
 const float BLOCK_SCALE = 100.0f;
 
-// Using the standard size of 32 for now.
-const int CHUNK_WIDTH_X  = 32;
-const int CHUNK_DEPTH_Z  = 32;
-const int CHUNK_HEIGHT_Y = 256;
+// Using the standard size of 32 by 32 by 256 for now.
+// The "X" width and the "Z" depth must be identical, or our logic would get
+// ridiculously complicated, but our "Y" height can be whatever we wish.
+const int CHUNK_WIDTH  = 32;
+const int CHUNK_HEIGHT = 256;
 
 const float NUDGE_AMOUNT = BLOCK_SCALE / 100.0f;
 

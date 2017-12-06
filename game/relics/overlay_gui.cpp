@@ -129,7 +129,7 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
 
         sprintf(blah,
             "Eval distance: %d meters, W=%d, E=%d, S=%d, N=%d", 
-            eval_blocks * CHUNK_WIDTH_X, region.west(), region.east(), region.south(), region.north());
+            eval_blocks * CHUNK_WIDTH, region.west(), region.east(), region.south(), region.north());
         m_text.setString(blah);
         m_window.draw(m_text);
         m_text.move(0.0f, text_down);

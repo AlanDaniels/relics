@@ -164,8 +164,8 @@ ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos)
     int grid_x = static_cast<int>(floor(pos.x() / BLOCK_SCALE));
     int grid_z = static_cast<int>(floor(pos.z() / BLOCK_SCALE));
 
-    int x = RoundDownInt(grid_x, CHUNK_WIDTH_X);
-    int z = RoundDownInt(grid_z, CHUNK_DEPTH_Z);
+    int x = RoundDownInt(grid_x, CHUNK_WIDTH);
+    int z = RoundDownInt(grid_z, CHUNK_WIDTH);
 
     return ChunkOrigin(x, z);
 }
@@ -180,8 +180,8 @@ Chunk::Chunk(const GameWorld *pWorld, const ChunkOrigin &origin) :
     m_origin(origin),
     m_is_current(false)
 {
-    for (int x = 0; x < CHUNK_WIDTH_X; x++) {
-        for (int y = 0; y < CHUNK_HEIGHT_Y; y++) {
+    for (int x = 0; x < CHUNK_WIDTH; x++) {
+        for (int y = 0; y < CHUNK_HEIGHT; y++) {
             m_pStripes[x][y] = new ChunkStripe(this, x, y);
         }
     }
@@ -191,8 +191,8 @@ Chunk::Chunk(const GameWorld *pWorld, const ChunkOrigin &origin) :
 // Get a chunk stripe, read-only version.
 const ChunkStripe *Chunk::getStripeLocal_RO(int local_x, int local_y) const
 {
-    assert((local_x >= 0) && (local_x < CHUNK_WIDTH_X));
-    assert((local_y >= 0) && (local_y < CHUNK_HEIGHT_Y));
+    assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
+    assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
 
     return m_pStripes[local_x][local_y];
 }
@@ -201,8 +201,8 @@ const ChunkStripe *Chunk::getStripeLocal_RO(int local_x, int local_y) const
 // Gert a chunk stripe, writeable version.
 ChunkStripe *Chunk::getStripeLocal_RW(int local_x, int local_y)
 {
-    assert((local_x >= 0) && (local_x < CHUNK_WIDTH_X));
-    assert((local_y >= 0) && (local_y < CHUNK_HEIGHT_Y));
+    assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
+    assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
 
     return m_pStripes[local_x][local_y];
 }
@@ -216,9 +216,9 @@ bool Chunk::isCoordWithin(const MyGridCoord &coord) const
     int local_z = coord.z() - m_origin.z();
 
     bool result = (
-        (local_x >= 0) && (local_x < CHUNK_WIDTH_X)  &&
-        (local_y >= 0) && (local_y < CHUNK_HEIGHT_Y) &&
-        (local_z >= 0) && (local_z < CHUNK_DEPTH_Z));
+        (local_x >= 0) && (local_x < CHUNK_WIDTH)  &&
+        (local_y >= 0) && (local_y < CHUNK_HEIGHT) &&
+        (local_z >= 0) && (local_z < CHUNK_WIDTH));
     return result;
 }
 
@@ -252,9 +252,9 @@ Block *Chunk::getBlockGlobal_RW(const MyGridCoord &coord)
 // Get the block at a particular local coord, read-only version.
 const Block *Chunk::getBlockLocal_RO(int local_x, int local_y, int local_z) const
 {
-    assert((local_x >= 0) && (local_x < CHUNK_WIDTH_X));
-    assert((local_y >= 0) && (local_y < CHUNK_HEIGHT_Y));
-    assert((local_z >= 0) && (local_z < CHUNK_DEPTH_Z));
+    assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
+    assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
+    assert((local_z >= 0) && (local_z < CHUNK_WIDTH));
 
     return getStripeLocal_RO(local_x, local_y)->getBlock_RO(local_z);
 }
@@ -263,9 +263,9 @@ const Block *Chunk::getBlockLocal_RO(int local_x, int local_y, int local_z) cons
 // Get the block at a particular local coord, writeable version.
 Block *Chunk::getBlockLocal_RW(int local_x, int local_y, int local_z)
 {
-    assert((local_x >= 0) && (local_x < CHUNK_WIDTH_X));
-    assert((local_y >= 0) && (local_y < CHUNK_HEIGHT_Y));
-    assert((local_z >= 0) && (local_z < CHUNK_DEPTH_Z));
+    assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
+    assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
+    assert((local_z >= 0) && (local_z < CHUNK_WIDTH));
 
     return getStripeLocal_RW(local_x, local_y)->getBlock_RW(local_z);
 }
@@ -275,8 +275,8 @@ Block *Chunk::getBlockLocal_RW(int local_x, int local_y, int local_z)
 // Note that this is a separate step from realizing our vert lists!
 void Chunk::recalcLandscape()
 {
-    for (int x = 0; x < CHUNK_WIDTH_X; x++) {
-        for (int y = 0; y < CHUNK_HEIGHT_Y; y++) {
+    for (int x = 0; x < CHUNK_WIDTH; x++) {
+        for (int y = 0; y < CHUNK_HEIGHT; y++) {
             getStripeLocal_RW(x, y)->recalcExposures();
         }
     }
@@ -290,8 +290,8 @@ void Chunk::realizeLandscape()
 {
     m_vert_lists.resetLists();
 
-    for (int x = 0; x < CHUNK_WIDTH_X; x++) {
-        for (int y = 0; y < CHUNK_HEIGHT_Y; y++) {
+    for (int x = 0; x < CHUNK_WIDTH; x++) {
+        for (int y = 0; y < CHUNK_HEIGHT; y++) {
             getStripeLocal_RW(x, y)->addToVertLists(&m_vert_lists);
         }
     }
@@ -305,9 +305,9 @@ void Chunk::realizeLandscape()
 bool Chunk::isAbovePlane(const MyPlane &plane) const
 {
     GLfloat west  = GridToWorld(m_origin.x());
-    GLfloat east  = GridToWorld(m_origin.x() + CHUNK_WIDTH_X);
+    GLfloat east  = GridToWorld(m_origin.x() + CHUNK_WIDTH);
     GLfloat south = GridToWorld(m_origin.z());
-    GLfloat north = GridToWorld(m_origin.z() + CHUNK_DEPTH_Z);
+    GLfloat north = GridToWorld(m_origin.z() + CHUNK_WIDTH);
 
     MyVec4 south_west(west, 0, south);
     MyVec4 south_east(east, 0, south);
@@ -327,9 +327,9 @@ bool Chunk::isAbovePlane(const MyPlane &plane) const
 MyVec4 Chunk::localToWorldCoord(int x, int y, int z) const
 {
     // Note the "less than or equal" to allow for edge cases.
-    assert((x >= 0) && (x <= CHUNK_WIDTH_X));
-    assert((z >= 0) && (z <= CHUNK_DEPTH_Z));
-    assert((y >= 0) && (y <= CHUNK_HEIGHT_Y));
+    assert((x >= 0) && (x <= CHUNK_WIDTH));
+    assert((y >= 0) && (y <= CHUNK_HEIGHT));
+    assert((z >= 0) && (z <= CHUNK_WIDTH));
 
     int global_x = m_origin.x() + x;
     int global_y = y;
@@ -354,7 +354,7 @@ MyGridCoord Chunk::globalToLocalCoord(const MyGridCoord &global_coord) const
 const Chunk *Chunk::getNeighborNorth() const
 {
     int x = m_origin.x();
-    int z = m_origin.z() + CHUNK_DEPTH_Z;
+    int z = m_origin.z() + CHUNK_WIDTH;
     return m_pWorld->getOptionalChunk(ChunkOrigin(x, z));
 }
 
@@ -364,7 +364,7 @@ const Chunk *Chunk::getNeighborNorth() const
 const Chunk *Chunk::getNeighborSouth() const
 {
     int x = m_origin.x();
-    int z = m_origin.z() - CHUNK_DEPTH_Z;
+    int z = m_origin.z() - CHUNK_WIDTH;
     return m_pWorld->getOptionalChunk(ChunkOrigin(x, z));
 }
 
@@ -373,7 +373,7 @@ const Chunk *Chunk::getNeighborSouth() const
 // This may not be loaded into the game world yet.
 const Chunk *Chunk::getNeighborEast() const
 {
-    int x = m_origin.x() + CHUNK_WIDTH_X;
+    int x = m_origin.x() + CHUNK_WIDTH;
     int z = m_origin.z();
     return m_pWorld->getOptionalChunk(ChunkOrigin(x, z));
 }
@@ -383,7 +383,7 @@ const Chunk *Chunk::getNeighborEast() const
 // This may not be loaded into the game world yet.
 const Chunk *Chunk::getNeighborWest() const
 {
-    int x = m_origin.x() - CHUNK_WIDTH_X;
+    int x = m_origin.x() - CHUNK_WIDTH;
     int z = m_origin.z();
     return m_pWorld->getOptionalChunk(ChunkOrigin(x, z));
 }
@@ -398,9 +398,9 @@ std::string Chunk::getDescription() const
     int dirt_blocks  = 0;
     int stone_blocks = 0;
 
-    for (int x = 0; x < CHUNK_WIDTH_X; x++) {
-        for (int z = 0; z < CHUNK_DEPTH_Z; z++) {
-            for (int y = 0; y < CHUNK_HEIGHT_Y; y++) {
+    for (int x = 0; x < CHUNK_WIDTH; x++) {
+        for (int z = 0; z < CHUNK_WIDTH; z++) {
+            for (int y = 0; y < CHUNK_HEIGHT; y++) {
                 const Block *pBlock = getBlockLocal_RO(x, y, z);
                 switch (pBlock->getContent()) {
                 case CONTENT_DIRT:  dirt_blocks++; break;

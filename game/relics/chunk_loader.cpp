@@ -76,11 +76,14 @@ Chunk *LoadChunkAsync(const GameWorld *pWorld, const ChunkOrigin &origin)
     Chunk *result = new Chunk(pWorld, origin);
 
     // First, figure out the content type, from height-map sampling.
-    for (int x = 0; x < CHUNK_WIDTH_X; x++) {
-        for (int z = 0; z < CHUNK_DEPTH_Z; z++) {
+    for     (int x = 0; x < CHUNK_WIDTH; x++) {
+        for (int z = 0; z < CHUNK_WIDTH; z++) {
             int dirt_level = SampleHeightMap(origin.x() + x, origin.z() + z);
 
-            for (int y = 0; y < CHUNK_HEIGHT_Y; y++) {
+            // TODO: Meh, flatten it for now.
+            dirt_level = dirt_level / 2;
+
+            for (int y = 0; y < CHUNK_HEIGHT; y++) {
                 BlockContent content;
                 if (y == 0) {
                     content = CONTENT_BEDROCK;

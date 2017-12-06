@@ -58,7 +58,7 @@ static bool CheckSouthFaces(
     MyGridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
 {
     int near_z = chunk.getOrigin().z();
-    int far_z  = chunk.getOrigin().z() + CHUNK_DEPTH_Z - 1;
+    int far_z  = chunk.getOrigin().z() + CHUNK_WIDTH - 1;
 
     for (int grid_z = near_z; grid_z <= far_z; grid_z++) {
         MyPlane plane = GetSouthGridPlane(grid_z);
@@ -89,7 +89,7 @@ static bool CheckNorthFaces(
     const Chunk &chunk, const MyRay &eye_ray,
     MyGridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
 {
-    int near_z = chunk.getOrigin().z() + CHUNK_DEPTH_Z;
+    int near_z = chunk.getOrigin().z() + CHUNK_WIDTH;
     int far_z  = chunk.getOrigin().z() + 1;
 
     for (int grid_z = near_z; grid_z >= far_z; grid_z--) {
@@ -122,7 +122,7 @@ static bool CheckWestFaces(
     MyGridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
 {
     int near_x = chunk.getOrigin().x();
-    int far_x  = chunk.getOrigin().x() + CHUNK_WIDTH_X - 1;
+    int far_x  = chunk.getOrigin().x() + CHUNK_WIDTH - 1;
 
     for (int grid_x = near_x; grid_x <= far_x; grid_x++) {
         MyPlane plane = GetWestGridPlane(grid_x);
@@ -153,7 +153,7 @@ static bool CheckEastFaces(
     const Chunk &chunk, const MyRay &eye_ray,
     MyGridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
 {
-    int near_x = chunk.getOrigin().x() + CHUNK_WIDTH_X;
+    int near_x = chunk.getOrigin().x() + CHUNK_WIDTH;
     int far_x  = chunk.getOrigin().x() + 1;
 
     for (int grid_x = near_x; grid_x >= far_x; grid_x--) {
@@ -185,7 +185,7 @@ static bool CheckTopFaces(
     const Chunk &chunk, const MyRay &eye_ray,
     MyGridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
 {
-    int high_y = CHUNK_HEIGHT_Y;
+    int high_y = CHUNK_HEIGHT;
     int low_y  = 1;
 
     for (int grid_y = high_y; grid_y >= low_y; grid_y--) {
@@ -218,7 +218,7 @@ static bool CheckBottomFaces(
     MyGridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
 {
     int low_y  = 0;
-    int high_y = CHUNK_HEIGHT_Y - 1;
+    int high_y = CHUNK_HEIGHT - 1;
 
     for (int grid_y = low_y; grid_y <= high_y; grid_y++) {
         MyPlane plane = GetBottomGridPlane(grid_y);

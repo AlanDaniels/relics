@@ -36,8 +36,8 @@ GameWorld::GameWorld() :
     // Fire off a thread to load each chunk we need. 
     std::vector<t_chunk_future> future_list;
 
-    for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH_X) {
-        for (int z = load_region.south(); z < load_region.north(); z += CHUNK_DEPTH_Z) {
+    for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH) {
+        for (int z = load_region.south(); z < load_region.north(); z += CHUNK_WIDTH) {
             t_chunk_future fut = std::async(std::launch::async, LoadChunkAsync, this, ChunkOrigin(x, z));
             future_list.emplace_back(std::move(fut));
         }
@@ -56,8 +56,8 @@ GameWorld::GameWorld() :
 
     // Recalc and realize every chunk that we've loaded.
     // This leaves a ring of unrealized chunks around us, and that's okay.
-    for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH_X) {
-        for (int z = load_region.south(); z < load_region.north(); z += CHUNK_DEPTH_Z) {
+    for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH) {
+        for (int z = load_region.south(); z < load_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
             Chunk *pChunk = m_chunk_map[origin];
             pChunk->recalcLandscape();
@@ -79,9 +79,9 @@ GameWorld::~GameWorld()
 // and one quarter of the way up.
 MyVec4 GameWorld::getCameraStartPos() const
 {
-    GLfloat x = BLOCK_SCALE * CHUNK_WIDTH_X  * 0.5f;
-    GLfloat y = BLOCK_SCALE * CHUNK_HEIGHT_Y * 0.25f;
-    GLfloat z = BLOCK_SCALE * CHUNK_DEPTH_Z  * 0.5f;
+    GLfloat x = BLOCK_SCALE * CHUNK_WIDTH  * 0.5f;
+    GLfloat y = BLOCK_SCALE * CHUNK_HEIGHT * 0.25f;
+    GLfloat z = BLOCK_SCALE * CHUNK_WIDTH  * 0.5f;
     return MyVec4(x, y, z);
 }
 
@@ -259,8 +259,8 @@ void GameWorld::updateWorld()
     EvalRegion load_region = draw_region.expand();
 
     // For any chunk at the "edge" of the load region, spawn a worker threads to get it loading.
-    for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH_X) {
-        for (int z = load_region.south(); z < load_region.north(); z += CHUNK_DEPTH_Z) {
+    for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH) {
+        for (int z = load_region.south(); z < load_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
 
             if (NOT(draw_region.containsOrigin(origin))) {
@@ -281,8 +281,8 @@ void GameWorld::updateWorld()
     // If the chunk hasn't loaded yet, then alas, wait for it's loaded to complete.
     // Needless to say, this isn't ideal (stutter!), so avoid this as much as possible.
     // Also, we damn well better have a thread going for this already.
-    for     (int x = draw_region.west();  x < draw_region.east();  x += CHUNK_WIDTH_X) {
-        for (int z = draw_region.south(); z < draw_region.north(); z += CHUNK_DEPTH_Z) {
+    for     (int x = draw_region.west();  x < draw_region.east();  x += CHUNK_WIDTH) {
+        for (int z = draw_region.south(); z < draw_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
 
             if (m_chunk_map.find(origin) == m_chunk_map.end()) {
@@ -337,11 +337,11 @@ void GameWorld::calcHitTest()
     ChunkHitTestDetail best_detail;
 
     GLfloat hit_test_distance = GetConfig().logic.getHitTestDistanceCm();
-    int block_count = static_cast<int>((hit_test_distance / 100.0f) / CHUNK_WIDTH_X);
+    int block_count = static_cast<int>((hit_test_distance / 100.0f) / CHUNK_WIDTH);
     EvalRegion region = WorldToEvalRegion(m_camera_pos, block_count);
 
-    for     (int x = region.west();  x < region.east();  x += CHUNK_WIDTH_X) {
-        for (int z = region.south(); z < region.north(); z += CHUNK_DEPTH_Z) {
+    for     (int x = region.west();  x < region.east();  x += CHUNK_WIDTH) {
+        for (int z = region.south(); z < region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
             Chunk *pChunk = m_chunk_map[origin];
 

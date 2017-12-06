@@ -37,5 +37,5 @@ private:
     int m_local_x;
     int m_local_y;
 
-    Block m_blocks[CHUNK_DEPTH_Z];
+    Block m_blocks[CHUNK_WIDTH];
 };

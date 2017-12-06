@@ -47,8 +47,8 @@ public:
     // Chunks always have to start at regular boundaries.
     ChunkOrigin(int x, int z) :
         m_x(x), m_z(z) {
-        assert((x % CHUNK_WIDTH_X) == 0);
-        assert((z % CHUNK_DEPTH_Z) == 0);
+        assert((x % CHUNK_WIDTH) == 0);
+        assert((z % CHUNK_WIDTH) == 0);
     }
 
     ChunkOrigin(const ChunkOrigin &that) :
@@ -142,6 +142,6 @@ private:
     ChunkOrigin m_origin;
 
     bool m_is_current;
-    ChunkStripe *m_pStripes[CHUNK_WIDTH_X][CHUNK_HEIGHT_Y];
+    ChunkStripe *m_pStripes[CHUNK_WIDTH][CHUNK_HEIGHT];
     LandscapeVertLists m_vert_lists;
 };

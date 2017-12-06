@@ -358,8 +358,8 @@ void ChunkHitTestToQuad(const Chunk &chunk, const ChunkHitTestDetail &details, V
 
     Brady brady(chunk, local_coord, details.getFace());
 
-    pOut->clear();
+    pOut->reset();
     brady.addToVertList_PT(pOut);
-    pOut->update();
+    pOut->realize();
 }
 

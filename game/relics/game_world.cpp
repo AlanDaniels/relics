@@ -331,9 +331,9 @@ void GameWorld::calcHitTest()
     Chunk *best_chunk = nullptr;
     ChunkHitTestDetail best_detail;
 
-    // TODO: HACK.
-    int hit_test_distance = static_cast<int>(GetConfig().logic.hit_test_distance_meters) / CHUNK_WIDTH_X;
-    EvalRegion region = WorldToEvalRegion(m_camera_pos, hit_test_distance);
+    GLfloat hit_test_distance = GetConfig().logic.getHitTestDistanceCm();
+    int block_count = static_cast<int>((hit_test_distance / 100.0f) / CHUNK_WIDTH_X);
+    EvalRegion region = WorldToEvalRegion(m_camera_pos, block_count);
 
     for     (int x = region.west();  x < region.east();  x += CHUNK_WIDTH_X) {
         for (int z = region.south(); z < region.north(); z += CHUNK_DEPTH_Z) {
@@ -357,11 +357,11 @@ void GameWorld::calcHitTest()
     }
 
     // Once we're done, *then* rebuild the quad list.
-    m_hit_test_vert_list.clear();
+    m_hit_test_vert_list.reset();
     if (success) {
         ChunkHitTestToQuad(*best_chunk, best_detail, &m_hit_test_vert_list);
     }
-    m_hit_test_vert_list.update();
+    m_hit_test_vert_list.realize();
 
     m_hit_test_success = success;
     if (success) {

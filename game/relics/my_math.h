@@ -327,9 +327,8 @@ private:
 MyGridCoord WorldToGridCoord(const MyVec4 &pos, NudgeEnum nudge_type);
 
 
-// Chunk eval region.
-// The four values always align along chunk boundaries.
-// The north and east values are range exclusive (that is, "0 through 9" kind of logic).
+// An "eval region", the four values always align along chunk boundaries.
+// This should alway result in a 3x3 grid of chunks, or 5x5, etc.
 struct EvalRegion
 {
 public:

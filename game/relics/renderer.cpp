@@ -93,14 +93,14 @@ void Renderer::buildSkyboxVertList()
         { MyVec4( 1000.0f, -1000.0f,  1000.0f) },
     };
 
-    m_skybox_vert_list.clear();
+    m_skybox_vert_list.reset();
     m_skybox_vert_list.addQuad(west_quad);
     m_skybox_vert_list.addQuad(north_quad);
     m_skybox_vert_list.addQuad(east_quad);
     m_skybox_vert_list.addQuad(south_quad);
     m_skybox_vert_list.addQuad(top_quad);
     m_skybox_vert_list.addQuad(bottom_quad);
-    m_skybox_vert_list.update();
+    m_skybox_vert_list.realize();
 }
 
 

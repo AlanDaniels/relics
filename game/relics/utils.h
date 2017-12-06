@@ -58,6 +58,8 @@ enum CornerEnum
 };
 
 
+bool NOT(bool val);
+
 const char *FaceEnumToString(FaceEnum face);
 const char *EdgeEnumToString(EdgeEnum edge);
 const char *CornerEnumToString(CornerEnum corner);

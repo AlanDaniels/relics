@@ -5,22 +5,26 @@
 
 // A call to "clear" can reset these, but otherwise, we'll alway rebuild from scratch.
 // Since this is a template, *all* of the code has to be in a header file.
-template<class T>
+template<typename T>
 class VertList_Base
 {
 public:
     VertList_Base() :
-        m_vertex_buffer_ID(0), m_item_count(0),
-        m_triangle_count(0),   m_up_to_date(true) {}
+        m_vertex_buffer_ID(0),
+        m_item_count(0),
+        m_triangle_count(0) {}
 
-    virtual ~VertList_Base() { clear(); }
+    virtual ~VertList_Base() { reset(); }
 
     void addQuad(const T(&items)[4]);
     void add(const T *items, int item_count, int triangle_count);
-    void clear();
-    void update();
+    void reset();
+    bool realize();
+    bool unrealize();
 
-    bool   isUpToDate()        const { return m_up_to_date; }
+    bool hasData()    const { return (m_verts.size() > 0); }
+    bool isRealized() const { return (m_vertex_buffer_ID != 0); }
+
     int    getByteCount()      const { return m_item_count * sizeof(T); }
     int    getItemCount()      const { return m_item_count; }
     int    getTriangleCount()  const { return m_triangle_count; }
@@ -36,50 +40,46 @@ private:
     GLuint m_vertex_buffer_ID;
     int    m_item_count;
     int    m_triangle_count;
-    bool   m_up_to_date;
 };
 
 
 // Add a quad.
-template<class T>
+// We must NOT be realized yet. You should check first.
+template<typename T>
 void VertList_Base<T>::addQuad(const T(&items)[4])
 {
-    assert(m_vertex_buffer_ID == 0);
+    assert(NOT(isRealized()));
 
-    // Add the quad.
     T quad_array[6] = {
         items[0], items[1], items[2],
         items[2], items[1], items[3],
     };
 
     m_verts.insert(m_verts.end(), &quad_array[0], &quad_array[6]);
-
     m_item_count     += 6;
     m_triangle_count += 3;
-    m_up_to_date = false;
 }
 
 
 // Add an arbitrary list of items. Call this when creating triangle strips.
-template<class T>
+// We must NOT be realized yet. You should check first.
+template<typename T>
 void VertList_Base<T>::add(const T *items, int item_count, int triangle_count)
 {
-    assert(m_vertex_buffer_ID == 0);
+    assert(NOT(isRealized()));
 
     m_verts.insert(m_verts.end(), &items[0], &items[item_count]);
-
     m_item_count     += item_count;
     m_triangle_count += triangle_count;
-    m_up_to_date = false;
 }
 
 
 // Empty out everything.
-template<class T>
-void VertList_Base<T>::clear()
+template<typename T>
+void VertList_Base<T>::reset()
 {
-    // Free up our buffer ID, if any.
-    if (m_vertex_buffer_ID != 0) {
+    // If we are realized, that's okay. Free that up.
+    if (isRealized()) {
         glDeleteBuffers(1, &m_vertex_buffer_ID);
         m_vertex_buffer_ID = 0;
     }
@@ -87,21 +87,22 @@ void VertList_Base<T>::clear()
     m_verts.clear();
     m_item_count     = 0;
     m_triangle_count = 0;
-    m_up_to_date = true;
 }
 
 
-// Update our buffer data.
-template<class T>
-void VertList_Base<T>::update()
+// Send our data out to the video card.
+// We should only do this if we have data, and haven't done it already.
+template<typename T>
+bool VertList_Base<T>::realize()
 {
-    // If we're already up-to-date, then never mind.
-    if (m_up_to_date) {
-        return;
+    if (NOT(hasData())) {
+        return false;
+    }
+    if (isRealized()) {
+        return false;
     }
 
     // Get our buffer ID.
-    assert(m_vertex_buffer_ID == 0);
     glGenBuffers(1, &m_vertex_buffer_ID);
 
     // Update the buffer.
@@ -110,6 +111,19 @@ void VertList_Base<T>::update()
     glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer_ID);
     glBufferData(GL_ARRAY_BUFFER, byte_count, &m_verts[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    return true;
+}
 
-    m_up_to_date = true;
+
+// Clear our data out of the video card, but leave our vertices intact.
+template<typename T>
+bool VertList_Base<T>::unrealize()
+{
+    if (NOT(isRealized())) {
+        return false;
+    }
+
+    glDeleteBuffers(1, &m_vertex_buffer_ID);
+    m_vertex_buffer_ID = 0;
+    return true;
 }

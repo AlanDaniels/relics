@@ -71,7 +71,7 @@ render = {
 -- Game logic.
 -- Now, *this* will. Mess with at your own peril.
 logic = {
-    eval_blocks       = 1,
+    eval_blocks       = 2,
     hit_test_distance = 25.0,
     landscape_noise   = 0.1
 }

@@ -17,8 +17,8 @@ bool DrawState_PNT::create(const DrawStateSettings &settings)
 // This is where the rubber hits the road.
 bool DrawState_PNT::render(const VertList_PNT &vert_list)
 {
-    // Make sure the vertices aren't out of date.
-    assert(vert_list.isUpToDate());
+    // Make sure the vert list is realized.
+    assert(vert_list.isRealized());
 
     // Set up our textures.
     if (!renderSetup()) {

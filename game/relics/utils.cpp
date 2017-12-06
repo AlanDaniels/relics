@@ -5,8 +5,14 @@
 #include "lua.hpp"
 
 
-// TODO: One day, turn this into a zip file or something.
+// TODO: One day, turn this into a zip file.
 const char *RESOURCE_PATH = "D:\\relics\\resources\\";
+
+
+// I've always hated that exclamation-point notation. Too hard to read.
+bool NOT(bool val) {
+    return !val;
+}
 
 
 // Convert a face enum to a string.

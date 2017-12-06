@@ -201,12 +201,12 @@ bool Config::loadFromFile()
 
         // Clamp the eval blocks count. We'll clamp from 1 to 6 for now.
         //   A value of 1 => (1 + 2x) ** 2 =>  3 ** 2 =>   9 blocks.
-        //   A value of 6 => (1 + 2x) ** 2 => 13 ** 2 => 169 blocks.
-        // If we go much bigger than that, we're asking to run out of memory.
+        //   A value of 7 => (1 + 2x) ** 2 => 15 ** 2 => 225 blocks.
+        // If we go any bigger than that, we're asking to run out of memory.
         lua_getfield(L, -1, "eval_blocks");
         if (lua_isnumber(L, -1)) {
             int val = static_cast<int>(lua_tointeger(L, -1));
-            logic.eval_blocks = clampInt(val, 1, 6);
+            logic.eval_blocks = clampInt(val, 1, 7);
         }
         lua_pop(L, 1);
 

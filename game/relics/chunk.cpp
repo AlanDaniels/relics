@@ -102,20 +102,20 @@ VertList_PNT *LandscapeVertLists::get_RW(BlockSurface surf)
 }
 
 
-// Clear any lists that we've realized so far.
+// Reset all out our lists.
 void LandscapeVertLists::clear() 
 {
     if (m_grass_list != nullptr) { 
-        m_grass_list->clear(); 
+        m_grass_list->reset(); 
     }
     if (m_dirt_list != nullptr) {
-        m_dirt_list->clear();
+        m_dirt_list->reset();
     }
     if (m_stone_list != nullptr) {
-        m_stone_list->clear();
+        m_stone_list->reset();
     }
     if (m_bedrock_list != nullptr) {
-        m_bedrock_list->clear();
+        m_bedrock_list->reset();
     }
 }
 
@@ -124,16 +124,16 @@ void LandscapeVertLists::clear()
 void LandscapeVertLists::update() 
 {
     if (m_grass_list != nullptr) {
-        m_grass_list->update();
+        m_grass_list->realize();
     }
     if (m_dirt_list != nullptr) {
-        m_dirt_list->update();
+        m_dirt_list->realize();
     }
     if (m_stone_list != nullptr) {
-        m_stone_list->update();
+        m_stone_list->realize();
     }
     if (m_bedrock_list != nullptr) {
-        m_bedrock_list->update();
+        m_bedrock_list->realize();
     }
 }
 

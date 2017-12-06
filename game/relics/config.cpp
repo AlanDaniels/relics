@@ -147,16 +147,6 @@ bool Config::loadFromFile()
         }
         lua_pop(L, 1);
 
-        // Clamp the fade distance to at least five meters.
-        lua_getfield(L, -1, "draw_distance");
-        if (lua_isnumber(L, -1)) {
-            render.draw_distance_meters = static_cast<GLfloat>(lua_tonumber(L, -1));
-            if (render.draw_distance_meters < 5.0f) {
-                render.draw_distance_meters = 5.0f;
-            }
-        }
-        lua_pop(L, 1);
-
         // Read the "landscape" settings.
         lua_getfield(L, -1, "landscape");
         if (lua_istable(L, -1)) {

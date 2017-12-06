@@ -27,13 +27,13 @@ GameWorld::GameWorld() :
     m_camera_pitch(0.0f),
     m_camera_yaw(0.0f)
 {
-    int eval_blocks = GetConfig().logic.eval_blocks;
-
+    // Figure out the size of our drawing region.
+    // We load one border larger than what we will actually draw.
+    int        eval_blocks = GetConfig().logic.eval_blocks;
     EvalRegion draw_region = WorldToEvalRegion(m_camera_pos, eval_blocks);
     EvalRegion load_region = draw_region.expand();
 
     // Fire off a thread to load each chunk we need. 
-    // Basically, one border larger than what we'll actually draw.
     std::vector<t_chunk_future> future_list;
 
     for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH_X) {
@@ -54,21 +54,13 @@ GameWorld::GameWorld() :
 
     PrintDebug("Created %d chunks.\n", count);
 
-    // Recalc every chunk that we've loaded.
+    // Recalc and realize every chunk that we've loaded.
+    // This leaves a ring of unrealized chunks around us, and that's okay.
     for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH_X) {
         for (int z = load_region.south(); z < load_region.north(); z += CHUNK_DEPTH_Z) {
             ChunkOrigin origin(x, z);
             Chunk *pChunk = m_chunk_map[origin];
             pChunk->recalcLandscape();
-        }
-    }
-
-    // But then, only realize the ones within our draw region.
-    // This leaves a "ring" of unrealized chunks around us, and that's okay.
-    for     (int x = draw_region.west();  x <= draw_region.east();  x += CHUNK_WIDTH_X) {
-        for (int z = draw_region.south(); z <= draw_region.north(); z += CHUNK_DEPTH_Z) {
-            ChunkOrigin origin(x, z);
-            Chunk *pChunk = m_chunk_map[origin];
             pChunk->realizeLandscape();
         }
     }
@@ -83,7 +75,8 @@ GameWorld::~GameWorld()
 
 
 // Figure out where the camera will start.
-// For now, smack in the center of the chunk at (0, 0), and 3/4ths of the way up.
+// For now, smack in the center of the starting chunk,
+// and one quarter of the way up.
 MyVec4 GameWorld::getCameraStartPos() const
 {
     GLfloat x = BLOCK_SCALE * CHUNK_WIDTH_X  * 0.5f;
@@ -99,7 +92,8 @@ void GameWorld::resetCamera()
     m_camera_pitch = 0.0f;
     m_camera_yaw   = 0.0f;
     m_camera_pos   = getCameraStartPos();
-    m_current_location = WorldToGridCoord(m_camera_pos, NUDGE_NONE);
+    m_current_grid_coord   = WorldToGridCoord(m_camera_pos, NUDGE_NONE);
+    m_current_chunk_origin = WorldToChunkOrigin(m_camera_pos);
 }
 
 
@@ -107,8 +101,7 @@ void GameWorld::resetCamera()
 // This should never be null. Otherwise, how would we be here?
 const Chunk *GameWorld::getPlayersChunk() const
 {
-    ChunkOrigin origin = WorldToChunkOrigin(m_camera_pos);
-    auto iter = m_chunk_map.find(origin);
+    auto iter = m_chunk_map.find(m_current_chunk_origin);
     assert(iter != m_chunk_map.end());
 
     const Chunk *pResult = iter->second;
@@ -124,14 +117,14 @@ const Chunk *GameWorld::getRequiredChunk(const ChunkOrigin &origin) const
     auto iter = m_chunk_map.find(origin);
     assert(iter != m_chunk_map.end());
 
-    const Chunk *pResult = iter->second;
-    assert(pResult != nullptr);
-    return pResult;
+    const Chunk *result = iter->second;
+    assert(result != nullptr);
+    return result;
 }
 
 
 
-// Look up a chunk that may or may not be loaded.
+// Look up a chunk that may not necessarily be loaded yet.
 const Chunk *GameWorld::getOptionalChunk(const ChunkOrigin &origin) const
 {
     auto iter = m_chunk_map.find(origin);
@@ -146,8 +139,8 @@ const Chunk *GameWorld::getOptionalChunk(const ChunkOrigin &origin) const
 
 
 
-// Handle a game tick.
-// This should always be called through the GameEventHandler, which will deal with keyboard events.
+// Handle a game tick. This should always be called through the 
+// "GameEventHandler" object, which will deal with keyboard events.
 void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
 {
     // If we're paused, nothing to do here.
@@ -174,7 +167,7 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
     // Then, handle the camera movement.
     // TODO: The math here is tricky, and should we tie it to the elapsed time?
     GLfloat meters_per_sec = GetConfig().debug.noclip_flight_speed;
-    GLfloat centimeters = (meters_per_sec / 10.0f) * elapsed_msec;
+    GLfloat centimeters    = (meters_per_sec / 10.0f) * elapsed_msec;
 
     MyMatrix4by4 roty = MyMatrix4by4::RotateY(m_camera_yaw);
     MyMatrix4by4 rotx = MyMatrix4by4::RotateX(-m_camera_pitch);
@@ -184,7 +177,7 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
 
     if (msg.getMoveFwd()) {
         MyVec4 rotated = rotator.times(VEC4_NORTHWARD);
-        MyVec4 move = rotated.times(centimeters * boost);
+        MyVec4 move    = rotated.times(centimeters * boost);
 
         MyMatrix4by4 tr = MyMatrix4by4::Translate(move.x(), move.y(), move.z());
         m_camera_pos = tr.times(m_camera_pos);
@@ -192,7 +185,7 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
 
     else if (msg.getMoveBkwd()) {
         MyVec4 rotated = rotator.times(VEC4_NORTHWARD);
-        MyVec4 move = rotated.times(-centimeters * boost);
+        MyVec4 move    = rotated.times(-centimeters * boost);
 
         MyMatrix4by4 tr = MyMatrix4by4::Translate(move.x(), move.y(), move.z());
         m_camera_pos = tr.times(m_camera_pos);
@@ -200,7 +193,7 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
 
     if (msg.getMoveLeft()) {
         MyVec4 rotated = rotator.times(VEC4_EASTWARD);
-        MyVec4 move = rotated.times(-centimeters * boost);
+        MyVec4 move    = rotated.times(-centimeters * boost);
 
         MyMatrix4by4 tr = MyMatrix4by4::Translate(move.x(), move.y(), move.z());
         m_camera_pos = tr.times(m_camera_pos);
@@ -208,7 +201,7 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
 
     else if (msg.getMoveRight()) {
         MyVec4 rotated = rotator.times(VEC4_EASTWARD);
-        MyVec4 move = rotated.times(centimeters * boost);
+        MyVec4 move    = rotated.times(centimeters * boost);
 
         MyMatrix4by4 tr = MyMatrix4by4::Translate(move.x(), move.y(), move.z());
         m_camera_pos = tr.times(m_camera_pos);
@@ -228,7 +221,7 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
         m_camera_pos = tr.times(m_camera_pos);
     }
 
-    // Since our camera moved, see if we need to update the world.
+    // Since our camera moved, see if we need to recalc any of the world.
     MyGridCoord  new_location = WorldToGridCoord(m_camera_pos, NUDGE_NONE);
 
     int eval_blocks = GetConfig().logic.eval_blocks;
@@ -237,7 +230,7 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
         updateWorld();
     }
 
-    m_current_location = new_location;
+    m_current_grid_coord   = new_location;
     m_current_chunk_origin = new_chunk_origin;
 
     // Recalc our hit test, and we're done.
@@ -258,25 +251,24 @@ MyRay GameWorld::getCameraEyeRay() const
 }
 
 
-// Update the world.
+// Update the world. The logic here is tricky, and very thread heavy!
 void GameWorld::updateWorld()
 {
     int eval_blocks = GetConfig().logic.eval_blocks;
     EvalRegion draw_region = WorldToEvalRegion(m_camera_pos, eval_blocks);
     EvalRegion load_region = draw_region.expand();
 
-    // Spawn new worker threads to load the chunks we don't have already.
+    // For any chunk at the "edge" of the load region, spawn a worker threads to get it loading.
     for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH_X) {
         for (int z = load_region.south(); z < load_region.north(); z += CHUNK_DEPTH_Z) {
-
-            // Ignore chunks that are already in the draw region. We should have them already.
             ChunkOrigin origin(x, z);
-            if (!draw_region.containsOrigin(origin)) {
+
+            if (NOT(draw_region.containsOrigin(origin))) {
                 // See if we have the chunk loaded yet.
+                // No? Then see if we have a thread going for it.
+                // Still no? Then fire off a thread to load it.
                 if (m_chunk_map.find(origin) == m_chunk_map.end()) {
-                    // No? Then see if we have a thread going for it.
                     if (m_load_future_map.find(origin) == m_load_future_map.end()) {
-                        // Still no? Then fire off a thread, and we'll finish that thread later.
                         m_load_future_map[origin] =
                             std::async(std::launch::async, LoadChunkAsync, this, origin);
                     }
@@ -285,14 +277,15 @@ void GameWorld::updateWorld()
         }
     }
 
-    // And then, only recalc the ones within the draw region.
+    // Then, only recalc the chunks within the draw region.
+    // If the chunk hasn't loaded yet, then alas, wait for it's loaded to complete.
+    // Needless to say, this isn't ideal (stutter!), so avoid this as much as possible.
+    // Also, we damn well better have a thread going for this already.
     for     (int x = draw_region.west();  x < draw_region.east();  x += CHUNK_WIDTH_X) {
         for (int z = draw_region.south(); z < draw_region.north(); z += CHUNK_DEPTH_Z) {
-            // If the chunk hasn't loaded yet, then alas, wait for it's loaded to complete.
-            // Needless to say, this isn't ideal (stutter!), so avoid this as much as possible.
             ChunkOrigin origin(x, z);
+
             if (m_chunk_map.find(origin) == m_chunk_map.end()) {
-                // Also, we damn well better have a thread going for this already.
                 auto future_iter = m_load_future_map.find(origin);
                 assert(future_iter != m_load_future_map.end());
 
@@ -301,7 +294,7 @@ void GameWorld::updateWorld()
                 m_chunk_map[origin] = pFreshChunk;
             }
 
-            // TODO: COME BACK TO THIS.
+            // Finally, rebuild the landscape as needed.
             Chunk *pChunk = m_chunk_map[origin];
             if (NOT(pChunk->isLandscapeCurrent())) {
                 pChunk->recalcLandscape();
@@ -392,7 +385,7 @@ void GameWorld::deleteBlockInFrontOfUs()
 {
     if (m_hit_test_success) {
         ChunkOrigin origin = m_hit_test_detail.getChunkOrigin();
-        MyGridCoord   coord  = m_hit_test_detail.getGlobalCoord();
+        MyGridCoord coord  = m_hit_test_detail.getGlobalCoord();
 
         const auto &iter = m_chunk_map.find(origin);
         Chunk *pChunk = iter->second;
@@ -418,11 +411,11 @@ void GameWorld::cashInWorkerThread()
     // Only look for one thread to finish, in no particular order.
     for (auto iter = m_load_future_map.begin(); iter != m_load_future_map.end(); iter++) {
         if (IsFutureReady<Chunk *>(iter->second)) {
-            Chunk *pFreshChunk = iter->second.get();
-            ChunkOrigin origin = pFreshChunk->getOrigin();
-            m_chunk_map[origin] = pFreshChunk;
+            Chunk *fresh_chunk  = iter->second.get();
+            ChunkOrigin origin  = fresh_chunk->getOrigin();
+            m_chunk_map[origin] = fresh_chunk;
             m_load_future_map.erase(origin);
-            PrintDebug("Thead to load chunk [%d, %d] is complete.\n", origin.x(), origin.z());
+            PrintDebug("Thread to load chunk [%d, %d] is complete.\n", origin.x(), origin.z());
             return;
         }
     }

@@ -71,7 +71,7 @@ private:
     GLfloat m_camera_pitch;
     GLfloat m_camera_yaw;
 
-    MyGridCoord m_current_location;
+    MyGridCoord m_current_grid_coord;
     ChunkOrigin m_current_chunk_origin;
 
     std::map<ChunkOrigin, Chunk *> m_chunk_map;

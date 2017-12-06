@@ -104,8 +104,7 @@ struct ConfigRender
         field_of_view(90.0f),
         near_plane_meters(0.1f),
         far_plane_meters(1000.0f),
-        fade_distance_meters(80.0f),
-        draw_distance_meters(100.0f) {}
+        fade_distance_meters(80.0f) {}
 
     bool cull_backfaces;
     bool cull_view_frustum;
@@ -114,7 +113,6 @@ struct ConfigRender
     GLfloat near_plane_meters;
     GLfloat far_plane_meters;
     GLfloat fade_distance_meters;
-    GLfloat draw_distance_meters;
 
     ConfigLandscape landscape;
     ConfigSky       sky;
@@ -123,7 +121,6 @@ struct ConfigRender
     GLfloat getNearPlaneCm()    const { return near_plane_meters    * 100.0f; }
     GLfloat getFarPlaneCm()     const { return far_plane_meters     * 100.0f; }
     GLfloat getFadeDistanceCm() const { return fade_distance_meters * 100.0f; }
-    GLfloat getDrawDistanceCm() const { return draw_distance_meters * 100.0f; }
 };
 
 
@@ -140,6 +137,9 @@ struct ConfigLogic
 
     GLfloat getHitTestDistanceCm() const { return hit_test_distance_meters * 100.0f; }
     GLfloat getLandscapeNoiseCm()  const { return landscape_noise_meters   * 100.0f; }
+
+    // Note that our OpenGL drawing distance can't be more than what's loaded in the world.
+    GLfloat getDrawDistanceCm()    const { return eval_blocks * CHUNK_WIDTH_X * 100.0f; }
 };
 
 

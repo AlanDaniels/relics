@@ -216,8 +216,9 @@ void Renderer::getChunksToRender(std::vector<const Chunk *> *pOut_list, RenderSt
 {
     bool    cull_view_frustum = GetConfig().render.cull_view_frustum;
     GLfloat field_of_view     = GetConfig().render.field_of_view;
-    GLfloat draw_distance     = GetConfig().render.getDrawDistanceCm();
-    int     eval_blocks       = GetConfig().logic.eval_blocks;
+
+    int     eval_blocks   = GetConfig().logic.eval_blocks;
+    GLfloat draw_distance = GetConfig().logic.getDrawDistanceCm();
 
     const MyVec4 &camera_pos = m_world.getCameraPos();
     const GLfloat camera_yaw = m_world.getCameraYaw();
@@ -345,7 +346,7 @@ void Renderer::renderLandscapeList(
 
     // Pluck out what we need from the game world.
     GLfloat fade_distance_cm = GetConfig().render.getFadeDistanceCm();
-    GLfloat draw_distance_cm = GetConfig().render.getDrawDistanceCm();
+    GLfloat draw_distance_cm = GetConfig().logic.getDrawDistanceCm();
 
     GLfloat camera_yaw   = m_world.getCameraYaw();
     GLfloat camera_pitch = m_world.getCameraPitch();
@@ -380,10 +381,8 @@ void Renderer::renderLandscapeList(
 // Don't use depth testing here, since it overlays the rest. Allow blending.
 void Renderer::renderHitTest(RenderStats *pOut_stats)
 {
-    const ConfigRender &conf_render = GetConfig().render;
-
-    GLfloat fade_distance_cm = conf_render.getFadeDistanceCm();
-    GLfloat draw_distance_cm = conf_render.getDrawDistanceCm();
+    GLfloat fade_distance_cm = GetConfig().render.getFadeDistanceCm();
+    GLfloat draw_distance_cm = GetConfig().logic.getDrawDistanceCm();
 
     GLfloat camera_yaw   = m_world.getCameraYaw();
     GLfloat camera_pitch = m_world.getCameraPitch();

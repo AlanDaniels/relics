@@ -224,7 +224,7 @@ void Renderer::getChunksToRender(std::vector<const Chunk *> *pOut_list, RenderSt
     const GLfloat camera_yaw = m_world.getCameraYaw();
 
     pOut_stats->chunks_considered = 0;
-    pOut_stats->chunks_rendered = 0;
+    pOut_stats->chunks_rendered   = 0;
 
     // Build our left and right frustum planes.
     MyMatrix4by4 left_rotate = MyMatrix4by4::RotateY(camera_yaw - (field_of_view / 2.0f));
@@ -254,13 +254,16 @@ void Renderer::getChunksToRender(std::vector<const Chunk *> *pOut_list, RenderSt
             pOut_stats->chunks_considered++;
 
             ChunkOrigin origin(x, z);
-            const Chunk *pChunk = m_world.getRequiredChunk(origin);
+            const Chunk *chunk = m_world.getRequiredChunk(origin);
+
+            // These must have been realized already.
+            assert(chunk->isLandcsapeRealized());
 
             // Only keep the chunks within the view frustum (if we want that sort of thing).
             bool keep;
             if (cull_view_frustum) {
-                keep = pChunk->isAbovePlane(left_clip_plane) &&
-                       pChunk->isAbovePlane(right_clip_plane);
+                keep = chunk->isAbovePlane(left_clip_plane) &&
+                       chunk->isAbovePlane(right_clip_plane);
                        // DEBUG: This is broken. Fix it later.
                        // pChunk->isAbovePlane(far_clip_plane);
             }
@@ -269,7 +272,7 @@ void Renderer::getChunksToRender(std::vector<const Chunk *> *pOut_list, RenderSt
             }
 
             if (keep) {
-                pOut_list->emplace_back(pChunk);
+                pOut_list->emplace_back(chunk);
                 pOut_stats->chunks_rendered++;
             }
         }

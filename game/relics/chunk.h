@@ -111,10 +111,10 @@ public:
     MyVec4 localToWorldCoord(int local_x, int local_y, int local_z) const;
     MyGridCoord globalToLocalCoord(const MyGridCoord &global_coord) const;
 
-    void recalcLandscape();
+    void recalcExposures();
     void realizeLandscape();
 
-    bool isLandscapeCurrent() const { return m_is_current; }
+    bool isLandscapeCurrent() const { return m_exposures_are_current; }
     bool isLandcsapeRealized() const { return m_vert_lists.areListsRealized();  }
 
     bool isAbovePlane(const MyPlane &plane) const;
@@ -135,13 +135,13 @@ private:
     Chunk(const Chunk &that) = delete;
     void operator=(const Chunk &that) = delete;
 
-    const ChunkStripe *getStripeLocal_RO(int local_x, int local_y) const;
-    ChunkStripe *getStripeLocal_RW(int local_x, int local_y);
+    const ChunkStripe *getStripe_RO(int local_x, int local_y) const;
+    ChunkStripe *getStripe_RW(int local_x, int local_y);
 
-    const GameWorld *m_pWorld;
+    const GameWorld *m_world;
     ChunkOrigin m_origin;
 
-    bool m_is_current;
-    ChunkStripe *m_pStripes[CHUNK_WIDTH][CHUNK_HEIGHT];
+    bool m_exposures_are_current;
+    ChunkStripe *m_stripes[CHUNK_WIDTH][CHUNK_HEIGHT];
     LandscapeVertLists m_vert_lists;
 };

@@ -141,7 +141,7 @@ void LandscapeVertLists::realizeLists()
 // TODO: I hate unrolling these loops by hand. Let's see if this is faster.
 bool LandscapeVertLists::areListsRealized() const
 {
-    std::vector<VertList_PNT *> all_lists = {
+    const std::vector<VertList_PNT *> all_lists = {
         m_grass_list, m_dirt_list, m_stone_list, m_bedrock_list
     };
 
@@ -175,36 +175,36 @@ ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos)
 // We have to use an array of pointers here, since we want each stripe to be aware
 // of its owner and position. So, we can't use references since that would get all circular.
 // Once that's done, feel free to use "getStripe" everywhere else.
-Chunk::Chunk(const GameWorld *pWorld, const ChunkOrigin &origin) :
-    m_pWorld(pWorld),
+Chunk::Chunk(const GameWorld *world, const ChunkOrigin &origin) :
+    m_world(world),
     m_origin(origin),
-    m_is_current(false)
+    m_exposures_are_current(false)
 {
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            m_pStripes[x][y] = new ChunkStripe(this, x, y);
+            m_stripes[x][y] = new ChunkStripe(this, x, y);
         }
     }
 }
 
 
 // Get a chunk stripe, read-only version.
-const ChunkStripe *Chunk::getStripeLocal_RO(int local_x, int local_y) const
+const ChunkStripe *Chunk::getStripe_RO(int local_x, int local_y) const
 {
     assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
     assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
 
-    return m_pStripes[local_x][local_y];
+    return m_stripes[local_x][local_y];
 }
 
 
 // Gert a chunk stripe, writeable version.
-ChunkStripe *Chunk::getStripeLocal_RW(int local_x, int local_y)
+ChunkStripe *Chunk::getStripe_RW(int local_x, int local_y)
 {
     assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
     assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
 
-    return m_pStripes[local_x][local_y];
+    return m_stripes[local_x][local_y];
 }
 
 
@@ -232,7 +232,7 @@ const Block *Chunk::getBlockGlobal_RO(const MyGridCoord &coord) const
     int local_y = coord.y();
     int local_z = coord.z() - m_origin.z();
 
-    return getStripeLocal_RO(local_x, local_y)->getBlock_RO(local_z);
+    return getStripe_RO(local_x, local_y)->getBlock_RO(local_z);
 }
 
 
@@ -245,7 +245,7 @@ Block *Chunk::getBlockGlobal_RW(const MyGridCoord &coord)
     int local_y = coord.y();
     int local_z = coord.z() - m_origin.z();
 
-    return getStripeLocal_RW(local_x, local_y)->getBlock_RW(local_z);
+    return getStripe_RW(local_x, local_y)->getBlock_RW(local_z);
 }
 
 
@@ -256,7 +256,7 @@ const Block *Chunk::getBlockLocal_RO(int local_x, int local_y, int local_z) cons
     assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
     assert((local_z >= 0) && (local_z < CHUNK_WIDTH));
 
-    return getStripeLocal_RO(local_x, local_y)->getBlock_RO(local_z);
+    return getStripe_RO(local_x, local_y)->getBlock_RO(local_z);
 }
 
 
@@ -267,32 +267,35 @@ Block *Chunk::getBlockLocal_RW(int local_x, int local_y, int local_z)
     assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
     assert((local_z >= 0) && (local_z < CHUNK_WIDTH));
 
-    return getStripeLocal_RW(local_x, local_y)->getBlock_RW(local_z);
+    return getStripe_RW(local_x, local_y)->getBlock_RW(local_z);
 }
 
 
 // Recalc the entire chunk from scratch.
 // Note that this is a separate step from realizing our vert lists!
-void Chunk::recalcLandscape()
+void Chunk::recalcExposures()
 {
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            getStripeLocal_RW(x, y)->recalcExposures();
+            getStripe_RW(x, y)->recalcExposures();
         }
     }
 
-    m_is_current = true;
+    m_exposures_are_current = true;
 }
 
 
 //  Realize all our vertt lists.
 void Chunk::realizeLandscape()
 {
+    // We must only call this when our landscape is current.
+    assert(m_exposures_are_current);
+
     m_vert_lists.resetLists();
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            getStripeLocal_RW(x, y)->addToVertLists(&m_vert_lists);
+            getStripe_RW(x, y)->addToVertLists(&m_vert_lists);
         }
     }
 
@@ -355,7 +358,7 @@ const Chunk *Chunk::getNeighborNorth() const
 {
     int x = m_origin.x();
     int z = m_origin.z() + CHUNK_WIDTH;
-    return m_pWorld->getOptionalChunk(ChunkOrigin(x, z));
+    return m_world->getOptionalChunk(ChunkOrigin(x, z));
 }
 
 
@@ -365,7 +368,7 @@ const Chunk *Chunk::getNeighborSouth() const
 {
     int x = m_origin.x();
     int z = m_origin.z() - CHUNK_WIDTH;
-    return m_pWorld->getOptionalChunk(ChunkOrigin(x, z));
+    return m_world->getOptionalChunk(ChunkOrigin(x, z));
 }
 
 
@@ -375,7 +378,7 @@ const Chunk *Chunk::getNeighborEast() const
 {
     int x = m_origin.x() + CHUNK_WIDTH;
     int z = m_origin.z();
-    return m_pWorld->getOptionalChunk(ChunkOrigin(x, z));
+    return m_world->getOptionalChunk(ChunkOrigin(x, z));
 }
 
 
@@ -385,7 +388,7 @@ const Chunk *Chunk::getNeighborWest() const
 {
     int x = m_origin.x() - CHUNK_WIDTH;
     int z = m_origin.z();
-    return m_pWorld->getOptionalChunk(ChunkOrigin(x, z));
+    return m_world->getOptionalChunk(ChunkOrigin(x, z));
 }
 
 
@@ -416,13 +419,24 @@ std::string Chunk::getDescription() const
     int dirt_surfaces  = m_vert_lists.getCount(SURF_DIRT);
     int stone_surfaces = m_vert_lists.getCount(SURF_STONE);
 
+    const char *exposures_true = isLandscapeCurrent()  ? "true" : "false";
+    const char *realized_true  = isLandcsapeRealized() ? "true" : "false";
+
     char msg[64];
-    sprintf(msg, "Description of chunk at [%d, %d]\n", m_origin.x(), m_origin.z()); result += msg;
-    sprintf(msg, "  Block = dirt: %d\n",  dirt_blocks);  result += msg;
-    sprintf(msg, "  Block = stone: %d\n", stone_blocks); result += msg;
-    sprintf(msg, "  Surface = grass: %d\n", grass_surfaces); result += msg;
-    sprintf(msg, "  Surface = dirt:  %d\n", dirt_surfaces);  result += msg;
-    sprintf(msg, "  Surface = stone: %d\n", stone_surfaces); result += msg;
+    sprintf(msg, "Chunk at [%d, %d]\n", m_origin.x(), m_origin.z());
+    result += msg;
+    sprintf(msg, "  Exposures: %s, Realized: %s\n", exposures_true, realized_true);
+    result += msg;
+    sprintf(msg, "  Block = dirt: %d\n",  dirt_blocks);
+    result += msg;
+    sprintf(msg, "  Block = stone: %d\n", stone_blocks);
+    result += msg;
+    sprintf(msg, "  Surface = grass: %d\n", grass_surfaces);
+    result += msg;
+    sprintf(msg, "  Surface = dirt:  %d\n", dirt_surfaces);
+    result += msg;
+    sprintf(msg, "  Surface = stone: %d\n", stone_surfaces);
+    result += msg;
 
     return result;
 }

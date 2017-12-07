@@ -46,9 +46,9 @@ GameWorld::GameWorld() :
     // Wait for each thread to complete.
     int count = 0;
     for (auto iter = future_list.begin(); iter != future_list.end(); iter++) {
-        Chunk *pChunk = iter->get();
-        ChunkOrigin origin = pChunk->getOrigin();
-        m_chunk_map[origin] = pChunk;
+        Chunk *chunk = iter->get();
+        ChunkOrigin origin = chunk->getOrigin();
+        m_chunk_map[origin] = chunk;
         count++;
     }
 
@@ -60,7 +60,7 @@ GameWorld::GameWorld() :
         for (int z = load_region.south(); z < load_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
             Chunk *pChunk = m_chunk_map[origin];
-            pChunk->recalcLandscape();
+            pChunk->recalcExposures();
             pChunk->realizeLandscape();
         }
     }
@@ -80,7 +80,7 @@ GameWorld::~GameWorld()
 MyVec4 GameWorld::getCameraStartPos() const
 {
     GLfloat x = BLOCK_SCALE * CHUNK_WIDTH  * 0.5f;
-    GLfloat y = BLOCK_SCALE * CHUNK_HEIGHT * 0.25f;
+    GLfloat y = BLOCK_SCALE * CHUNK_HEIGHT * 0.1f;
     GLfloat z = BLOCK_SCALE * CHUNK_WIDTH  * 0.5f;
     return MyVec4(x, y, z);
 }
@@ -285,22 +285,27 @@ void GameWorld::updateWorld()
         for (int z = draw_region.south(); z < draw_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
 
-            if (m_chunk_map.find(origin) == m_chunk_map.end()) {
-                auto future_iter = m_load_future_map.find(origin);
+            auto &chunk_iter = m_chunk_map.find(origin);
+            if (chunk_iter == m_chunk_map.end()) {
+                auto &future_iter = m_load_future_map.find(origin);
                 assert(future_iter != m_load_future_map.end());
 
-                Chunk *pFreshChunk = future_iter->second.get();
+                Chunk *fresh_chunk = future_iter->second.get();
                 m_load_future_map.erase(origin);
-                m_chunk_map[origin] = pFreshChunk;
+                m_chunk_map[origin] = fresh_chunk;
+
+                chunk_iter = m_chunk_map.find(origin);
             }
 
             // Finally, rebuild the landscape as needed.
-            Chunk *pChunk = m_chunk_map[origin];
-            if (NOT(pChunk->isLandscapeCurrent())) {
-                pChunk->recalcLandscape();
+            chunk_iter = m_chunk_map.find(origin);
+            assert(chunk_iter != m_chunk_map.end());
+            Chunk *chunk = chunk_iter->second;
+            if (NOT(chunk->isLandscapeCurrent())) {
+                chunk->recalcExposures();
             }
-            if (NOT(pChunk->isLandcsapeRealized())) {
-                pChunk->realizeLandscape();
+            if (NOT(chunk->isLandcsapeRealized())) {
+                chunk->realizeLandscape();
             }
         }
     }
@@ -394,7 +399,7 @@ void GameWorld::deleteBlockInFrontOfUs()
         assert(pChunk->isCoordWithin(coord));
 
         pChunk->getBlockGlobal_RW(coord)->setContent(CONTENT_AIR);
-        pChunk->recalcLandscape();
+        pChunk->recalcExposures();
         pChunk->realizeLandscape();
     }
 }

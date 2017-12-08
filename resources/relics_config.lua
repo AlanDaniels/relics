@@ -31,8 +31,7 @@ window = {
 -- Rendering.
 -- NOTE: This should not affect the game logic in any way.
 render = {
-    cull_backfaces    = true,
-    cull_view_frustum = false, -- THIS IS BROKEN.
+    cull_backfaces = true,
 
     field_of_view  = 90.0,
     near_plane     = 0.1,

@@ -10,6 +10,7 @@ class MyPlane;
 // My own vector classes. The SFML ones don't have a Vec4.
 
 
+// Floating point comparisons always make me nervous.
 const GLfloat EPSILON = 0.0001f;
 
 

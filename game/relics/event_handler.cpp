@@ -49,10 +49,9 @@ void EventHandler::onEvent(sf::Event event)
     }
 
     else if (event.type == sf::Event::KeyPressed) {
-        // Use space to print whatever debugging info we're interested in.
+        // Use space to trigger our magic global breakpoint.
         if (event.key.code == sf::Keyboard::Space) {
-            const Chunk *pChunk = m_game_world.getPlayersChunk();
-            PrintDebug(pChunk->toDescription().c_str());
+            MAGIC_BREAKPOINT = true;
         }
 
         // Escape pauses the game, and shows the mouse.

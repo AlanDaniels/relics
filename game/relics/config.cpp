@@ -110,14 +110,13 @@ bool Config::loadFromFile()
     // Read the "render" table.
     lua_getglobal(L, "render");
     if (lua_istable(L, -1)) {
-        render.cull_backfaces    = getBoolField(L, "cull_backfaces", true);
-        render.cull_view_frustum = getBoolField(L, "cull_view_frustum", true);
+        render.cull_backfaces = getBoolField(L, "cull_backfaces", true);
 
-        // Clamp the field of view from 45 degrees to 180 degrees.
+        // Clamp the field of view from 30 degrees to 180 degrees.
         lua_getfield(L, -1, "field_of_view");
         if (lua_isnumber(L, -1)) {
             GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
-            render.field_of_view = clampFloat(val, 45.0f, 180.0f);
+            render.field_of_view = clampFloat(val, 30.0f, 180.0f);
         }
         lua_pop(L, 1);
 

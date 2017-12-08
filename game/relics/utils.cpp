@@ -5,6 +5,10 @@
 #include "lua.hpp"
 
 
+// A breakpoint to be triggered just once, when we hit the spacebar.
+bool MAGIC_BREAKPOINT;
+
+
 // TODO: One day, turn this into a zip file.
 const char *RESOURCE_PATH = "D:\\relics\\resources\\";
 

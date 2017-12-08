@@ -214,37 +214,36 @@ bool Renderer::loadShaders()
 // Get the list of all the chunks we want to render.
 void Renderer::getChunksToRender(std::vector<const Chunk *> *pOut_list, RenderStats *pOut_stats)
 {
-    bool    cull_view_frustum = GetConfig().render.cull_view_frustum;
-    GLfloat field_of_view     = GetConfig().render.field_of_view;
-
+    GLfloat field_of_view = GetConfig().render.field_of_view;
     int     eval_blocks   = GetConfig().logic.eval_blocks;
     GLfloat draw_distance = GetConfig().logic.getDrawDistanceCm();
 
     const MyVec4 &camera_pos = m_world.getCameraPos();
-    const GLfloat camera_yaw = m_world.getCameraYaw();
 
+    GLfloat camera_pitch = m_world.getCameraPitch();
+    GLfloat camera_yaw   = m_world.getCameraYaw();
+    
     pOut_stats->chunks_considered = 0;
     pOut_stats->chunks_rendered   = 0;
 
+    if (MAGIC_BREAKPOINT) {
+        printf("");
+    }
+
     // Build our left and right frustum planes.
-    MyMatrix4by4 left_rotate = MyMatrix4by4::RotateY(camera_yaw - (field_of_view / 2.0f));
-    MyVec4  left_dir = left_rotate.times(VEC4_EASTWARD);
-    MyVec4  left_start(camera_pos.x(), 0.0f, camera_pos.z());
-    MyPlane left_clip_plane = MyRay(left_start, left_dir).toPlane();
+    MyMatrix4by4 pitch_rotate = MyMatrix4by4::RotateX(-camera_pitch);
 
-    MyMatrix4by4 right_rotate = MyMatrix4by4::RotateY(camera_yaw + (field_of_view / 2.0f));
-    MyVec4  right_dir = right_rotate.times(VEC4_WESTWARD);
-    MyVec4  right_start(camera_pos.x(), 0.0f, camera_pos.z());
-    MyPlane right_clip_plane = MyRay(right_start, right_dir).toPlane();
+    GLfloat offset = field_of_view / 2.0f;
 
-    // Build our far clip frustum plane.
-    MyMatrix4by4 far_rotate = MyMatrix4by4::RotateY(camera_yaw);
-    MyVec4 far_dir = far_rotate.times(VEC4_SOUTHWARD);
+    MyMatrix4by4 left_rotate = MyMatrix4by4::RotateY(camera_yaw - offset);
+    MyVec4  left_dir_1 = left_rotate.times(VEC4_EASTWARD);
+    MyVec4  left_dir_2 = pitch_rotate.times(left_dir_1);
+    MyPlane left_clip_plane = MyRay(camera_pos, left_dir_2).toPlane();
 
-    MyVec4 far_point = far_rotate.times(VEC4_NORTHWARD).times(draw_distance);
-    MyVec4 far_start = MyVec4(camera_pos.x(), 0, camera_pos.y()).plus(far_point);
-
-    MyPlane far_clip_plane = MyRay(far_start, far_dir).toPlane();
+    MyMatrix4by4 right_rotate = MyMatrix4by4::RotateY(camera_yaw + offset);
+    MyVec4  right_dir_1 = right_rotate.times(VEC4_WESTWARD);
+    MyVec4  right_dir_2 = pitch_rotate.times(right_dir_1);
+    MyPlane right_clip_plane = MyRay(camera_pos, right_dir_2).toPlane();
 
     // Look up every chunk within our eval region.
     EvalRegion region = WorldToEvalRegion(camera_pos, eval_blocks);
@@ -259,18 +258,9 @@ void Renderer::getChunksToRender(std::vector<const Chunk *> *pOut_list, RenderSt
             // These must have been realized already.
             assert(chunk->isLandcsapeRealized());
 
-            // Only keep the chunks within the view frustum (if we want that sort of thing).
-            bool keep;
-            if (cull_view_frustum) {
-                keep = chunk->isAbovePlane(left_clip_plane) &&
-                       chunk->isAbovePlane(right_clip_plane);
-                       // DEBUG: This is broken. Fix it later.
-                       // pChunk->isAbovePlane(far_clip_plane);
-            }
-            else {
-                keep = true;
-            }
-
+            // Only keep the chunks within the view frustum.
+            bool keep = chunk->isAbovePlane(left_clip_plane) &&
+                        chunk->isAbovePlane(right_clip_plane);
             if (keep) {
                 pOut_list->emplace_back(chunk);
                 pOut_stats->chunks_rendered++;

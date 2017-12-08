@@ -100,14 +100,12 @@ struct ConfigRender
 {
     ConfigRender() :
         cull_backfaces(true),
-        cull_view_frustum(true),
         field_of_view(90.0f),
         near_plane_meters(0.1f),
         far_plane_meters(1000.0f),
         fade_distance_meters(80.0f) {}
 
     bool cull_backfaces;
-    bool cull_view_frustum;
 
     GLfloat field_of_view;
     GLfloat near_plane_meters;

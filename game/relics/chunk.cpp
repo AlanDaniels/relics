@@ -297,25 +297,36 @@ void Chunk::realizeLandscape()
 }
 
 
-// Return true if any of the four corners of the chunk are "above" a plane.
-// TODO: Floating-point comparisons always make me nervous. Should we have an epsilon factor here?
+// Return true if any of the eight corners of the chunk are "above" a plane.
 bool Chunk::isAbovePlane(const MyPlane &plane) const
 {
-    GLfloat west  = GridToWorld(m_origin.x());
-    GLfloat east  = GridToWorld(m_origin.x() + CHUNK_WIDTH);
-    GLfloat south = GridToWorld(m_origin.z());
-    GLfloat north = GridToWorld(m_origin.z() + CHUNK_WIDTH);
+    GLfloat west   = GridToWorld(m_origin.x());
+    GLfloat east   = GridToWorld(m_origin.x() + CHUNK_WIDTH);
+    GLfloat south  = GridToWorld(m_origin.z());
+    GLfloat north  = GridToWorld(m_origin.z() + CHUNK_WIDTH);
+    GLfloat top    = GridToWorld(CHUNK_HEIGHT);
+    GLfloat bottom = GridToWorld(0);
 
-    MyVec4 south_west(west, 0, south);
-    MyVec4 south_east(east, 0, south);
-    MyVec4 north_west(west, 0, north);
-    MyVec4 north_east(east, 0, north);
+    MyVec4 top_SW(west, top, south);
+    MyVec4 top_SE(east, top, south);
+    MyVec4 top_NW(west, top, north);
+    MyVec4 top_NE(east, top, north);
+
+    MyVec4 bottom_SW(west, bottom, south);
+    MyVec4 bottom_SE(east, bottom, south);
+    MyVec4 bottom_NW(west, bottom, north);
+    MyVec4 bottom_NE(east, bottom, north);
 
     bool result = (
-        (plane.distanceToPoint(south_west) >= 0.0f) ||
-        (plane.distanceToPoint(south_east) >= 0.0f) ||
-        (plane.distanceToPoint(north_west) >= 0.0f) ||
-        (plane.distanceToPoint(north_east) >= 0.0f));
+        (plane.distanceToPoint(top_SW) >= EPSILON) ||
+        (plane.distanceToPoint(top_SE) >= EPSILON) ||
+        (plane.distanceToPoint(top_NW) >= EPSILON) ||
+        (plane.distanceToPoint(top_NE) >= EPSILON) ||
+        (plane.distanceToPoint(bottom_SW) >= EPSILON) ||
+        (plane.distanceToPoint(bottom_SE) >= EPSILON) ||
+        (plane.distanceToPoint(bottom_NW) >= EPSILON) ||
+        (plane.distanceToPoint(bottom_NE) >= EPSILON));
+
     return result;
 }
 

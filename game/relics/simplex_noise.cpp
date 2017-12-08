@@ -106,7 +106,22 @@ static int simplex[][4] = {
     {3, 1, 0, 2}, {0, 0, 0, 0}, {3, 2, 0, 1}, {3, 2, 1, 0}
 };
 
-  // This method is a *lot* faster than using (int)Math.floor(x)
+
+// Here is one of the few times I'll tolerate C++ function overloading.
+GLfloat simplex_noise_2(const MyVec2 &val) {
+    return static_cast<GLfloat>(simplex_noise_2(val.x(), val.y()));
+}
+
+GLfloat simplex_noise_3(const MyVec4 &val) {
+    return static_cast<GLfloat>(simplex_noise_3(val.x(), val.y(), val.z()));
+}
+
+GLfloat simplex_noise_4(const MyVec4 &val) {
+    return static_cast<GLfloat>(simplex_noise_4(val.x(), val.y(), val.z(), val.w()));
+}
+
+
+// This method is a *lot* faster than using (int)Math.floor(x)
 static int fastfloor(double x)
 {
     return x > 0 ? (int) x : (int) x - 1;

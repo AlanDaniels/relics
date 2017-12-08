@@ -15,7 +15,7 @@ const GLfloat TWO_THIRDS = 0.6666667f;
 
 
 // Constructor from values.
-Brady::Brady(const Chunk &chunk, const MyGridCoord &local_coord, FaceEnum face) :
+Brady::Brady(const Chunk &chunk, const GridCoord &local_coord, FaceEnum face) :
     m_local_coord(local_coord),
     m_face(face)
 {

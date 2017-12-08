@@ -22,7 +22,6 @@
 GameWorld::GameWorld() :
     m_paused(false),
     m_time_msec(0),
-    m_msecs_since_worker(0),
     m_camera_pos(getCameraStartPos()),
     m_camera_pitch(0.0f),
     m_camera_yaw(0.0f)
@@ -33,31 +32,22 @@ GameWorld::GameWorld() :
     EvalRegion draw_region = WorldToEvalRegion(m_camera_pos, eval_blocks);
     EvalRegion load_region = draw_region.expand();
 
-    // Fire off a thread to load each chunk we need. 
-    std::vector<t_chunk_future> future_list;
-
-    for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH) {
-        for (int z = load_region.south(); z < load_region.north(); z += CHUNK_WIDTH) {
-            t_chunk_future fut = std::async(std::launch::async, LoadChunkAsync, this, ChunkOrigin(x, z));
-            future_list.emplace_back(std::move(fut));
-        }
-    }
-
-    // Wait for each thread to complete.
+    // TODO: Forget threads for now. 
     int count = 0;
-    for (auto iter = future_list.begin(); iter != future_list.end(); iter++) {
-        Chunk *chunk = iter->get();
-        ChunkOrigin origin = chunk->getOrigin();
-        m_chunk_map[origin] = chunk;
-        count++;
+    for     (int x = load_region.west();  x <= load_region.east();  x += CHUNK_WIDTH) {
+        for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {
+            ChunkOrigin origin(x, z);
+            m_chunk_map[origin] = LoadChunkAsync(this, origin);
+            count++;
+        }
     }
 
     PrintDebug("Created %d chunks.\n", count);
 
     // Recalc and realize every chunk that we've loaded.
     // This leaves a ring of unrealized chunks around us, and that's okay.
-    for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH) {
-        for (int z = load_region.south(); z < load_region.north(); z += CHUNK_WIDTH) {
+    for     (int x = load_region.west();  x <= load_region.east();  x += CHUNK_WIDTH) {
+        for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
             Chunk *pChunk = m_chunk_map[origin];
             pChunk->recalcExposures();
@@ -148,13 +138,6 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
         return;
     }
 
-    // Every few seconds, cash in a worker thread.
-    m_msecs_since_worker += elapsed_msec;
-    if (m_msecs_since_worker >= WORKER_PACE_MSECS) {
-        cashInWorkerThread();
-        m_msecs_since_worker = 0;
-    }
-
     GLfloat degrees_per_pixel = GetConfig().window.mouse_degrees_per_pixel;
 
     // Handle the mouse movement.
@@ -222,7 +205,7 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
     }
 
     // Since our camera moved, see if we need to recalc any of the world.
-    MyGridCoord  new_location = WorldToGridCoord(m_camera_pos, NUDGE_NONE);
+    GridCoord  new_location = WorldToGridCoord(m_camera_pos, NUDGE_NONE);
 
     int eval_blocks = GetConfig().logic.eval_blocks;
     ChunkOrigin new_chunk_origin = WorldToChunkOrigin(m_camera_pos);
@@ -258,50 +241,33 @@ void GameWorld::updateWorld()
     EvalRegion draw_region = WorldToEvalRegion(m_camera_pos, eval_blocks);
     EvalRegion load_region = draw_region.expand();
 
-    // For any chunk at the "edge" of the load region, spawn a worker threads to get it loading.
-    for     (int x = load_region.west();  x < load_region.east();  x += CHUNK_WIDTH) {
-        for (int z = load_region.south(); z < load_region.north(); z += CHUNK_WIDTH) {
+    PrintDebug("Draw Region = %s\n", draw_region.toDebugStr().c_str());
+
+    // For any chunk at the "edge" of the load region, load it if we don't have it already.
+    for     (int x = load_region.west();  x <= load_region.east();  x += CHUNK_WIDTH) {
+        for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
 
             if (NOT(draw_region.containsOrigin(origin))) {
-                // See if we have the chunk loaded yet.
-                // No? Then see if we have a thread going for it.
-                // Still no? Then fire off a thread to load it.
                 if (m_chunk_map.find(origin) == m_chunk_map.end()) {
-                    if (m_load_future_map.find(origin) == m_load_future_map.end()) {
-                        m_load_future_map[origin] =
-                            std::async(std::launch::async, LoadChunkAsync, this, origin);
-                    }
+                    Chunk *chunk = LoadChunkAsync(this, origin);;
+                    m_chunk_map[origin] = chunk;
                 }
             }
         }
     }
 
     // Then, only recalc the chunks within the draw region.
-    // If the chunk hasn't loaded yet, then alas, wait for it's loaded to complete.
-    // Needless to say, this isn't ideal (stutter!), so avoid this as much as possible.
-    // Also, we damn well better have a thread going for this already.
-    for     (int x = draw_region.west();  x < draw_region.east();  x += CHUNK_WIDTH) {
-        for (int z = draw_region.south(); z < draw_region.north(); z += CHUNK_WIDTH) {
+    for     (int x = draw_region.west();  x <= draw_region.east();  x += CHUNK_WIDTH) {
+        for (int z = draw_region.south(); z <= draw_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
 
             auto &chunk_iter = m_chunk_map.find(origin);
-            if (chunk_iter == m_chunk_map.end()) {
-                auto &future_iter = m_load_future_map.find(origin);
-                assert(future_iter != m_load_future_map.end());
-
-                Chunk *fresh_chunk = future_iter->second.get();
-                m_load_future_map.erase(origin);
-                m_chunk_map[origin] = fresh_chunk;
-
-                chunk_iter = m_chunk_map.find(origin);
-            }
+            assert(chunk_iter != m_chunk_map.end());
 
             // Finally, rebuild the landscape as needed.
-            chunk_iter = m_chunk_map.find(origin);
-            assert(chunk_iter != m_chunk_map.end());
             Chunk *chunk = chunk_iter->second;
-            if (NOT(chunk->isLandscapeCurrent())) {
+            if (NOT(chunk->areExposuresCurrent())) {
                 chunk->recalcExposures();
             }
             if (NOT(chunk->isLandcsapeRealized())) {
@@ -345,8 +311,8 @@ void GameWorld::calcHitTest()
     int block_count = static_cast<int>((hit_test_distance / 100.0f) / CHUNK_WIDTH);
     EvalRegion region = WorldToEvalRegion(m_camera_pos, block_count);
 
-    for     (int x = region.west();  x < region.east();  x += CHUNK_WIDTH) {
-        for (int z = region.south(); z < region.north(); z += CHUNK_WIDTH) {
+    for     (int x = region.west();  x <= region.east();  x += CHUNK_WIDTH) {
+        for (int z = region.south(); z <= region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
             Chunk *pChunk = m_chunk_map[origin];
 
@@ -390,7 +356,7 @@ void GameWorld::deleteBlockInFrontOfUs()
 {
     if (m_hit_test_success) {
         ChunkOrigin origin = m_hit_test_detail.getChunkOrigin();
-        MyGridCoord coord  = m_hit_test_detail.getGlobalCoord();
+        GridCoord coord  = m_hit_test_detail.getGlobalCoord();
 
         const auto &iter = m_chunk_map.find(origin);
         Chunk *pChunk = iter->second;
@@ -398,30 +364,8 @@ void GameWorld::deleteBlockInFrontOfUs()
         assert(pChunk != nullptr);
         assert(pChunk->isCoordWithin(coord));
 
-        pChunk->getBlockGlobal_RW(coord)->setContent(CONTENT_AIR);
+        pChunk->getBlockGlobal(coord)->setContent(CONTENT_AIR);
         pChunk->recalcExposures();
         pChunk->realizeLandscape();
-    }
-}
-
-
-// Every couple of seconds, cash in a worker thread.
-void GameWorld::cashInWorkerThread()
-{
-    // Nothing to do? Bail out, so that I can set breakpoints easier.
-    if (m_load_future_map.size() == 0) {
-        return;
-    }
-
-    // Only look for one thread to finish, in no particular order.
-    for (auto iter = m_load_future_map.begin(); iter != m_load_future_map.end(); iter++) {
-        if (IsFutureReady<Chunk *>(iter->second)) {
-            Chunk *fresh_chunk  = iter->second.get();
-            ChunkOrigin origin  = fresh_chunk->getOrigin();
-            m_chunk_map[origin] = fresh_chunk;
-            m_load_future_map.erase(origin);
-            PrintDebug("Thread to load chunk [%d, %d] is complete.\n", origin.x(), origin.z());
-            return;
-        }
     }
 }

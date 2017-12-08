@@ -7,7 +7,7 @@
 
 
 class Chunk;
-class LandscapeVertLists;
+class ChunkVertLists;
 
 
 class ChunkStripe
@@ -21,7 +21,7 @@ public:
 
     void fillStripe(BlockContent block_type);
     void recalcExposures();
-    void addToVertLists(LandscapeVertLists *pOut);
+    void addToVertLists(ChunkVertLists *pOut);
 
 private:
     // Disallow copying, and default ctor.
@@ -31,7 +31,7 @@ private:
 
     BlockSurface calcSurfaceForBlock(int local_z, FaceEnum face);
     void recalcExposureForBlock(int local_z);
-    void addVertsForBlock(LandscapeVertLists *pOut, int local_z);
+    void addVertsForBlock(ChunkVertLists *pOut, int local_z);
 
     const Chunk *m_pOwner;
     int m_local_x;

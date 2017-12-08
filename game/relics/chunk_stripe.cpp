@@ -62,7 +62,7 @@ void ChunkStripe::recalcExposures()
 
 // Rebuild the vertex list for one stripe.
 // Return the total number of faces added.
-void ChunkStripe::addToVertLists(LandscapeVertLists *pOut)
+void ChunkStripe::addToVertLists(ChunkVertLists *pOut)
 {
     for (int local_z = 0; local_z < CHUNK_WIDTH; local_z++) {
         addVertsForBlock(pOut, local_z);
@@ -180,7 +180,7 @@ void ChunkStripe::recalcExposureForBlock(int local_z)
 
 
 // Add the quads for a block.
-void ChunkStripe::addVertsForBlock(LandscapeVertLists *pOut, int local_z)
+void ChunkStripe::addVertsForBlock(ChunkVertLists *pOut, int local_z)
 {
     const Block &current = m_blocks[local_z];
 
@@ -193,13 +193,13 @@ void ChunkStripe::addVertsForBlock(LandscapeVertLists *pOut, int local_z)
     int y = m_local_y;
     int z = local_z;
 
-    MyGridCoord local_coord(x, y, z);
+    GridCoord local_coord(x, y, z);
 
     // Top face.
     if (current.getExposure(FACE_TOP)) {
         Brady brady(*m_pOwner, local_coord, FACE_TOP);
         BlockSurface surf = calcSurfaceForBlock(local_z, FACE_TOP);
-        VertList_PNT *pList = pOut->get_RW(surf);
+        VertList_PNT *pList = pOut->get(surf);
         brady.addToVertList_PNT(pList);
     }
 
@@ -207,7 +207,7 @@ void ChunkStripe::addVertsForBlock(LandscapeVertLists *pOut, int local_z)
     if (current.getExposure(FACE_BOTTOM)) {
         Brady brady(*m_pOwner, local_coord, FACE_BOTTOM);
         BlockSurface surf = calcSurfaceForBlock(local_z, FACE_BOTTOM);
-        VertList_PNT *pList = pOut->get_RW(surf);
+        VertList_PNT *pList = pOut->get(surf);
         brady.addToVertList_PNT(pList);
     }
 
@@ -215,7 +215,7 @@ void ChunkStripe::addVertsForBlock(LandscapeVertLists *pOut, int local_z)
     if (current.getExposure(FACE_SOUTH)) {
         Brady brady(*m_pOwner, local_coord, FACE_SOUTH);
         BlockSurface surf = calcSurfaceForBlock(local_z, FACE_SOUTH);
-        VertList_PNT *pList = pOut->get_RW(surf);
+        VertList_PNT *pList = pOut->get(surf);
         brady.addToVertList_PNT(pList);
     }
 
@@ -223,7 +223,7 @@ void ChunkStripe::addVertsForBlock(LandscapeVertLists *pOut, int local_z)
     if (current.getExposure(FACE_NORTH)) {
         Brady brady(*m_pOwner, local_coord, FACE_NORTH);
         BlockSurface surf = calcSurfaceForBlock(local_z, FACE_NORTH);
-        VertList_PNT *pList = pOut->get_RW(surf);
+        VertList_PNT *pList = pOut->get(surf);
         brady.addToVertList_PNT(pList);
     }
 
@@ -231,7 +231,7 @@ void ChunkStripe::addVertsForBlock(LandscapeVertLists *pOut, int local_z)
     if (current.getExposure(FACE_EAST)) {
         Brady brady(*m_pOwner, local_coord, FACE_EAST);
         BlockSurface surf = calcSurfaceForBlock(local_z, FACE_EAST);
-        VertList_PNT *pList = pOut->get_RW(surf);
+        VertList_PNT *pList = pOut->get(surf);
         brady.addToVertList_PNT(pList);
     }
 
@@ -239,7 +239,7 @@ void ChunkStripe::addVertsForBlock(LandscapeVertLists *pOut, int local_z)
     if (current.getExposure(FACE_WEST)) {
         Brady brady(*m_pOwner, local_coord, FACE_WEST);
         BlockSurface surf = calcSurfaceForBlock(local_z, FACE_WEST);
-        VertList_PNT *pList = pOut->get_RW(surf);
+        VertList_PNT *pList = pOut->get(surf);
         brady.addToVertList_PNT(pList);
     }
 }

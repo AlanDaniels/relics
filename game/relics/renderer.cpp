@@ -249,8 +249,8 @@ void Renderer::getChunksToRender(std::vector<const Chunk *> *pOut_list, RenderSt
     // Look up every chunk within our eval region.
     EvalRegion region = WorldToEvalRegion(camera_pos, eval_blocks);
 
-    for     (int x = region.west();  x < region.east();  x += CHUNK_WIDTH) {
-        for (int z = region.south(); z < region.north(); z += CHUNK_WIDTH) {
+    for     (int x = region.west();  x <= region.east();  x += CHUNK_WIDTH) {
+        for (int z = region.south(); z <= region.north(); z += CHUNK_WIDTH) {
             pOut_stats->chunks_considered++;
 
             ChunkOrigin origin(x, z);

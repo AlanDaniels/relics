@@ -55,7 +55,7 @@ std::string ChunkHitTestDetail::toDescription() const
 // Try each Z-plane, from near to far.
 static bool CheckSouthFaces(
     const Chunk &chunk, const MyRay &eye_ray,
-    MyGridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
+    GridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
 {
     int near_z = chunk.getOrigin().z();
     int far_z  = chunk.getOrigin().z() + CHUNK_WIDTH - 1;
@@ -67,7 +67,7 @@ static bool CheckSouthFaces(
         GLfloat distance;
         HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
         if (hit == HITTEST_SUCCESS) {
-            MyGridCoord coord = WorldToGridCoord(impact, NUDGE_NORTH);
+            GridCoord coord = WorldToGridCoord(impact, NUDGE_NORTH);
             if (chunk.isCoordWithin(coord)) {
                 const Block *block = chunk.getBlockGlobal_RO(coord);
                 if (block->isFilled()) {
@@ -87,7 +87,7 @@ static bool CheckSouthFaces(
 // Try each Z-plane, from near to far.
 static bool CheckNorthFaces(
     const Chunk &chunk, const MyRay &eye_ray,
-    MyGridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
+    GridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
 {
     int near_z = chunk.getOrigin().z() + CHUNK_WIDTH;
     int far_z  = chunk.getOrigin().z() + 1;
@@ -99,7 +99,7 @@ static bool CheckNorthFaces(
         GLfloat distance;
         HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
         if (hit == HITTEST_SUCCESS) {
-            MyGridCoord coord = WorldToGridCoord(impact, NUDGE_SOUTH);
+            GridCoord coord = WorldToGridCoord(impact, NUDGE_SOUTH);
             if (chunk.isCoordWithin(coord)) {
                 const Block *block = chunk.getBlockGlobal_RO(coord);
                 if (block->isFilled()) {
@@ -119,7 +119,7 @@ static bool CheckNorthFaces(
 // Try each X-plane, from nearest to farthest.
 static bool CheckWestFaces(
     const Chunk &chunk, const MyRay &eye_ray,
-    MyGridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
+    GridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
 {
     int near_x = chunk.getOrigin().x();
     int far_x  = chunk.getOrigin().x() + CHUNK_WIDTH - 1;
@@ -131,7 +131,7 @@ static bool CheckWestFaces(
         GLfloat distance;
         HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
         if (hit == HITTEST_SUCCESS) {
-            MyGridCoord coord = WorldToGridCoord(impact, NUDGE_EAST);
+            GridCoord coord = WorldToGridCoord(impact, NUDGE_EAST);
             if (chunk.isCoordWithin(coord)) {
                 const Block *block = chunk.getBlockGlobal_RO(coord);
                 if (block->isFilled()) {
@@ -151,7 +151,7 @@ static bool CheckWestFaces(
 // Try each X-plane, from nearest to farthest.
 static bool CheckEastFaces(
     const Chunk &chunk, const MyRay &eye_ray,
-    MyGridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
+    GridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
 {
     int near_x = chunk.getOrigin().x() + CHUNK_WIDTH;
     int far_x  = chunk.getOrigin().x() + 1;
@@ -163,7 +163,7 @@ static bool CheckEastFaces(
         GLfloat distance;
         HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
         if (hit == HITTEST_SUCCESS) {
-            MyGridCoord coord = WorldToGridCoord(impact, NUDGE_WEST);
+            GridCoord coord = WorldToGridCoord(impact, NUDGE_WEST);
             if (chunk.isCoordWithin(coord)) {
                 const Block *block = chunk.getBlockGlobal_RO(coord);
                 if (block->isFilled()) {
@@ -183,7 +183,7 @@ static bool CheckEastFaces(
 // Try each Y-plane, from nearest to farthest.
 static bool CheckTopFaces(
     const Chunk &chunk, const MyRay &eye_ray,
-    MyGridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
+    GridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
 {
     int high_y = CHUNK_HEIGHT;
     int low_y  = 1;
@@ -195,7 +195,7 @@ static bool CheckTopFaces(
         GLfloat distance;
         HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
         if (hit == HITTEST_SUCCESS) {
-            MyGridCoord coord = WorldToGridCoord(impact, NUDGE_DOWN);
+            GridCoord coord = WorldToGridCoord(impact, NUDGE_DOWN);
             if (chunk.isCoordWithin(coord)) {
                 const Block *block = chunk.getBlockGlobal_RO(coord);
                 if (block->isFilled()) {
@@ -215,7 +215,7 @@ static bool CheckTopFaces(
 // Try each Y-plane, from lowest to highest.
 static bool CheckBottomFaces(
     const Chunk &chunk, const MyRay &eye_ray,
-    MyGridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
+    GridCoord *pOut_coord, MyVec4 *pOut_impact, GLfloat *pOut_distance)
 {
     int low_y  = 0;
     int high_y = CHUNK_HEIGHT - 1;
@@ -227,7 +227,7 @@ static bool CheckBottomFaces(
         GLfloat distance;
         HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
         if (hit == HITTEST_SUCCESS) {
-            MyGridCoord coord = WorldToGridCoord(impact, NUDGE_UP);
+            GridCoord coord = WorldToGridCoord(impact, NUDGE_UP);
             if (chunk.isCoordWithin(coord)) {
                 const Block *block = chunk.getBlockGlobal_RO(coord);
                 if (block->isFilled()) {
@@ -252,7 +252,7 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
     GLfloat  closest = FLT_MAX;
 
     // South faces.
-    MyGridCoord south_coord;
+    GridCoord south_coord;
     MyVec4  south_impact;
     GLfloat south_dist = 0.0f;
     bool south_hit = CheckSouthFaces(chunk, eye_ray, &south_coord, &south_impact, &south_dist);
@@ -262,7 +262,7 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
     }
 
     // North faces.
-    MyGridCoord north_coord;
+    GridCoord north_coord;
     MyVec4  north_impact;
     GLfloat north_dist = 0.0f;
     bool north_hit = CheckNorthFaces(chunk, eye_ray, &north_coord, &north_impact, &north_dist);
@@ -272,7 +272,7 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
     }
 
     // West faces.
-    MyGridCoord west_coord;
+    GridCoord west_coord;
     MyVec4  west_impact;
     GLfloat west_dist = 0.0;
     bool west_hit = CheckWestFaces(chunk, eye_ray, &west_coord, &west_impact, &west_dist);
@@ -282,7 +282,7 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
     }
 
     // East faces.
-    MyGridCoord east_coord;
+    GridCoord east_coord;
     MyVec4  east_impact;
     GLfloat east_dist = 0.0;
     bool east_hit = CheckEastFaces(chunk, eye_ray, &east_coord, &east_impact, &east_dist);
@@ -292,7 +292,7 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
     }
 
     // Top faces.
-    MyGridCoord top_coord;
+    GridCoord top_coord;
     MyVec4  top_impact;
     GLfloat top_dist   = 0.0;
     bool top_hit = CheckTopFaces(chunk, eye_ray, &top_coord, &top_impact, &top_dist);
@@ -302,7 +302,7 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
     }
 
     // Bottom faces.
-    MyGridCoord bottom_coord;
+    GridCoord bottom_coord;
     MyVec4  bottom_impact;
     GLfloat bottom_dist = 0.0;
     bool bottom_hit = CheckBottomFaces(chunk, eye_ray, &bottom_coord, &bottom_impact, &bottom_dist);
@@ -353,8 +353,8 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
 // The second call available outside this file.
 void ChunkHitTestToQuad(const Chunk &chunk, const ChunkHitTestDetail &details, VertList_PT *pOut)
 {
-    MyGridCoord global_coord = details.getGlobalCoord();
-    MyGridCoord local_coord  = chunk.globalToLocalCoord(details.getGlobalCoord());
+    GridCoord global_coord = details.getGlobalCoord();
+    GridCoord local_coord  = chunk.globalToLocalCoord(details.getGlobalCoord());
 
     Brady brady(chunk, local_coord, details.getFace());
 

@@ -98,7 +98,7 @@ Chunk *LoadChunkAsync(const GameWorld *pWorld, const ChunkOrigin &origin)
                     content = CONTENT_AIR;
                 }
 
-                result->getBlockLocal_RW(x, y, z)->setContent(content);
+                result->getBlockLocal(x, y, z)->setContent(content);
             }
         }
     }

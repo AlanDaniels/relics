@@ -9,8 +9,8 @@
 #include "utils.h"
 
 
-// Landscape Vert List Destructor.
-LandscapeVertLists::~LandscapeVertLists()
+// Chunk Vert Lists destructor.
+ChunkVertLists::~ChunkVertLists()
 {
     if (m_grass_list != nullptr) {
         delete m_grass_list;
@@ -31,11 +31,13 @@ LandscapeVertLists::~LandscapeVertLists()
         delete m_bedrock_list;
         m_bedrock_list = nullptr;
     }
+
+    m_realized = false;
 }
 
 
 // Return the count for a particular surface type.
-int LandscapeVertLists::getCount(BlockSurface surf) const 
+int ChunkVertLists::getCount(BlockSurface surf) const 
 {
     switch (surf) {
     case SURF_GRASS:   return (m_grass_list   == nullptr) ? 0 : m_grass_list->getByteCount();
@@ -51,7 +53,7 @@ int LandscapeVertLists::getCount(BlockSurface surf) const
 
 // Return a read-only version of the list for a particular surface.
 // It's okay for a list to be null if it hasn't been used yet.
-const VertList_PNT *LandscapeVertLists::get_RO(BlockSurface surf) const 
+const VertList_PNT *ChunkVertLists::get_RO(BlockSurface surf) const 
 {
     switch (surf) {
     case SURF_GRASS:   return m_grass_list;
@@ -67,7 +69,7 @@ const VertList_PNT *LandscapeVertLists::get_RO(BlockSurface surf) const
 
 // Return a verison of the list, for writing.
 // If the list hasn't been created, do that now.
-VertList_PNT *LandscapeVertLists::get_RW(BlockSurface surf) 
+VertList_PNT *ChunkVertLists::get(BlockSurface surf) 
 {
     switch (surf) {
     case SURF_GRASS:
@@ -102,7 +104,7 @@ VertList_PNT *LandscapeVertLists::get_RW(BlockSurface surf)
 
 
 // Reset all out our lists.
-void LandscapeVertLists::resetLists() 
+void ChunkVertLists::resetLists() 
 {
     if (m_grass_list != nullptr) { 
         m_grass_list->reset(); 
@@ -116,46 +118,38 @@ void LandscapeVertLists::resetLists()
     if (m_bedrock_list != nullptr) {
         m_bedrock_list->reset();
     }
+
+    m_realized = false;
 }
 
 
 // Realize any lists we've created so far.
-void LandscapeVertLists::realizeLists() 
+void ChunkVertLists::realizeLists() 
 {
+    bool did_realizing = false;
+
     if (m_grass_list != nullptr) {
         m_grass_list->realize();
+        did_realizing = true;
     }
+
     if (m_dirt_list != nullptr) {
         m_dirt_list->realize();
+        did_realizing = true;
     }
+
     if (m_stone_list != nullptr) {
         m_stone_list->realize();
+        did_realizing = true;
     }
+
     if (m_bedrock_list != nullptr) {
         m_bedrock_list->realize();
-    }
-}
-
-
-// Return true if all existing lists are realized.
-// TODO: I hate unrolling these loops by hand. Let's see if this is faster.
-bool LandscapeVertLists::areListsRealized() const
-{
-    const std::vector<VertList_PNT *> all_lists = {
-        m_grass_list, m_dirt_list, m_stone_list, m_bedrock_list
-    };
-
-    for (const auto &iter : all_lists) {
-        if (iter != nullptr) {
-            if (NOT(iter->isRealized())) {
-                return false;
-            }
-        }
+        did_realizing = true;
     }
 
-    return true;
+    m_realized = did_realizing;
 }
-
 
 
 // Turn a world coord into a chunk origin.
@@ -199,7 +193,7 @@ const ChunkStripe *Chunk::getStripe_RO(int local_x, int local_y) const
 
 
 // Gert a chunk stripe, writeable version.
-ChunkStripe *Chunk::getStripe_RW(int local_x, int local_y)
+ChunkStripe *Chunk::getStripe(int local_x, int local_y)
 {
     assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
     assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
@@ -209,7 +203,7 @@ ChunkStripe *Chunk::getStripe_RW(int local_x, int local_y)
 
 
 // Return true if a grid coord is within this chunk.
-bool Chunk::isCoordWithin(const MyGridCoord &coord) const
+bool Chunk::isCoordWithin(const GridCoord &coord) const
 {
     int local_x = coord.x() - m_origin.x();
     int local_y = coord.y();
@@ -224,7 +218,7 @@ bool Chunk::isCoordWithin(const MyGridCoord &coord) const
 
 
 // Get the block at a particular grid coord, read-only version.
-const Block *Chunk::getBlockGlobal_RO(const MyGridCoord &coord) const
+const Block *Chunk::getBlockGlobal_RO(const GridCoord &coord) const
 {
     assert(isCoordWithin(coord));
 
@@ -237,7 +231,7 @@ const Block *Chunk::getBlockGlobal_RO(const MyGridCoord &coord) const
 
 
 // Get the block at a particular grid coord, read-only version.
-Block *Chunk::getBlockGlobal_RW(const MyGridCoord &coord)
+Block *Chunk::getBlockGlobal(const GridCoord &coord)
 {
     assert(isCoordWithin(coord));
 
@@ -245,7 +239,7 @@ Block *Chunk::getBlockGlobal_RW(const MyGridCoord &coord)
     int local_y = coord.y();
     int local_z = coord.z() - m_origin.z();
 
-    return getStripe_RW(local_x, local_y)->getBlock_RW(local_z);
+    return getStripe(local_x, local_y)->getBlock_RW(local_z);
 }
 
 
@@ -261,13 +255,13 @@ const Block *Chunk::getBlockLocal_RO(int local_x, int local_y, int local_z) cons
 
 
 // Get the block at a particular local coord, writeable version.
-Block *Chunk::getBlockLocal_RW(int local_x, int local_y, int local_z)
+Block *Chunk::getBlockLocal(int local_x, int local_y, int local_z)
 {
     assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
     assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
     assert((local_z >= 0) && (local_z < CHUNK_WIDTH));
 
-    return getStripe_RW(local_x, local_y)->getBlock_RW(local_z);
+    return getStripe(local_x, local_y)->getBlock_RW(local_z);
 }
 
 
@@ -277,7 +271,7 @@ void Chunk::recalcExposures()
 {
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            getStripe_RW(x, y)->recalcExposures();
+            getStripe(x, y)->recalcExposures();
         }
     }
 
@@ -295,7 +289,7 @@ void Chunk::realizeLandscape()
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            getStripe_RW(x, y)->addToVertLists(&m_vert_lists);
+            getStripe(x, y)->addToVertLists(&m_vert_lists);
         }
     }
 
@@ -343,9 +337,9 @@ MyVec4 Chunk::localToWorldCoord(int x, int y, int z) const
 
 
 // Convert a global coord to a local coord.
-MyGridCoord Chunk::globalToLocalCoord(const MyGridCoord &global_coord) const
+GridCoord Chunk::globalToLocalCoord(const GridCoord &global_coord) const
 {
-    return MyGridCoord(
+    return GridCoord(
         global_coord.x() - m_origin.x(),
         global_coord.y(),
         global_coord.z() - m_origin.z());
@@ -393,7 +387,7 @@ const Chunk *Chunk::getNeighborWest() const
 
 
 // For debugging, print out all the details about this chunk.
-std::string Chunk::getDescription() const
+std::string Chunk::toDescription() const
 {
     std::string result;
 
@@ -419,10 +413,11 @@ std::string Chunk::getDescription() const
     int dirt_surfaces  = m_vert_lists.getCount(SURF_DIRT);
     int stone_surfaces = m_vert_lists.getCount(SURF_STONE);
 
-    const char *exposures_true = isLandscapeCurrent()  ? "true" : "false";
+    const char *exposures_true = areExposuresCurrent()  ? "true" : "false";
     const char *realized_true  = isLandcsapeRealized() ? "true" : "false";
 
     char msg[64];
+
     sprintf(msg, "Chunk at [%d, %d]\n", m_origin.x(), m_origin.z());
     result += msg;
     sprintf(msg, "  Exposures: %s, Realized: %s\n", exposures_true, realized_true);

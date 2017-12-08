@@ -27,10 +27,10 @@ public:
 
     MyColor &operator=(const MyColor &that);
 
-    inline GLfloat red()   const { return m_red; }
-    inline GLfloat green() const { return m_green; }
-    inline GLfloat blue()  const { return m_blue; }
-    inline GLfloat alpha() const { return m_alpha; }
+    GLfloat red()   const { return m_red; }
+    GLfloat green() const { return m_green; }
+    GLfloat blue()  const { return m_blue; }
+    GLfloat alpha() const { return m_alpha; }
 
 private:
     // Forbit default ctor.
@@ -62,19 +62,19 @@ public:
     MyVec2(const MyVec2 &that) :
         m_x(that.m_x), m_y(that.m_y) {}
 
-    inline const MyVec2 &MyVec2::operator=(const MyVec2 &that) {
+    const MyVec2 &MyVec2::operator=(const MyVec2 &that) {
         m_x = that.m_x; m_y = that.m_y; return *this;
     }
 
-    inline const MyVec2 &MyVec2::operator=(const MyVec2 &&that) {
+    const MyVec2 &MyVec2::operator=(const MyVec2 &&that) {
         m_x = that.m_x; m_y = that.m_y; return *this;
     }
 
     MyVec2 lerp(const MyVec2 &that, float amount) const;
     std::string toString() const;
 
-    inline GLfloat x() const { return m_x; }
-    inline GLfloat y() const { return m_y; }
+    GLfloat x() const { return m_x; }
+    GLfloat y() const { return m_y; }
 
 private:
     GLfloat m_x;
@@ -91,7 +91,7 @@ MyVec2 FourWayLerp2(
 class MyVec4
 {
 public:
-    inline static GLfloat Dot(const MyVec4 &one, const MyVec4 &two) {
+    static GLfloat Dot(const MyVec4 &one, const MyVec4 &two) {
         return (one.m_x * two.m_x) + (one.m_y * two.m_y) + (one.m_z * two.m_z);
     }
 
@@ -106,49 +106,49 @@ public:
     MyVec4(const MyVec4 &that) : 
         m_x(that.m_x), m_y(that.m_y), m_z(that.m_z), m_w(that.m_w) {}
 
-    inline const MyVec4 &operator=(const MyVec4 &that) {
+    const MyVec4 &operator=(const MyVec4 &that) {
         m_x = that.m_x; m_y = that.m_y; m_z = that.m_z; m_w = that.m_w; return *this;
     }
 
-    inline const MyVec4 &operator=(const MyVec4 &&that) {
+    const MyVec4 &operator=(const MyVec4 &&that) {
         m_x = that.m_x; m_y = that.m_y; m_z = that.m_z; m_w = that.m_w; return *this;
     }
 
-    inline GLfloat length() const {
+    GLfloat length() const {
         return sqrt((m_x * m_x) + (m_y * m_y) + (m_z * m_z));
     }
 
-    inline GLfloat lengthSquared() const {
+    GLfloat lengthSquared() const {
         return (m_x * m_x) + (m_y * m_y) + (m_z * m_z);
     }
 
-    inline bool isNormalLength() const {
+    bool isNormalLength() const {
         return (abs(length() - 1.0f) < EPSILON);
     }
 
-    inline MyVec4 times(GLfloat val) const {
+    MyVec4 times(GLfloat val) const {
         return MyVec4(m_x * val, m_y * val, m_z * val);
     }
 
-    inline MyVec4 dividedBy(GLfloat val) const {
+    MyVec4 dividedBy(GLfloat val) const {
         return MyVec4(m_x / val, m_y / val, m_z / val);
     }
 
-    inline MyVec4 plus(const MyVec4 &that) const {
+    MyVec4 plus(const MyVec4 &that) const {
         return MyVec4(m_x + that.m_x, m_y + that.m_y, m_z + that.m_z);
     }
 
-    inline MyVec4 minus(const MyVec4 &that) const {
+    MyVec4 minus(const MyVec4 &that) const {
         return MyVec4(m_x - that.m_x, m_y - that.m_y, m_z - that.m_z);
     }
 
     MyVec4 lerp(const MyVec4 &that, float amount) const;
     std::string toString() const;
 
-    inline GLfloat x() const { return m_x; }
-    inline GLfloat y() const { return m_y; }
-    inline GLfloat z() const { return m_z; }
-    inline GLfloat w() const { return m_w; }
+    GLfloat x() const { return m_x; }
+    GLfloat y() const { return m_y; }
+    GLfloat z() const { return m_z; }
+    GLfloat w() const { return m_w; }
 
 private:
     GLfloat m_x;
@@ -200,7 +200,7 @@ public:
         m_v20(that.m_v20), m_v21(that.m_v21), m_v22(that.m_v22), m_v23(that.m_v23),
         m_v30(that.m_v30), m_v31(that.m_v31), m_v32(that.m_v32), m_v33(that.m_v33) {}
 
-    inline const GLfloat *ptr() const { return &m_v00; }
+    const GLfloat *ptr() const { return &m_v00; }
 
     const MyMatrix4by4 &operator=(const MyMatrix4by4 &that);
 
@@ -237,8 +237,8 @@ public:
 
     const MyRay &operator=(const MyRay &that);
 
-    inline const MyVec4 &getStart() const { return m_start; }
-    inline const MyVec4 &getDir()   const { return m_dir; }
+    const MyVec4 &getStart() const { return m_start; }
+    const MyVec4 &getDir()   const { return m_dir; }
 
     MyPlane toPlane() const;
 
@@ -260,8 +260,8 @@ public:
 
     MyPlane &operator=(const MyPlane &that);
 
-    inline const MyVec4 &getNormal() const { return m_normal; }
-    inline GLfloat getDist() const { return m_distance; }
+    const MyVec4 &getNormal() const { return m_normal; }
+    GLfloat getDist() const { return m_distance; }
 
     GLfloat distanceToPoint(const MyVec4 &point) const;
 
@@ -299,23 +299,23 @@ enum NudgeEnum
 };
 
 
-class MyGridCoord
+class GridCoord
 {
 public:
-    MyGridCoord() :
+    GridCoord() :
         m_x(0), m_y(0), m_z(0) {}
-    MyGridCoord(int grid_x, int grid_y, int grid_z) :
+    GridCoord(int grid_x, int grid_y, int grid_z) :
         m_x(grid_x), m_y(grid_y), m_z(grid_z) {}
-    MyGridCoord(const MyGridCoord &that) :
+    GridCoord(const GridCoord &that) :
         m_x(that.m_x), m_y(that.m_y), m_z(that.m_z) {}
 
-    const MyGridCoord &operator=(const MyGridCoord &that);
+    const GridCoord &operator=(const GridCoord &that);
 
-    bool operator==(const MyGridCoord &that);
+    bool operator==(const GridCoord &that);
 
-    inline int x() const { return m_x; }
-    inline int y() const { return m_y; }
-    inline int z() const { return m_z; }
+    int x() const { return m_x; }
+    int y() const { return m_y; }
+    int z() const { return m_z; }
 
 private:
     int m_x;
@@ -324,7 +324,7 @@ private:
 };
 
 
-MyGridCoord WorldToGridCoord(const MyVec4 &pos, NudgeEnum nudge_type);
+GridCoord WorldToGridCoord(const MyVec4 &pos, NudgeEnum nudge_type);
 
 
 // An "eval region", the four values always align along chunk boundaries.
@@ -334,25 +334,37 @@ struct EvalRegion
 public:
     EvalRegion() :
         m_west(0),  m_east(0), 
-        m_south(0), m_north(0) {}
+        m_south(0), m_north(0),
+        m_debug_west(0),  m_debug_east(0),
+        m_debug_south(0), m_debug_north(0) {}
+
     EvalRegion(const EvalRegion & that) :
         m_west(that.m_west),   m_east(that.m_east),
-        m_south(that.m_south), m_north(that.m_north) {}
+        m_south(that.m_south), m_north(that.m_north),
+        m_debug_west(that.m_debug_west),   m_debug_east(that.m_debug_east),
+        m_debug_south(that.m_debug_south), m_debug_north(that.m_debug_north) {}
 
     EvalRegion(int west, int east, int south, int north);
 
     bool operator==(const EvalRegion &that) const;
     bool operator!=(const EvalRegion &that) const;
 
-    inline int west()  const { return m_west; }
-    inline int east()  const { return m_east; }
-    inline int south() const { return m_south; }
-    inline int north() const { return m_north; }
+    int west()  const { return m_west; }
+    int east()  const { return m_east; }
+    int south() const { return m_south; }
+    int north() const { return m_north; }
 
     bool containsOrigin(const ChunkOrigin &origin) const;
     EvalRegion expand() const;
 
+    std::string toDebugStr() const;
+
 private:
+    int m_debug_west;
+    int m_debug_east;
+    int m_debug_south;
+    int m_debug_north;
+
     int m_west;
     int m_east;
     int m_south;

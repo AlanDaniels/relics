@@ -52,7 +52,7 @@ void EventHandler::onEvent(sf::Event event)
         // Use space to print whatever debugging info we're interested in.
         if (event.key.code == sf::Keyboard::Space) {
             const Chunk *pChunk = m_game_world.getPlayersChunk();
-            PrintDebug(pChunk->getDescription().c_str());
+            PrintDebug(pChunk->toDescription().c_str());
         }
 
         // Escape pauses the game, and shows the mouse.

@@ -366,7 +366,7 @@ HitTestEnum WorldHitTest(const MyRay &ray, const MyPlane &plane, MyVec4 *pOut_im
 
 
 // Grid coord assignment operator.
-const MyGridCoord &MyGridCoord::operator=(const MyGridCoord &that)
+const GridCoord &GridCoord::operator=(const GridCoord &that)
 {
     m_x = that.m_x;
     m_y = that.m_y;
@@ -376,7 +376,7 @@ const MyGridCoord &MyGridCoord::operator=(const MyGridCoord &that)
 
 
 // Comparison operator. Simple enough since this is all ints.
-bool MyGridCoord::operator==(const MyGridCoord &that)
+bool GridCoord::operator==(const GridCoord &that)
 {
     return (
         (m_x == that.m_x) &&
@@ -388,7 +388,7 @@ bool MyGridCoord::operator==(const MyGridCoord &that)
 // Convert a world coord into a grid coord.
 // The nudge factor is so we can "burrow" into a block a bit, when we do a
 // hit-test against a block face, so that we don't hit strange edge cases in the math.
-MyGridCoord WorldToGridCoord(const MyVec4 &pos, NudgeEnum nudge)
+GridCoord WorldToGridCoord(const MyVec4 &pos, NudgeEnum nudge)
 {
     float fixed_x = pos.x();
     float fixed_y = pos.y();
@@ -408,7 +408,7 @@ MyGridCoord WorldToGridCoord(const MyVec4 &pos, NudgeEnum nudge)
     int x = static_cast<int>(floor(fixed_x / BLOCK_SCALE));
     int y = static_cast<int>(floor(fixed_y / BLOCK_SCALE));
     int z = static_cast<int>(floor(fixed_z / BLOCK_SCALE));
-    return MyGridCoord(x, y, z);
+    return GridCoord(x, y, z);
 }
 
 
@@ -426,6 +426,11 @@ EvalRegion::EvalRegion(int west, int east, int south, int north) :
     assert((m_east  % CHUNK_WIDTH) == 0);
     assert((m_south % CHUNK_WIDTH) == 0);
     assert((m_north % CHUNK_WIDTH) == 0);
+
+    m_debug_west  = west  / CHUNK_WIDTH;
+    m_debug_east  = east  / CHUNK_WIDTH;
+    m_debug_south = south / CHUNK_WIDTH;
+    m_debug_north = north / CHUNK_WIDTH;
 }
 
 
@@ -473,17 +478,28 @@ EvalRegion EvalRegion::expand() const
 }
 
 
+// Return a debug version of an eval region.
+std::string EvalRegion::toDebugStr() const
+{
+    char msg[64];
+    sprintf(msg, "w=%d, e=%d, s=%d, n=%d",
+        m_debug_west, m_debug_east, m_debug_south, m_debug_north);
+    return std::string(msg);
+}
+
+
 // Given a position and aneval block count, calc the "eval region".
 // That is, what's the min and max for X and Z, giving us all the chunks
 // that fall within this range. This should always be a 3x3 grid, 5x5, etc.
+// Note that this is range-inclusive (ex: -2 to +2), etc.
 EvalRegion WorldToEvalRegion(const MyVec4 &pos, int block_count)
 {
     ChunkOrigin origin = WorldToChunkOrigin(pos);
 
-    int east  = origin.x() + (CHUNK_WIDTH * (block_count + 1));
-    int west  = origin.x() - (CHUNK_WIDTH *  block_count);
-    int north = origin.z() + (CHUNK_WIDTH * (block_count + 1));
-    int south = origin.z() - (CHUNK_WIDTH *  block_count);
+    int east  = origin.x() + (CHUNK_WIDTH * block_count);
+    int west  = origin.x() - (CHUNK_WIDTH * block_count);
+    int north = origin.z() + (CHUNK_WIDTH * block_count);
+    int south = origin.z() - (CHUNK_WIDTH * block_count);
 
     return EvalRegion(west, east, south, north);
 }

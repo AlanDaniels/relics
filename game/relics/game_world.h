@@ -43,7 +43,7 @@ public:
     MyRay getCameraEyeRay() const;
 
     void resetCamera();
-    void setCameraYaw(GLfloat val) { m_camera_yaw = val; clampRotations(); }
+    void setCameraYaw(GLfloat val)   { m_camera_yaw = val; clampRotations(); }
     void setCameraPitch(GLfloat val) { m_camera_pitch = val; clampRotations(); }
 
     void deleteBlockInFrontOfUs();
@@ -61,23 +61,18 @@ private:
     void clampRotations();
     void calcHitTest();
 
-    void cashInWorkerThread();
-
     bool m_paused;
     int  m_time_msec;
-    int  m_msecs_since_worker;
     
     MyVec4  m_camera_pos;
     GLfloat m_camera_pitch;
     GLfloat m_camera_yaw;
 
-    MyGridCoord m_current_grid_coord;
+    GridCoord m_current_grid_coord;
     ChunkOrigin m_current_chunk_origin;
 
     std::map<ChunkOrigin, Chunk *> m_chunk_map;
     bool m_hit_test_success;
     ChunkHitTestDetail m_hit_test_detail;
     VertList_PT m_hit_test_vert_list;
-
-    std::map<ChunkOrigin, t_chunk_future> m_load_future_map;
 };

@@ -39,7 +39,7 @@ private:
     MyCanvas(const MyCanvas &that) = delete;
     void operator=(const MyCanvas &that) = delete;
 
-    // Misc code below here.
+    void renderGameData(wxDC &dc);
     void renderGrid(wxDC &dc);
 
     MyMainFrame *m_parent;

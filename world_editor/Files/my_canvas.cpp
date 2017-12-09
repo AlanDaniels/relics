@@ -1,7 +1,9 @@
 
 #include "stdafx.h"
-#include "my_canvas.h"
+
 #include "world_editor.h"
+#include "my_canvas.h"
+#include "world_data.h"
 
 
 // Declare all our canvas events.
@@ -158,10 +160,21 @@ void MyCanvas::render(wxDC &dc)
     dc.DrawRectangle(0, 0, width, height);
 
     // Draw everything.
+    renderGameData(dc);
     renderGrid(dc);
 }
 
 
+void MyCanvas::renderGameData(wxDC &dc)
+{
+    WorldData *world_data = m_parent->getWorldData();
+    if (world_data == nullptr) {
+        return;
+    }
+
+    wxBitmap *bitmap = world_data->getBitmap();
+    dc.DrawBitmap(*bitmap, wxPoint(0, 0), false);
+}
 
 void MyCanvas::renderGrid(wxDC &dc)
 {

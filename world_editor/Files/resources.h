@@ -3,7 +3,8 @@
 #include "stdafx.h"
 
 
-// Let's keep these around for now, for when we add back a toolbar.
+extern const char *RESOURCE_PATH;
+
 bool LoadEditorResources();
 bool FreeEditorResources();
 

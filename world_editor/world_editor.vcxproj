@@ -19,13 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Files\ed_resources.cpp" />
+    <ClCompile Include="Files\resources.cpp" />
+    <ClCompile Include="Files\world_data.cpp" />
     <ClCompile Include="Files\world_editor.cpp" />
     <ClCompile Include="Files\my_canvas.cpp" />
     <ClCompile Include="Files\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Files\ed_resources.h" />
+    <ClInclude Include="Files\resources.h" />
+    <ClInclude Include="Files\world_data.h" />
     <ClInclude Include="Files\world_editor.h" />
     <ClInclude Include="Files\my_canvas.h" />
     <ClInclude Include="Files\Resource.h" />

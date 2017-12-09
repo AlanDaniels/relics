@@ -1,18 +1,17 @@
 
 #include "stdafx.h"
-#include "ed_resources.h"
+#include "resources.h"
 
 
-// I'm keeping these around for when we add back a toolbar later.
+const char *RESOURCE_PATH = "D:\\relics\\resources";
+
+
+// These don't do anything now, but keeping them
+// around for when we add back a toolbar later.
 bool LoadEditorResources() { return true; }
 bool FreeEditorResources() { return true; }
 
 
-// Constants.
-const std::string RESOURCE_PATH = "D:\\relics\\resources\\editor";
-
-
-// After all these years, I still believe C++ is stupid on how it handles strings.
 wxBitmap *LoadPNGBitmap(const std::string &fname)
 {
     std::ostringstream temp1;

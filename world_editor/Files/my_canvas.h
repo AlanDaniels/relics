@@ -40,7 +40,8 @@ private:
     void operator=(const MyCanvas &that) = delete;
 
     void changeZoomScale(bool positive);
-    void renderGameData(WorldData *world_data, wxDC &dc);
+    void rebuildZoomedHeightmap();
+    void renderWorldData(WorldData *world_data, wxDC &dc);
     void renderGrid(wxDC &dc);
 
     MyMainFrame *m_parent;
@@ -52,4 +53,8 @@ private:
     int  m_center_y;
     int  m_old_mouse_x;
     int  m_old_mouse_y;
+
+    int m_old_zoom_scale;
+    wxBitmap *m_old_heightmap;
+    wxBitmap *m_zoomed_heightmap;
 };

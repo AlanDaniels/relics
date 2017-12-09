@@ -36,7 +36,10 @@ MyCanvas::MyCanvas(MyMainFrame *parent) :
     m_center_x(0),
     m_center_y(0),
     m_old_mouse_x(0),
-    m_old_mouse_y(0)
+    m_old_mouse_y(0),
+    m_old_zoom_scale(MIN_ZOOM_SCALE),
+    m_old_heightmap(nullptr),
+    m_zoomed_heightmap(nullptr)
 {
 }
 
@@ -170,12 +173,17 @@ void MyCanvas::repaintCanvas()
 // Change the zoom scale, and clamp it to the allowed values.
 void MyCanvas::changeZoomScale(bool positive)
 {
-    m_zoom_scale += (positive ? 1 : -1);
-    if (m_zoom_scale < MIN_ZOOM_SCALE) {
-        m_zoom_scale = MIN_ZOOM_SCALE;
+    int new_value = m_zoom_scale + (positive ? 1 : -1);
+    if (new_value < MIN_ZOOM_SCALE) {
+        new_value = MIN_ZOOM_SCALE;
     }
-    else if (m_zoom_scale > MAX_ZOOM_SCALE) {
-        m_zoom_scale = MAX_ZOOM_SCALE;
+    else if (new_value > MAX_ZOOM_SCALE) {
+        new_value = MAX_ZOOM_SCALE;
+    }
+
+    if (m_zoom_scale != new_value) {
+        m_zoom_scale = new_value;
+        rebuildZoomedHeightmap();
     }
 }
 
@@ -193,34 +201,68 @@ void MyCanvas::render(wxDC &dc)
     // If we have a world loaded, draw it.
     WorldData *world_data = m_parent->getWorldData();
     if (world_data != nullptr) {
-        renderGameData(world_data, dc);
+        renderWorldData(world_data, dc);
         renderGrid(dc);
     }
 }
 
 
-// TODO NEXT:
-// Here is promise of getting the zoom scaling working again.
-// Go with that. Once you're done, work on saving.
-// And cache the image. Shit gets expensive.
+// Whenever we zoom in on the bitmap, rebuild our cached version.
+// Image sizing is expensive, so we don't want to do this if we don't need to.
+void MyCanvas::rebuildZoomedHeightmap()
+{
+    // If there's no loaded world, don't bother.
+    WorldData *world_data = m_parent->getWorldData();
+    if (world_data == nullptr) {
+        return;
+    }
 
-void MyCanvas::renderGameData(WorldData *world_data, wxDC &dc)
+    // If we've already built this, and nothing has changed, don't bother.
+    wxBitmap *heightmap = world_data->getBitmap();
+    if ((m_zoomed_heightmap != nullptr) &&
+        (m_old_heightmap  == heightmap) &&
+        (m_old_zoom_scale == m_zoom_scale)) {
+        return;
+    }
+
+    // Free up any previous one.
+    if (m_zoomed_heightmap != nullptr) {
+        m_zoomed_heightmap->FreeResource();
+        m_zoomed_heightmap = nullptr;
+    }
+
+    // Build our bigger image.
+    int width  = heightmap->GetWidth();
+    int height = heightmap->GetHeight();
+
+    wxImage image = heightmap->ConvertToImage();
+    m_zoomed_heightmap = new wxBitmap(
+        image.Scale(width  * m_zoom_scale,
+                    height * m_zoom_scale,
+                    wxIMAGE_QUALITY_NEAREST));
+
+    // Remember when to do this again.
+    m_old_zoom_scale = m_zoom_scale;
+    m_old_heightmap  = heightmap;
+}
+
+
+// And cache the image. Shit gets expensive.
+void MyCanvas::renderWorldData(WorldData *world_data, wxDC &dc)
 {
     wxBitmap *bitmap = world_data->getBitmap();
     int width  = bitmap->GetWidth();
     int height = bitmap->GetHeight();
+    rebuildZoomedHeightmap();
 
     // Offset the drawing so the center of the bitmap is at the screen origin.
     int screen_x = X_worldToScreen(-width  / 2);
     int screen_y = Y_worldToScreen( height / 2);
 
-    wxImage image = bitmap->ConvertToImage();
-    wxBitmap other(image.Scale(width  * m_zoom_scale,
-                               height * m_zoom_scale,
-                               wxIMAGE_QUALITY_NEAREST));
+    // But, the DC doesn't know about our zoom scale, so draw the zoomed version.
+    dc.DrawBitmap(*m_zoomed_heightmap, wxPoint(screen_x, screen_y), false);
 
-    dc.DrawBitmap(other, wxPoint(screen_x, screen_y), false);
-
+    // Draw a red outline around the heightmap.
     wxPen *pen = wxThePenList->FindOrCreatePen(COLOR_RED, 1, wxPENSTYLE_SOLID);
     dc.SetPen(*pen);
     dc.SetBrush(*wxTRANSPARENT_BRUSH);

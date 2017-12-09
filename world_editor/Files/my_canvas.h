@@ -19,15 +19,15 @@ public:
     int X_screenToWorld(int x) const;
     int Y_screenToWorld(int y) const;
 
-    void onSizeEvent(wxSizeEvent& evt);
-    void onKeyDownEvent(wxKeyEvent &evt);
-    void onKeyUpEvent(wxKeyEvent &evt);
-    void onLeftDownEvent(wxMouseEvent &evt);
-    void onLeftUpEvent(wxMouseEvent &evt);
-    void onMouseMoveEvent(wxMouseEvent &evt);
-    void onMouseWheelEvent(wxMouseEvent &evt);
+    void onSize(wxSizeEvent& evt);
+    void onKeyDown(wxKeyEvent &evt);
+    void onKeyUp(wxKeyEvent &evt);
+    void onMouseLeftDown(wxMouseEvent &evt);
+    void onMouseLeftUp(wxMouseEvent &evt);
+    void onMouseMove(wxMouseEvent &evt);
+    void onMouseWheel(wxMouseEvent &evt);
 
-    void onPaintEvent(wxPaintEvent& evt);
+    void onPaint(wxPaintEvent& evt);
     void repaintCanvas();
     void render(wxDC &dc);
 
@@ -39,7 +39,8 @@ private:
     MyCanvas(const MyCanvas &that) = delete;
     void operator=(const MyCanvas &that) = delete;
 
-    void renderGameData(wxDC &dc);
+    void changeZoomScale(bool positive);
+    void renderGameData(WorldData *world_data, wxDC &dc);
     void renderGrid(wxDC &dc);
 
     MyMainFrame *m_parent;

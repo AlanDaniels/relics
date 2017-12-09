@@ -8,27 +8,23 @@
 
 // Declare all our canvas events.
 BEGIN_EVENT_TABLE(MyCanvas, wxPanel)
-    EVT_SIZE(MyCanvas::onSizeEvent)
-    EVT_KEY_DOWN(MyCanvas::onKeyDownEvent)
-    EVT_KEY_UP(MyCanvas::onKeyUpEvent)
-    EVT_LEFT_DOWN(MyCanvas::onLeftDownEvent)
-    EVT_LEFT_UP(MyCanvas::onLeftUpEvent)
-    EVT_MOTION(MyCanvas::onMouseMoveEvent)
-    EVT_MOUSEWHEEL(MyCanvas::onMouseWheelEvent)
-    EVT_PAINT(MyCanvas::onPaintEvent)
+    EVT_SIZE(MyCanvas::onSize)
+    EVT_KEY_DOWN(MyCanvas::onKeyDown)
+    EVT_KEY_UP(MyCanvas::onKeyUp)
+    EVT_LEFT_DOWN(MyCanvas::onMouseLeftDown)
+    EVT_LEFT_UP(MyCanvas::onMouseLeftUp)
+    EVT_MOTION(MyCanvas::onMouseMove)
+    EVT_MOUSEWHEEL(MyCanvas::onMouseWheel)
+    EVT_PAINT(MyCanvas::onPaint)
 END_EVENT_TABLE();
 
 
-// Static constants for the file here.
-static const int INITIAL_ZOOM_SCALE = 24;
-static const int MIN_ZOOM_SCALE = 4;
+static const int MIN_ZOOM_SCALE = 1;
+static const int MAX_ZOOM_SCALE = 16;
 
-static const wxColor COLOR_GRID_ORIGIN(255, 0, 255);
-static const wxColor COLOR_GRID_MAJOR(128, 128, 128);
-static const wxColor COLOR_GRID_MINOR(64, 64, 64);
 
-static const wxColor COLOR_TILE_WALL(255, 255, 255);
-static const wxColor COLOR_TILE_FLOOR(192, 192, 192);
+static const wxColor COLOR_RED(255, 0, 0);
+static const wxColor COLOR_PURPLE(255, 0, 255, 128);
 
 
 // Canvas ctor.
@@ -36,7 +32,7 @@ MyCanvas::MyCanvas(MyMainFrame *parent) :
     wxPanel(parent),
     m_parent(parent),
     m_panning_mode(false),
-    m_zoom_scale(INITIAL_ZOOM_SCALE),
+    m_zoom_scale(MIN_ZOOM_SCALE),
     m_center_x(0),
     m_center_y(0),
     m_old_mouse_x(0),
@@ -47,7 +43,7 @@ MyCanvas::MyCanvas(MyMainFrame *parent) :
 
 int MyCanvas::X_worldToScreen(int x) const 
 {
-    int width = GetSize().GetWidth();
+    int width  = GetSize().GetWidth();
     int center = (width / 2) - m_center_x;
     return center + (x * m_zoom_scale);
 }
@@ -88,54 +84,77 @@ int MyCanvas::Y_screenToWorld(int y) const
 
 
 // When we resize, just repaint everything.B
-void MyCanvas::onSizeEvent(wxSizeEvent &evt)
+void MyCanvas::onSize(wxSizeEvent &evt)
 {
     repaintCanvas();
 }
 
 
 // Key down event.
-void MyCanvas::onKeyDownEvent(wxKeyEvent &evt)
+// TODO: Make a dialog to show these later.
+void MyCanvas::onKeyDown(wxKeyEvent &evt)
 {
+    wxChar ch = evt.GetUnicodeKey();
+    switch (ch) {
+    case '-': changeZoomScale(-1); break;
+    case '=': changeZoomScale(1); break;
+    default: break;
+    }
+    
+    repaintCanvas();
 }
 
 
 // Key up event.
-void MyCanvas::onKeyUpEvent(wxKeyEvent &evt)
+void MyCanvas::onKeyUp(wxKeyEvent &evt)
 {
 }
 
 
 // On left mouse down.
-void MyCanvas::onLeftDownEvent(wxMouseEvent &evt)
+void MyCanvas::onMouseLeftDown(wxMouseEvent &evt)
 {
 }
 
 
 // On left mouse up.
-void MyCanvas::onLeftUpEvent(wxMouseEvent &evt)
+void MyCanvas::onMouseLeftUp(wxMouseEvent &evt)
 {
 }
 
 
 // Mouse move event.
-void MyCanvas::onMouseMoveEvent(wxMouseEvent &evt)
+void MyCanvas::onMouseMove(wxMouseEvent &evt)
 {
+#if 0
+    int x = evt.GetX();
+    int y = evt.GetY();
+
+    int screen_x = X_screenToWorld(x);
+    int screen_y = Y_screenToWorld(y);
+
+    char msg[64];
+    sprintf(msg, "Pos: %d, %d", screen_x, screen_y);
+    SetToolTip(wxString(msg));
+#endif
 }
 
 
 // Let the mouse wheel zoom in and out.
-void MyCanvas::onMouseWheelEvent(wxMouseEvent &evt)
+// Note that "wheel rotation" is just a positive or negative.
+void MyCanvas::onMouseWheel(wxMouseEvent &evt)
 {
+    int delta = evt.GetWheelRotation();
+    bool positive = (delta > 0);
+    changeZoomScale(positive);
+    repaintCanvas();
 }
 
 
 // Handle the paint event.
-void MyCanvas::onPaintEvent(wxPaintEvent &evt)
+void MyCanvas::onPaint(wxPaintEvent &evt)
 {
-    wxPaintDC dc(this);
-    wxBufferedDC buff_dc(&dc);
-    render(buff_dc);
+    repaintCanvas();
 }
 
 
@@ -148,6 +167,18 @@ void MyCanvas::repaintCanvas()
 }
 
 
+// Change the zoom scale, and clamp it to the allowed values.
+void MyCanvas::changeZoomScale(bool positive)
+{
+    m_zoom_scale += (positive ? 1 : -1);
+    if (m_zoom_scale < MIN_ZOOM_SCALE) {
+        m_zoom_scale = MIN_ZOOM_SCALE;
+    }
+    else if (m_zoom_scale > MAX_ZOOM_SCALE) {
+        m_zoom_scale = MAX_ZOOM_SCALE;
+    }
+}
+
 // Repaint everything.
 void MyCanvas::render(wxDC &dc)
 {
@@ -159,22 +190,70 @@ void MyCanvas::render(wxDC &dc)
     dc.SetBrush(*wxBLACK_BRUSH);
     dc.DrawRectangle(0, 0, width, height);
 
-    // Draw everything.
-    renderGameData(dc);
-    renderGrid(dc);
-}
-
-
-void MyCanvas::renderGameData(wxDC &dc)
-{
+    // If we have a world loaded, draw it.
     WorldData *world_data = m_parent->getWorldData();
-    if (world_data == nullptr) {
-        return;
+    if (world_data != nullptr) {
+        renderGameData(world_data, dc);
+        renderGrid(dc);
     }
-
-    wxBitmap *bitmap = world_data->getBitmap();
-    dc.DrawBitmap(*bitmap, wxPoint(0, 0), false);
 }
+
+
+// TODO NEXT:
+// Here is promise of getting the zoom scaling working again.
+// Go with that. Once you're done, work on saving.
+// And cache the image. Shit gets expensive.
+
+void MyCanvas::renderGameData(WorldData *world_data, wxDC &dc)
+{
+    wxBitmap *bitmap = world_data->getBitmap();
+    int width  = bitmap->GetWidth();
+    int height = bitmap->GetHeight();
+
+    // Offset the drawing so the center of the bitmap is at the screen origin.
+    int screen_x = X_worldToScreen(-width  / 2);
+    int screen_y = Y_worldToScreen( height / 2);
+
+    wxImage image = bitmap->ConvertToImage();
+    wxBitmap other(image.Scale(width  * m_zoom_scale,
+                               height * m_zoom_scale,
+                               wxIMAGE_QUALITY_NEAREST));
+
+    dc.DrawBitmap(other, wxPoint(screen_x, screen_y), false);
+
+    wxPen *pen = wxThePenList->FindOrCreatePen(COLOR_RED, 1, wxPENSTYLE_SOLID);
+    dc.SetPen(*pen);
+    dc.SetBrush(*wxTRANSPARENT_BRUSH);
+    dc.DrawRectangle(wxRect(screen_x, screen_y,
+                            width  * m_zoom_scale,
+                            height * m_zoom_scale));
+}
+
+
+void MyCanvas::renderGrid(wxDC &dc)
+{
+    wxSize size = GetSize();
+    int width = size.GetWidth();
+    int height = size.GetHeight();
+
+    wxPen *pen = wxThePenList->FindOrCreatePen(COLOR_PURPLE, 1, wxPENSTYLE_SOLID);
+    dc.SetPen(*pen);
+
+    // Draw our vertical grid lines.
+    int screen_x = X_worldToScreen(0);
+    dc.DrawLine(screen_x, 0, screen_x, height);
+
+    // Draw our horizontal grid lines.
+    int screen_y = Y_worldToScreen(0);
+    dc.DrawLine(0, screen_y, width, screen_y);
+}
+
+
+// This is too useful to get rid of. We'll add it back one day.
+#if 0
+static const wxColor COLOR_GRID_ORIGIN(255, 0, 255);
+static const wxColor COLOR_GRID_MAJOR(128, 128, 128);
+static const wxColor COLOR_GRID_MINOR(64, 64, 64);
 
 void MyCanvas::renderGrid(wxDC &dc)
 {
@@ -231,3 +310,4 @@ void MyCanvas::renderGrid(wxDC &dc)
         }
     }
 }
+#endif

@@ -97,10 +97,10 @@ void MyCanvas::onSize(wxSizeEvent &evt)
 // TODO: Make a dialog to show these later.
 void MyCanvas::onKeyDown(wxKeyEvent &evt)
 {
-    wxChar ch = evt.GetUnicodeKey();
+    int ch = evt.GetKeyCode();
     switch (ch) {
-    case '-': changeZoomScale(-1); break;
-    case '=': changeZoomScale(1); break;
+    case '-': changeZoomScale(false); break;
+    case '=': changeZoomScale(true);  break;
     default: break;
     }
     

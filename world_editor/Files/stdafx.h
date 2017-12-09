@@ -33,5 +33,7 @@
 
 // My headers.
 #include "wx/wxprec.h"
-#include "wx/listctrl.h"
+
 #include "wx/dcbuffer.h"
+#include "wx/listctrl.h"
+#include "wx/rawbmp.h""

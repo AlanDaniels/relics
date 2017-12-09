@@ -19,6 +19,8 @@ private:
     // Disallow the default ctor.
     WorldData() = delete;
 
+    wxBitmap *trimBorders(wxBitmap *bitmap);
+
     std::string m_image_fname;
     wxBitmap *m_bitmap;
 };

@@ -44,6 +44,17 @@ MyCanvas::MyCanvas(MyMainFrame *parent) :
 }
 
 
+// Destructor.
+MyCanvas::~MyCanvas()
+{
+    if (m_zoomed_heightmap != nullptr) {
+        m_zoomed_heightmap->FreeResource();
+        delete m_zoomed_heightmap;
+        m_zoomed_heightmap = nullptr;
+    }
+}
+
+
 int MyCanvas::X_worldToScreen(int x) const 
 {
     int width  = GetSize().GetWidth();
@@ -127,19 +138,50 @@ void MyCanvas::onMouseLeftUp(wxMouseEvent &evt)
 
 
 // Mouse move event.
+// If there's heightmap data, show it.
 void MyCanvas::onMouseMove(wxMouseEvent &evt)
 {
-#if 0
+    WorldData *world = m_parent->getWorldData();
+    if (world == nullptr) {
+        return;
+    }
+
     int x = evt.GetX();
     int y = evt.GetY();
-
     int screen_x = X_screenToWorld(x);
     int screen_y = Y_screenToWorld(y);
 
+    wxBitmap *heightmap = world->getHeightmap();
+    int width  = heightmap->GetWidth();
+    int height = heightmap->GetHeight();
+
+    int map_x =   screen_x + (width  / 2);
+    int map_y =  -screen_y + (height / 2);
+
+    if ((map_x < 0) || (map_x >= width) ||
+        (map_y < 0) || (map_y >= height)) {
+        SetToolTip(wxString(""));
+        return;
+    }
+
+    // Sample that one pixel.
+    wxNativePixelData data(*heightmap);
+    if (!data) {
+        SetToolTip(wxString(""));
+        return;
+    }
+
+    wxNativePixelData::Iterator p(data);
+    p.Offset(data, map_x, map_y);
+    unsigned char r = p.Red();
+    unsigned char g = p.Green();
+    unsigned char b = p.Blue();
+
     char msg[64];
-    sprintf(msg, "Pos: %d, %d", screen_x, screen_y);
+    sprintf(msg,
+        "Screen Pos: %d, %d\nHeightmap Pos: %d, %d\n%u %u %u",
+        screen_x, screen_y, map_x, map_y, r, g, b);
     SetToolTip(wxString(msg));
-#endif
 }
 
 
@@ -218,7 +260,7 @@ void MyCanvas::rebuildZoomedHeightmap()
     }
 
     // If we've already built this, and nothing has changed, don't bother.
-    wxBitmap *heightmap = world_data->getBitmap();
+    wxBitmap *heightmap = world_data->getHeightmap();
     if ((m_zoomed_heightmap != nullptr) &&
         (m_old_heightmap  == heightmap) &&
         (m_old_zoom_scale == m_zoom_scale)) {
@@ -250,7 +292,7 @@ void MyCanvas::rebuildZoomedHeightmap()
 // And cache the image. Shit gets expensive.
 void MyCanvas::renderWorldData(WorldData *world_data, wxDC &dc)
 {
-    wxBitmap *bitmap = world_data->getBitmap();
+    wxBitmap *bitmap = world_data->getHeightmap();
     int width  = bitmap->GetWidth();
     int height = bitmap->GetHeight();
     rebuildZoomedHeightmap();

@@ -12,6 +12,7 @@ class MyCanvas : public wxPanel
 {
 public:
     MyCanvas(MyMainFrame *parent);
+    ~MyCanvas();
 
     int X_worldToScreen(int x) const;
     int Y_worldToScreen(int y) const;

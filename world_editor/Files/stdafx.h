@@ -5,14 +5,14 @@
 
 #pragma once
 
-// Dear Visual Studio: Everything will be okay. Love, Alan.
+// Dear Visual Studio: Everything will be okay.
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
 #include "targetver.h"
 
-// Exclude rarely-used stuff from Windows headers/
+// Exclude rarely-used stuff from Windows headers.
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -36,4 +36,4 @@
 
 #include "wx/dcbuffer.h"
 #include "wx/listctrl.h"
-#include "wx/rawbmp.h""
+#include "wx/rawbmp.h"

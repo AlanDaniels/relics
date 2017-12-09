@@ -147,7 +147,28 @@ void MyMainFrame::onMenuOpen(wxCommandEvent &evt)
 
 void MyMainFrame::onMenuSave(wxCommandEvent &evt)
 {
-    wxLogMessage("Hello world from wxWidgets!");
+    if (m_world_data == nullptr) {
+        wxLogMessage("Nothing to save!");
+        return;
+    }
+
+    wxString dlg_result = wxFileSelector(
+        wxString("Choose a World file name."),
+        wxString(RESOURCE_PATH),
+        wxString("*.world"),
+        wxString("world"),
+        wxString("World Files (*.world)|All Files (*.*)"),
+        wxFD_OVERWRITE_PROMPT,
+        this,
+        wxDefaultCoord,
+        wxDefaultCoord);
+
+    if (dlg_result.IsEmpty()) {
+        return;
+    }
+
+    std::string fname(dlg_result.c_str());
+    m_world_data->saveToDatabase(fname);
 }
 
 

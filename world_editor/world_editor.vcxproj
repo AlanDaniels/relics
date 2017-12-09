@@ -20,6 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Files\resources.cpp" />
+    <ClCompile Include="Files\shell.c" />
+    <ClCompile Include="Files\sqlite3.c" />
     <ClCompile Include="Files\world_data.cpp" />
     <ClCompile Include="Files\world_editor.cpp" />
     <ClCompile Include="Files\my_canvas.cpp" />
@@ -27,6 +29,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Files\resources.h" />
+    <ClInclude Include="Files\sqlite3.h" />
+    <ClInclude Include="Files\sqlite3ext.h" />
     <ClInclude Include="Files\world_data.h" />
     <ClInclude Include="Files\world_editor.h" />
     <ClInclude Include="Files\my_canvas.h" />
@@ -97,6 +101,7 @@
     <Link>
       <AdditionalLibraryDirectories>D:\Libraries\wxWidgets-3.0.3\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>wxbase30ud.lib;wxmsw30ud_core.lib;wxmsw30ud_adv.lib;wxjpegd.lib;wxpngd.lib;wxtiffd.lib;wxzlibd.lib;comctl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

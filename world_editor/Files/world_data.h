@@ -10,17 +10,19 @@
 class WorldData
 {
 public:
-    WorldData(const std::string &fname);
+    WorldData(const std::string &heightmap_fname);
     ~WorldData();
 
-    wxBitmap *getBitmap() { return m_bitmap; }
+    void saveToDatabase(const std::string &db_fname);
+
+    wxBitmap *getHeightmap() { return m_heightmap; }
 
 private:
     // Disallow the default ctor.
     WorldData() = delete;
 
-    wxBitmap *trimBorders(wxBitmap *bitmap);
+    std::string m_heightmap_fname;
+    std::string m_db_fname;
 
-    std::string m_image_fname;
-    wxBitmap *m_bitmap;
+    wxBitmap *m_heightmap;
 };

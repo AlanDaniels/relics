@@ -1,6 +1,7 @@
 
 #include "stdafx.h"
 #include "draw_cubemap_texture.h"
+#include "common_util.h"
 
 #include "utils.h"
 

@@ -1,6 +1,7 @@
 ﻿
 #include "stdafx.h"
 #include "relics.h"
+#include "common_util.h"
 
 #include "config.h"
 #include "chunk.h"

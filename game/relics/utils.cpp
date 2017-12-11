@@ -1,5 +1,6 @@
 
 #include "stdafx.h"
+#include "common_util.h"
 #include "relics.h"
 #include "utils.h"
 #include "lua.hpp"
@@ -109,32 +110,6 @@ MyPlane GetTopGridPlane(int grid_y)
 MyPlane GetBottomGridPlane(int grid_y)
 {
     return MyPlane(VEC4_DOWNWARD, -GridToWorld(grid_y));
-}
-
-
-// Print a debug message, both to the Visual Studio debugger, and stdout.
-// Note the global here means this call won't be thread safe, if you ever get to that point.
-static char debug_dest[2048];
-void PrintDebug(const char *format, ...)
-{
-    va_list arg_list;
-
-    va_start(arg_list, format);
-    vsprintf(debug_dest, format, arg_list);
-    va_end(arg_list);
-
-    OutputDebugStringA(debug_dest);
-    printf(debug_dest);
-}
-
-
-// Print when we hit an "impossible" case in a switch statement, and kill the app.
-void PrintTheImpossible(const char *fname, int line_num, int value)
-{
-    PrintDebug(
-        "IMPOSSIBLE VALUE! %s (line %d), value of %d\n.",
-        fname, line_num, value);
-    assert(false);
 }
 
 

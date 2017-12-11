@@ -1,6 +1,7 @@
 
 #include "stdafx.h"
 #include "chunk.h"
+#include "common_util.h"
 
 #include "block.h"
 #include "chunk_stripe.h"

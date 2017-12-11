@@ -1,6 +1,7 @@
 
 #include "stdafx.h"
 #include "game_world.h"
+#include "common_util.h"
 
 #include "chunk.h"
 #include "chunk_hit_test.h"

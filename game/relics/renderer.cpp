@@ -1,5 +1,6 @@
 
 #include "stdafx.h"
+#include "common_util.h"
 #include "renderer.h"
 
 #include "config.h"

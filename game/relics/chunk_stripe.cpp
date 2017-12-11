@@ -1,6 +1,7 @@
 
 #include "stdafx.h"
 #include "chunk_stripe.h"
+#include "common_util.h"
 
 #include "brady.h"
 #include "block.h"

@@ -1,6 +1,7 @@
 
 #include "stdafx.h"
 #include "my_math.h"
+#include "common_util.h"
 
 #include "chunk.h"
 #include "config.h"

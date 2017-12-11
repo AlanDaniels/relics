@@ -1,6 +1,7 @@
 
 #include "stdafx.h"
 #include "brady.h"
+#include "common_util.h"
 
 #include "chunk.h"
 #include "draw_state_pnt.h"

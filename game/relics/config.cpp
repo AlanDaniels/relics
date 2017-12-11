@@ -1,6 +1,8 @@
 
 #include "stdafx.h"
 #include "config.h"
+#include "common_util.h"
+
 #include "utils.h"
 #include "lua.hpp"
 

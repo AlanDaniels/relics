@@ -76,8 +76,6 @@ MyPlane GetEastGridPlane(int grid_x);
 MyPlane GetTopGridPlane(int grid_y);
 MyPlane GetBottomGridPlane(int grid_y);
 
-void  PrintDebug(const char *format, ...);
-void  PrintTheImpossible(const char *fname, int line_num, int value);
 void  PrintOpenglEnabledState(const char *title, bool details);
 
 const char *LuaErrorToString(int error);

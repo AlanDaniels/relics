@@ -1,8 +1,8 @@
 
 #include "stdafx.h"
 #include "world_data.h"
+#include "common_util.h"
 #include "sqlite3.h"
-#include "util.h"
 
 
 // The only allowed constructor.

@@ -1,6 +1,8 @@
 
 #include "stdafx.h"
 #include "block.h"
+#include "common_util.h"
+
 #include "utils.h"
 
 

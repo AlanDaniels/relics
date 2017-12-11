@@ -19,18 +19,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Files\common_util.cpp" />
+    <ClCompile Include="Files\sqlite3.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Files\util.cpp" />
-    <ClCompile Include="Files\shell.c" />
-    <ClCompile Include="Files\sqlite3.c" />
     <ClCompile Include="Files\world_data.cpp" />
     <ClCompile Include="Files\world_editor.cpp" />
     <ClCompile Include="Files\my_canvas.cpp" />
-    <ClCompile Include="Files\stdafx.cpp" />
+    <ClCompile Include="Files\stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Files\util.h" />
+    <ClInclude Include="Files\common_util.h" />
     <ClInclude Include="Files\sqlite3.h" />
-    <ClInclude Include="Files\sqlite3ext.h" />
+    <ClInclude Include="Files\util.h" />
     <ClInclude Include="Files\world_data.h" />
     <ClInclude Include="Files\world_editor.h" />
     <ClInclude Include="Files\my_canvas.h" />
@@ -96,7 +100,8 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Libraries\wxWidgets-3.0.3\lib\vc_lib\mswud;D:\Libraries\wxWidgets-3.0.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common_code;D:\Libraries\wxWidgets-3.0.3\lib\vc_lib\mswud;D:\Libraries\wxWidgets-3.0.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>D:\Libraries\wxWidgets-3.0.3\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>

@@ -1,6 +1,7 @@
 
 #include "stdafx.h"
 #include "draw_state_base.h"
+#include "common_util.h"
 
 #include "draw_cubemap_texture.h"
 #include "draw_texture.h"

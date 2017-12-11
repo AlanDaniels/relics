@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Files\resources.cpp" />
+    <ClCompile Include="Files\util.cpp" />
     <ClCompile Include="Files\shell.c" />
     <ClCompile Include="Files\sqlite3.c" />
     <ClCompile Include="Files\world_data.cpp" />
@@ -28,7 +28,7 @@
     <ClCompile Include="Files\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Files\resources.h" />
+    <ClInclude Include="Files\util.h" />
     <ClInclude Include="Files\sqlite3.h" />
     <ClInclude Include="Files\sqlite3ext.h" />
     <ClInclude Include="Files\world_data.h" />

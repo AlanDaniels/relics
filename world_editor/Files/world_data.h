@@ -13,13 +13,15 @@ public:
     WorldData(const std::string &heightmap_fname);
     ~WorldData();
 
-    void saveToDatabase(const std::string &db_fname);
+    bool saveToDatabase(const std::string &db_fname);
 
     wxBitmap *getHeightmap() { return m_heightmap; }
 
 private:
     // Disallow the default ctor.
     WorldData() = delete;
+
+    bool actualSaveToDatabase(const std::string &db_fname, int *pOut_blocks_written);
 
     std::string m_heightmap_fname;
     std::string m_db_fname;

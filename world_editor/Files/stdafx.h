@@ -37,3 +37,4 @@
 #include "wx/dcbuffer.h"
 #include "wx/listctrl.h"
 #include "wx/rawbmp.h"
+#include "wx/time.h"

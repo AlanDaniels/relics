@@ -3,7 +3,7 @@
 #include "world_editor.h"
 
 #include "my_canvas.h"
-#include "resources.h"
+#include "util.h"
 #include "world_data.h"
 
 
@@ -115,16 +115,13 @@ void MyMainFrame::onMenuNew(wxCommandEvent &evt)
     }
 
     wxString dlg_result = wxFileSelector(
-        wxString("Choose a base image to start with"),
-        wxString(RESOURCE_PATH),
-        wxString("*.png"),
-        wxString("png"),
-        wxString("PNG Files (*.png)|All Files (*.*)"),
+        "Choose a base heightmap to start with...",
+        RESOURCE_PATH,
+        "*.png",
+        ".png",
+        "PNG Files (*.png)|*.png",
         wxFD_OPEN | wxFD_FILE_MUST_EXIST,
-        this,
-        wxDefaultCoord,
-        wxDefaultCoord);
-
+        this);
     if (dlg_result.IsEmpty()) {
         return;
     }
@@ -135,7 +132,7 @@ void MyMainFrame::onMenuNew(wxCommandEvent &evt)
 
     char msg[128];
     sprintf(msg, "File: %s", fname.c_str());
-    SetStatusText(wxString(msg));
+    SetStatusText(msg);
 }
 
 
@@ -153,16 +150,13 @@ void MyMainFrame::onMenuSave(wxCommandEvent &evt)
     }
 
     wxString dlg_result = wxFileSelector(
-        wxString("Choose a World file name."),
-        wxString(RESOURCE_PATH),
-        wxString("*.world"),
-        wxString("world"),
-        wxString("World Files (*.world)|All Files (*.*)"),
-        wxFD_OVERWRITE_PROMPT,
-        this,
-        wxDefaultCoord,
-        wxDefaultCoord);
-
+        "Choose a World file name",
+        RESOURCE_PATH,
+        "",
+        "*.world",
+        "World Files (*.world)|*.world",
+        wxFD_SAVE | wxFD_OVERWRITE_PROMPT,
+        this);
     if (dlg_result.IsEmpty()) {
         return;
     }

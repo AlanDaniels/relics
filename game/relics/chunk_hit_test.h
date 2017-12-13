@@ -15,7 +15,7 @@ public:
         m_dist(FLT_MAX) {}
         
     ChunkHitTestDetail(
-        const ChunkOrigin &origin, const GridCoord &coord,
+        const ChunkOrigin &origin, const GlobalGrid &coord,
         FaceEnum face, const MyVec4 &impact, GLfloat dist) :
         m_chunk_origin(origin),
         m_global_coord(coord),
@@ -33,7 +33,7 @@ public:
     const ChunkHitTestDetail &operator=(const ChunkHitTestDetail &that);
 
     const ChunkOrigin &getChunkOrigin() const { return m_chunk_origin; }
-    const GridCoord &getGlobalCoord() const { return m_global_coord; }
+    const GlobalGrid &getGlobalCoord() const { return m_global_coord; }
     FaceEnum getFace() const { return m_face; }
     const MyVec4 &getImpact() const { return m_impact; }
     GLfloat getDist() const { return m_dist; }
@@ -42,10 +42,10 @@ public:
 
 private:
     ChunkOrigin m_chunk_origin;
-    GridCoord   m_global_coord;
-    FaceEnum      m_face;
-    MyVec4        m_impact;
-    GLfloat       m_dist;
+    GlobalGrid  m_global_coord;
+    FaceEnum    m_face;
+    MyVec4      m_impact;
+    GLfloat     m_dist;
 };
 
 

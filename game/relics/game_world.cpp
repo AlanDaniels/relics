@@ -56,7 +56,7 @@ GameWorld::GameWorld(sqlite3 *database) :
     // Figure out the size of our drawing region.
     // We load one border larger than what we will actually draw.
     int        eval_blocks = GetConfig().logic.eval_blocks;
-    EvalRegion draw_region = WorldToEvalRegion(m_camera_pos, eval_blocks);
+    EvalRegion draw_region = WorldPosToEvalRegion(m_camera_pos, eval_blocks);
     EvalRegion load_region = draw_region.expand();
 
     // TODO: Forget threads for now. 
@@ -117,7 +117,7 @@ void GameWorld::resetCamera()
     m_camera_pitch = 0.0f;
     m_camera_yaw   = 0.0f;
     m_camera_pos   = getCameraStartPos();
-    m_current_grid_coord   = WorldToGridCoord(m_camera_pos, NUDGE_NONE);
+    m_current_grid_coord   = WorldPosToGlobalGrid(m_camera_pos, NUDGE_NONE);
     m_current_chunk_origin = WorldToChunkOrigin(m_camera_pos);
 }
 
@@ -240,7 +240,7 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
     }
 
     // Since our camera moved, see if we need to recalc any of the world.
-    GridCoord  new_location = WorldToGridCoord(m_camera_pos, NUDGE_NONE);
+    GlobalGrid  new_location = WorldPosToGlobalGrid(m_camera_pos, NUDGE_NONE);
 
     int eval_blocks = GetConfig().logic.eval_blocks;
     ChunkOrigin new_chunk_origin = WorldToChunkOrigin(m_camera_pos);
@@ -273,7 +273,7 @@ MyRay GameWorld::getCameraEyeRay() const
 void GameWorld::updateWorld()
 {
     int eval_blocks = GetConfig().logic.eval_blocks;
-    EvalRegion draw_region = WorldToEvalRegion(m_camera_pos, eval_blocks);
+    EvalRegion draw_region = WorldPosToEvalRegion(m_camera_pos, eval_blocks);
     EvalRegion load_region = draw_region.expand();
 
     // For any chunk at the "edge" of the load region, load it if we don't have it already.
@@ -342,7 +342,7 @@ void GameWorld::calcHitTest()
 
     GLfloat hit_test_distance = GetConfig().logic.getHitTestDistanceCm();
     int block_count = static_cast<int>((hit_test_distance / 100.0f) / CHUNK_WIDTH);
-    EvalRegion region = WorldToEvalRegion(m_camera_pos, block_count);
+    EvalRegion region = WorldPosToEvalRegion(m_camera_pos, block_count);
 
     for     (int x = region.west();  x <= region.east();  x += CHUNK_WIDTH) {
         for (int z = region.south(); z <= region.north(); z += CHUNK_WIDTH) {
@@ -389,7 +389,7 @@ void GameWorld::deleteBlockInFrontOfUs()
 {
     if (m_hit_test_success) {
         ChunkOrigin origin = m_hit_test_detail.getChunkOrigin();
-        GridCoord coord  = m_hit_test_detail.getGlobalCoord();
+        GlobalGrid coord    = m_hit_test_detail.getGlobalCoord();
 
         const auto &iter = m_chunk_map.find(origin);
         Chunk *pChunk = iter->second;

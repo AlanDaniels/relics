@@ -43,8 +43,8 @@ Chunk *LoadChunk(GameWorld *pWorld, const ChunkOrigin &origin)
         std::string text(reinterpret_cast<const char*>(raw_text));
 
         if (text == "dirt_top") {
-            GridCoord global_coord(block_x, block_y, block_z);
-            GridCoord local_coord = result->globalToLocalCoord(global_coord);
+            GlobalGrid global_coord(block_x, block_y, block_z);
+            LocalGrid  local_coord = GlobalGridToLocal(global_coord, origin);
 
             int local_x = local_coord.x();
             int local_z = local_coord.z();

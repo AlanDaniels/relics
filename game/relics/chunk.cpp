@@ -198,7 +198,7 @@ ChunkStripe *Chunk::getStripe(int local_x, int local_y)
 
 
 // Return true if a grid coord is within this chunk.
-bool Chunk::isCoordWithin(const GridCoord &coord) const
+bool Chunk::isCoordWithin(const GlobalGrid &coord) const
 {
     int local_x = coord.x() - m_origin.x();
     int local_y = coord.y();
@@ -213,7 +213,7 @@ bool Chunk::isCoordWithin(const GridCoord &coord) const
 
 
 // Get the block at a particular grid coord, read-only version.
-const Block *Chunk::getBlockGlobal_RO(const GridCoord &coord) const
+const Block *Chunk::getBlockGlobal_RO(const GlobalGrid &coord) const
 {
     assert(isCoordWithin(coord));
 
@@ -226,7 +226,7 @@ const Block *Chunk::getBlockGlobal_RO(const GridCoord &coord) const
 
 
 // Get the block at a particular grid coord, read-only version.
-Block *Chunk::getBlockGlobal(const GridCoord &coord)
+Block *Chunk::getBlockGlobal(const GlobalGrid &coord)
 {
     assert(isCoordWithin(coord));
 
@@ -339,21 +339,6 @@ MyVec4 Chunk::localToWorldCoord(int x, int y, int z) const
     int global_z = m_origin.z() + z;
 
     return MyVec4(GridToWorld(global_x), GridToWorld(global_y), GridToWorld(global_z));
-}
-
-
-// Convert a global coord to a local coord.
-GridCoord Chunk::globalToLocalCoord(const GridCoord &global_coord) const
-{
-    int local_x = global_coord.x() - m_origin.x();
-    int local_y = global_coord.y();
-    int local_z = global_coord.z() - m_origin.z();
-
-    assert((local_x >= 0) && (local_x <= CHUNK_WIDTH));
-    assert((local_y >= 0) && (local_y <= CHUNK_HEIGHT));
-    assert((local_z >= 0) && (local_z <= CHUNK_WIDTH));
-
-    return GridCoord(local_x, local_y, local_z);
 }
 
 

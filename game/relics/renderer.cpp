@@ -247,7 +247,7 @@ void Renderer::getChunksToRender(std::vector<const Chunk *> *pOut_list, RenderSt
     MyPlane right_clip_plane = MyRay(camera_pos, right_dir_2).toPlane();
 
     // Look up every chunk within our eval region.
-    EvalRegion region = WorldToEvalRegion(camera_pos, eval_blocks);
+    EvalRegion region = WorldPosToEvalRegion(camera_pos, eval_blocks);
 
     for     (int x = region.west();  x <= region.east();  x += CHUNK_WIDTH) {
         for (int z = region.south(); z <= region.north(); z += CHUNK_WIDTH) {

@@ -193,7 +193,7 @@ void ChunkStripe::addVertsForBlock(ChunkVertLists *pOut, int local_z)
     int y = m_local_y;
     int z = local_z;
 
-    GridCoord local_coord(x, y, z);
+    LocalGrid local_coord(x, y, z);
 
     // Top face.
     if (current.getExposure(FACE_TOP)) {

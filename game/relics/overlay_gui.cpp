@@ -125,7 +125,7 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     if (config.debug.show_eval_region) {
         MyVec4  pos = game_world.getCameraPos();
         int eval_blocks = config.logic.eval_blocks;
-        EvalRegion region = WorldToEvalRegion(pos, eval_blocks);
+        EvalRegion region = WorldPosToEvalRegion(pos, eval_blocks);
 
         sprintf(blah,
             "Eval distance: %d meters, W=%d, E=%d, S=%d, N=%d", 

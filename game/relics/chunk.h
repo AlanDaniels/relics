@@ -10,8 +10,9 @@ class Chunk;
 class GameWorld;
 
 
-// The landscape vert lists for a chunk.
-// We tried this as a map of surface-to-list, but the peformance was horrible.
+// The landscape vert lists for a chunk. We tried this as a map of 
+// surface-enum-to-list, but the peformance was horrible, and there
+// aren't that many lists anyway, so I'm hard-coding them here.
 class ChunkVertLists {
 public:
     ChunkVertLists() :
@@ -50,12 +51,15 @@ class ChunkOrigin
 {
 public:
     ChunkOrigin() :
-        m_x(0), m_z(0),
-        m_debug_x(0), m_debug_z(0) {}
+        m_x(0),
+        m_z(0),
+        m_debug_x(0),
+        m_debug_z(0) {}
 
     // Chunks always have to start at regular boundaries.
     ChunkOrigin(int x, int z) :
-        m_x(x), m_z(z) {
+        m_x(x),
+        m_z(z) {
         assert((x % CHUNK_WIDTH) == 0);
         assert((z % CHUNK_WIDTH) == 0);
         m_debug_x = x / CHUNK_WIDTH;
@@ -97,8 +101,8 @@ public:
         else { return false; }
     }
 
-    int x() const { return m_x; }
-    int z() const { return m_z; }
+    inline int x() const { return m_x; }
+    inline int z() const { return m_z; }
 
 private:
     // Temporary, for the sake of checking our math.
@@ -114,22 +118,20 @@ private:
 ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos);
 
 
-// TODO: We need to clean up the whole global vs. local coords thing.
 class Chunk
 {
 public:
     Chunk(const GameWorld *pWorld, const ChunkOrigin &origin);
 
-    bool isCoordWithin(const GridCoord &coord) const;
+    bool isCoordWithin(const GlobalGrid &coord) const;
 
-    const Block *getBlockGlobal_RO(const GridCoord &coord) const;
-    Block *getBlockGlobal(const GridCoord &coord);
+    const Block *getBlockGlobal_RO(const GlobalGrid &coord) const;
+    Block *getBlockGlobal(const GlobalGrid &coord);
 
     const Block *getBlockLocal_RO(int local_x, int local_y, int local_z) const;
     Block *getBlockLocal(int local_x, int local_y, int local_z);
 
     MyVec4 localToWorldCoord(int local_x, int local_y, int local_z) const;
-    GridCoord globalToLocalCoord(const GridCoord &global_coord) const;
 
     void recalcExposures();
     void realizeLandscape();

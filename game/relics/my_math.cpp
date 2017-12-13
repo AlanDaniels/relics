@@ -366,30 +366,20 @@ HitTestEnum WorldHitTest(const MyRay &ray, const MyPlane &plane, MyVec4 *pOut_im
 }
 
 
-// Grid coord assignment operator.
-const GridCoord &GridCoord::operator=(const GridCoord &that)
+// Local grid ctor.
+LocalGrid::LocalGrid(int x, int y, int z) :
+    m_x(x), m_y(y), m_z(z) 
 {
-    m_x = that.m_x;
-    m_y = that.m_y;
-    m_z = that.m_z;
-    return *this;
-}
-
-
-// Comparison operator. Simple enough since this is all ints.
-bool GridCoord::operator==(const GridCoord &that)
-{
-    return (
-        (m_x == that.m_x) &&
-        (m_y == that.m_y) &&
-        (m_z == that.m_z));
+    assert((x >= 0) && (x < CHUNK_WIDTH));
+    assert((y >= 0) && (y < CHUNK_HEIGHT));
+    assert((z >= 0) && (z < CHUNK_WIDTH));
 }
 
 
 // Convert a world coord into a grid coord.
 // The nudge factor is so we can "burrow" into a block a bit, when we do a
 // hit-test against a block face, so that we don't hit strange edge cases in the math.
-GridCoord WorldToGridCoord(const MyVec4 &pos, NudgeEnum nudge)
+GlobalGrid WorldPosToGlobalGrid(const MyVec4 &pos, NudgeEnum nudge)
 {
     float fixed_x = pos.x();
     float fixed_y = pos.y();
@@ -409,7 +399,19 @@ GridCoord WorldToGridCoord(const MyVec4 &pos, NudgeEnum nudge)
     int x = static_cast<int>(floor(fixed_x / BLOCK_SCALE));
     int y = static_cast<int>(floor(fixed_y / BLOCK_SCALE));
     int z = static_cast<int>(floor(fixed_z / BLOCK_SCALE));
-    return GridCoord(x, y, z);
+    return GlobalGrid(x, y, z);
+}
+
+
+// Convert a global grid coor to a local one.
+// It is up to *you* to make sure you're calling this for the right chunk origin.
+// Also, o make sure the Y value for height is clamped to valid values.
+LocalGrid GlobalGridToLocal(const GlobalGrid &coord, const ChunkOrigin &origin)
+{
+    int x = coord.x() - origin.x();
+    int y = coord.y();
+    int z = coord.z() - origin.z();
+    return LocalGrid(x, y, z);
 }
 
 
@@ -493,7 +495,7 @@ std::string EvalRegion::toDebugStr() const
 // That is, what's the min and max for X and Z, giving us all the chunks
 // that fall within this range. This should always be a 3x3 grid, 5x5, etc.
 // Note that this is range-inclusive (ex: -2 to +2), etc.
-EvalRegion WorldToEvalRegion(const MyVec4 &pos, int block_count)
+EvalRegion WorldPosToEvalRegion(const MyVec4 &pos, int block_count)
 {
     ChunkOrigin origin = WorldToChunkOrigin(pos);
 

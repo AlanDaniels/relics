@@ -15,7 +15,7 @@ enum  EdgeEnum;
 class Brady
 {
 public:
-    Brady(const Chunk &chunk, const GridCoord &local_coord, FaceEnum face);
+    Brady(const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face);
     std::string toString() const;
 
     void addToVertList_PNT(VertList_PNT *pOut);
@@ -27,7 +27,7 @@ private:
     Brady(const Brady &that) = delete;
     void operator=(const Brady &that) = delete;
 
-    GridCoord m_local_coord;
+    LocalGrid m_local_coord;
     FaceEnum  m_face;
 
     Vertex_PNT m_verts[4][4];

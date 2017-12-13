@@ -2,7 +2,6 @@
 
 #include "stdafx.h"
 
-
 class ChunkOrigin;
 class MyPlane;
 
@@ -28,10 +27,10 @@ public:
 
     MyColor &operator=(const MyColor &that);
 
-    GLfloat red()   const { return m_red; }
-    GLfloat green() const { return m_green; }
-    GLfloat blue()  const { return m_blue; }
-    GLfloat alpha() const { return m_alpha; }
+    inline GLfloat red()   const { return m_red; }
+    inline GLfloat green() const { return m_green; }
+    inline GLfloat blue()  const { return m_blue; }
+    inline GLfloat alpha() const { return m_alpha; }
 
 private:
     // Forbit default ctor.
@@ -74,8 +73,8 @@ public:
     MyVec2 lerp(const MyVec2 &that, float amount) const;
     std::string toString() const;
 
-    GLfloat x() const { return m_x; }
-    GLfloat y() const { return m_y; }
+    inline GLfloat x() const { return m_x; }
+    inline GLfloat y() const { return m_y; }
 
 private:
     GLfloat m_x;
@@ -100,10 +99,13 @@ public:
 
     MyVec4() :
         m_x(0.0f), m_y(0.0f), m_z(0.0f), m_w(1.0f) {}
+
     MyVec4(GLfloat x, GLfloat y, GLfloat z) :
         m_x(x), m_y(y), m_z(z), m_w(1.0f) {}
+
     MyVec4(GLfloat x, GLfloat y, GLfloat z, GLfloat w) : 
         m_x(x), m_y(y), m_z(z), m_w(w) {}
+
     MyVec4(const MyVec4 &that) : 
         m_x(that.m_x), m_y(that.m_y), m_z(that.m_z), m_w(that.m_w) {}
 
@@ -146,10 +148,10 @@ public:
     MyVec4 lerp(const MyVec4 &that, float amount) const;
     std::string toString() const;
 
-    GLfloat x() const { return m_x; }
-    GLfloat y() const { return m_y; }
-    GLfloat z() const { return m_z; }
-    GLfloat w() const { return m_w; }
+    inline GLfloat x() const { return m_x; }
+    inline GLfloat y() const { return m_y; }
+    inline GLfloat z() const { return m_z; }
+    inline GLfloat w() const { return m_w; }
 
 private:
     GLfloat m_x;
@@ -300,23 +302,35 @@ enum NudgeEnum
 };
 
 
-class GridCoord
+// Global grid coordinates. These are valid anywhere.
+class GlobalGrid
 {
 public:
-    GridCoord() :
+    GlobalGrid() :
         m_x(0), m_y(0), m_z(0) {}
-    GridCoord(int grid_x, int grid_y, int grid_z) :
-        m_x(grid_x), m_y(grid_y), m_z(grid_z) {}
-    GridCoord(const GridCoord &that) :
+
+    GlobalGrid::GlobalGrid(int x, int y, int z) :
+        m_x(x), m_y(y), m_z(z) {}
+
+    GlobalGrid(const GlobalGrid &that) :
         m_x(that.m_x), m_y(that.m_y), m_z(that.m_z) {}
 
-    const GridCoord &operator=(const GridCoord &that);
+    const GlobalGrid &GlobalGrid::operator=(const GlobalGrid &that) {
+        m_x = that.m_x;
+        m_y = that.m_y;
+        m_z = that.m_z;
+        return *this;
+    }
 
-    bool operator==(const GridCoord &that);
+    bool GlobalGrid::operator==(const GlobalGrid &that) {
+        return ((m_x == that.m_x) &&
+                (m_y == that.m_y) &&
+                (m_z == that.m_z));
+    }
 
-    int x() const { return m_x; }
-    int y() const { return m_y; }
-    int z() const { return m_z; }
+    inline int x() const { return m_x; }
+    inline int y() const { return m_y; }
+    inline int z() const { return m_z; }
 
 private:
     int m_x;
@@ -325,7 +339,46 @@ private:
 };
 
 
-GridCoord WorldToGridCoord(const MyVec4 &pos, NudgeEnum nudge_type);
+// Local grid coordinates. These are only valid within one chunk.
+// Yeah, this is the same structure as "global", but I want it 
+// to be obvious when we're working in one system or another.
+class LocalGrid
+{
+public:
+    LocalGrid() :
+        m_x(0), m_y(0), m_z(0) {}
+
+    LocalGrid(int x, int y, int z);
+
+    LocalGrid(const LocalGrid &that) :
+        m_x(that.m_x), m_y(that.m_y), m_z(that.m_z) {}
+
+    const LocalGrid &LocalGrid::operator=(const LocalGrid &that) {
+        m_x = that.m_x;
+        m_y = that.m_y;
+        m_z = that.m_z;
+        return *this;
+    }
+
+    bool LocalGrid::operator==(const LocalGrid &that) {
+        return ((m_x == that.m_x) &&
+                (m_y == that.m_y) &&
+                (m_z == that.m_z));
+    }
+
+    inline int x() const { return m_x; }
+    inline int y() const { return m_y; }
+    inline int z() const { return m_z; }
+
+private:
+    int m_x;
+    int m_y;
+    int m_z;
+};
+
+
+GlobalGrid WorldPosToGlobalGrid(const MyVec4 &pos, NudgeEnum nudge_type);
+LocalGrid  GlobalGridToLocal(const GlobalGrid &coord, const ChunkOrigin &origin);
 
 
 // An "eval region", the four values always align along chunk boundaries.
@@ -350,10 +403,10 @@ public:
     bool operator==(const EvalRegion &that) const;
     bool operator!=(const EvalRegion &that) const;
 
-    int west()  const { return m_west; }
-    int east()  const { return m_east; }
-    int south() const { return m_south; }
-    int north() const { return m_north; }
+    inline int west()  const { return m_west; }
+    inline int east()  const { return m_east; }
+    inline int south() const { return m_south; }
+    inline int north() const { return m_north; }
 
     bool containsOrigin(const ChunkOrigin &origin) const;
     EvalRegion expand() const;
@@ -374,4 +427,4 @@ private:
 
 
 // Given a chunk origin, figure our our eval region.
-EvalRegion WorldToEvalRegion(const MyVec4 &pos, int block_count);
+EvalRegion WorldPosToEvalRegion(const MyVec4 &pos, int block_count);

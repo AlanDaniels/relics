@@ -5,9 +5,9 @@
 #include "draw_state_pt.h"
 
 
-class  Chunk;
-enum   FaceEnum;
-enum   EdgeEnum;
+class Chunk;
+enum  FaceEnum;
+enum  EdgeEnum;
 
 
 // The 9-by-9 array of quads.
@@ -28,7 +28,7 @@ private:
     void operator=(const Brady &that) = delete;
 
     GridCoord m_local_coord;
-    FaceEnum m_face;
+    FaceEnum  m_face;
 
     Vertex_PNT m_verts[4][4];
 };

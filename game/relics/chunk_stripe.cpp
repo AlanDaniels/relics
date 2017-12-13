@@ -91,7 +91,6 @@ void ChunkStripe::recalcExposureForBlock(int local_z)
     int z = local_z;
 
     bool west_edge = (x == 0);
-
     bool east_edge = (x == (CHUNK_WIDTH - 1));
 
     bool south_edge = (z == 0);

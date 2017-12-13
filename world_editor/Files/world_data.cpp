@@ -144,7 +144,8 @@ bool WorldData::actualSaveToDatabase(const std::string &fname, int *pOut_blocks_
             unsigned char green = pixel_iter.Green();
             unsigned char blue  = pixel_iter.Blue();
 
-            int height = (red + green + blue) / 3;
+            // TODO: I'm trying half for now. That is, a max of 128 rather than 255.
+            int height = (red + green + blue) / 6;
             if (height > 0) {
                 int landscape_x =  x - (width  / 2);
                 int landscape_z = -y + (height / 2);

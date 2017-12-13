@@ -53,7 +53,7 @@ Chunk *LoadChunk(GameWorld *pWorld, const ChunkOrigin &origin)
 
             for (int y = 0; y < block_y; y++) {
                 LocalGrid lookup(local_x, y, local_z);
-                result->getBlock(lookup)->setContent(CONTENT_DIRT);
+                result->setBlockType(lookup, BT_DIRT);
             }
         }
 

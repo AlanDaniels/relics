@@ -398,7 +398,7 @@ void GameWorld::deleteBlockInFrontOfUs()
         assert(chunk != nullptr);
         assert(chunk->IsGlobalGridWithin(global_coord));
 
-        chunk->getBlock(local_coord)->setContent(CONTENT_AIR);
+        chunk->setBlockType(local_coord, BT_AIR);
         chunk->recalcExposures();
         chunk->realizeLandscape();
     }

@@ -192,17 +192,22 @@ bool Chunk::IsGlobalGridWithin(const GlobalGrid &coord) const
 }
 
 
-// Get the block at a particular local coord, read-only version.
-const Block *Chunk::getBlock_RO(const LocalGrid &coord) const
+// Get the type of a block.
+BlockType Chunk::getBlockType(const LocalGrid &coord) const
 {
-    return getStripe_RO(coord.x(), coord.y())->getBlock_RO(coord.z());
+    const ChunkStripe *stripe = getStripe_RO(coord.x(), coord.y());
+    const Block *block = stripe->getBlock_RO(coord.z());
+    return block->getBlockType();
 }
 
 
-// Get the block at a particular local coord, writeable version.
-Block *Chunk::getBlock(const LocalGrid &coord)
+// Set the type of a block.
+// TODO: This should invalidate everything.
+void Chunk::setBlockType(const LocalGrid &coord, BlockType block_type)
 {
-    return getStripe(coord.x(), coord.y())->getBlock_RW(coord.z());
+    ChunkStripe *stripe = getStripe(coord.x(), coord.y());
+    Block *block = stripe->getBlock_RW(coord.z());
+    block->setBlockType(block_type);
 }
 
 
@@ -341,11 +346,11 @@ std::string Chunk::toDescription() const
         for (int z = 0; z < CHUNK_WIDTH; z++) {
             for (int y = 0; y < CHUNK_HEIGHT; y++) {
                 LocalGrid coord(x, y, z);
-                const Block *pBlock = getBlock_RO(coord);
+                BlockType block_type = getBlockType(coord);
 
-                switch (pBlock->getContent()) {
-                case CONTENT_DIRT:  dirt_blocks++; break;
-                case CONTENT_STONE: stone_blocks++; break;
+                switch (block_type) {
+                case BT_DIRT:  dirt_blocks++; break;
+                case BT_STONE: stone_blocks++; break;
                 default: break;
                 }
             }

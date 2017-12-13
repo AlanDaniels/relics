@@ -71,8 +71,9 @@ static bool CheckSouthFaces(
             GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_NORTH);
             if (chunk.IsGlobalGridWithin(global_coord)) {
                 LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
-                const Block *block = chunk.getBlock_RO(local_coord);
-                if (block->isFilled()) {
+                BlockType block_type  = chunk.getBlockType(local_coord);
+
+                if (IsBlockTypeFilled(block_type)) {
                     *pOut_coord    = global_coord;
                     *pOut_impact   = impact;
                     *pOut_distance = distance;
@@ -104,8 +105,9 @@ static bool CheckNorthFaces(
             GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_SOUTH);
             if (chunk.IsGlobalGridWithin(global_coord)) {
                 LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
-                const Block *block = chunk.getBlock_RO(local_coord);
-                if (block->isFilled()) {
+                BlockType block_type  = chunk.getBlockType(local_coord);
+
+                if (IsBlockTypeFilled(block_type)) {
                     *pOut_coord    = global_coord;
                     *pOut_impact   = impact;
                     *pOut_distance = distance;
@@ -137,8 +139,9 @@ static bool CheckWestFaces(
             GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_EAST);
             if (chunk.IsGlobalGridWithin(global_coord)) {
                 LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
-                const Block *block = chunk.getBlock_RO(local_coord);
-                if (block->isFilled()) {
+                BlockType block_type  = chunk.getBlockType(local_coord);
+
+                if (IsBlockTypeFilled(block_type)) {
                     *pOut_coord    = global_coord;
                     *pOut_impact   = impact;
                     *pOut_distance = distance;
@@ -170,8 +173,9 @@ static bool CheckEastFaces(
             GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_WEST);
             if (chunk.IsGlobalGridWithin(global_coord)) {
                 LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
-                const Block *block = chunk.getBlock_RO(local_coord);
-                if (block->isFilled()) {
+                BlockType block_type  = chunk.getBlockType(local_coord);
+
+                if (IsBlockTypeFilled(block_type)) {
                     *pOut_coord    = global_coord;
                     *pOut_impact   = impact;
                     *pOut_distance = distance;
@@ -203,8 +207,9 @@ static bool CheckTopFaces(
             GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_DOWN);
             if (chunk.IsGlobalGridWithin(global_coord)) {
                 LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
-                const Block *block = chunk.getBlock_RO(local_coord);
-                if (block->isFilled()) {
+                BlockType block_type  = chunk.getBlockType(local_coord);
+
+                if (IsBlockTypeFilled(block_type)) {
                     *pOut_coord    = global_coord;
                     *pOut_impact   = impact;
                     *pOut_distance = distance;
@@ -236,8 +241,9 @@ static bool CheckBottomFaces(
             GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_UP);
             if (chunk.IsGlobalGridWithin(global_coord)) {
                 LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
-                const Block *block = chunk.getBlock_RO(local_coord);
-                if (block->isFilled()) {
+                BlockType block_type  = chunk.getBlockType(local_coord);
+
+                if (IsBlockTypeFilled(block_type)) {
                     *pOut_coord    = global_coord;
                     *pOut_impact   = impact;
                     *pOut_distance = distance;

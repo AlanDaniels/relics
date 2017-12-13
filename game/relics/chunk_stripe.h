@@ -21,7 +21,7 @@ public:
     const Block *getBlock_RO(int local_z) const;
     Block *getBlock_RW(int local_z);
 
-    void fillStripe(BlockContent block_type);
+    void fillStripe(BlockType block_type);
     void recalcExposures();
     void addToVertLists(ChunkVertLists *pOut);
 

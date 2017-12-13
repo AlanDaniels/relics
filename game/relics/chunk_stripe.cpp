@@ -25,10 +25,10 @@ Block *ChunkStripe::getBlock_RW(int z)
 
 
 // Populate a stripe with a particular block type.
-void ChunkStripe::fillStripe(BlockContent block_type)
+void ChunkStripe::fillStripe(BlockType block_type)
 {
     for (int z = 0; z < CHUNK_WIDTH; z++) {
-        m_blocks[z].setContent(block_type);
+        m_blocks[z].setBlockType(block_type);
     }
 }
 
@@ -38,11 +38,11 @@ BlockSurface ChunkStripe::calcSurfaceForBlock(int local_z, FaceEnum face)
 {
     const Block *block = getBlock_RO(local_z);
 
-    BlockContent content = block->getContent();
+    BlockType content = block->getBlockType();
     switch (content) {
-    case CONTENT_GRASS:   return SURF_GRASS;
-    case CONTENT_DIRT:    return SURF_DIRT;
-    case CONTENT_STONE:   return SURF_STONE;
+    case BT_GRASS:   return SURF_GRASS;
+    case BT_DIRT:    return SURF_DIRT;
+    case BT_STONE:   return SURF_STONE;
     default:
         PrintTheImpossible(__FILE__, __LINE__, content);
         return SURF_NONE;
@@ -80,7 +80,7 @@ void ChunkStripe::recalcExposureForBlock(int local_z)
     current.clearExposureFlags();
 
     // If this block is empty, it doesn't generate any faces.
-    if (current.isEmpty()) {
+    if (IsBlockTypeEmpty(current.getBlockType())) {
         return;
     }
 
@@ -99,89 +99,79 @@ void ChunkStripe::recalcExposureForBlock(int local_z)
     bool top_edge    = (y == (CHUNK_HEIGHT - 1));
 
     // Get our six neigbors, straddling across chunk boundaries if necessary.
-    BlockContent west_content = CONTENT_AIR;
+    BlockType west_content = BT_AIR;
     if (west_edge) {
         const Chunk *neighbor = m_owner->getNeighborWest();
         if (neighbor != nullptr) {
             LocalGrid coord(CHUNK_WIDTH - 1, y, z);
-            const Block *block = neighbor->getBlock_RO(coord);
-            west_content = block->getContent();
+            west_content = neighbor->getBlockType(coord);
         }
     }
     else {
         LocalGrid coord(x - 1, y, z);
-        const Block *block = m_owner->getBlock_RO(coord);
-        west_content = block->getContent();
+        west_content = m_owner->getBlockType(coord);
     }
 
-    BlockContent east_content = CONTENT_AIR;
+    BlockType east_content = BT_AIR;
     if (east_edge) {
         const Chunk *neighbor = m_owner->getNeighborEast();
         if (neighbor != nullptr) {
             LocalGrid coord(0, y, z);
-            const Block * block = neighbor->getBlock_RO(coord);
-            east_content = block->getContent();
+            east_content = neighbor->getBlockType(coord);
         }
     }
     else {
         LocalGrid coord(x + 1, y, z);
-        const Block *block = m_owner->getBlock_RO(coord);
-        east_content = block->getContent();
+        east_content = m_owner->getBlockType(coord);
     }
 
-    BlockContent south_content = CONTENT_AIR;
+    BlockType south_content = BT_AIR;
     if (south_edge) {
         const Chunk *neighbor = m_owner->getNeighborSouth();
         if (neighbor != nullptr) {
             LocalGrid coord(x, y, CHUNK_WIDTH - 1);
-            const Block *block = neighbor->getBlock_RO(coord);
-            south_content = block->getContent();
+            south_content = neighbor->getBlockType(coord);
         }
     }
     else {
         LocalGrid coord(x, y, z - 1);
-        const Block *block = m_owner->getBlock_RO(coord);
-        south_content = block->getContent();
+        south_content = m_owner->getBlockType(coord);
     }
 
-    BlockContent north_content = CONTENT_AIR;
+    BlockType north_content = BT_AIR;
     if (north_edge) {
         const Chunk *neighbor = m_owner->getNeighborNorth();
         if (neighbor != nullptr) {
             LocalGrid coord(x, y, 0);
-            const Block *block = neighbor->getBlock_RO(coord);
-            north_content = block->getContent();
+            north_content = neighbor->getBlockType(coord);
         }
     }
     else {
         LocalGrid coord(x, y, z + 1);
-        const Block *block = m_owner->getBlock_RO(coord);
-        north_content = block->getContent();
+        north_content = m_owner->getBlockType(coord);
     }
 
-    BlockContent top_content = CONTENT_AIR;
+    BlockType top_content = BT_AIR;
     if (!top_edge) {
         LocalGrid coord(x, y + 1, z);
-        const Block *block = m_owner->getBlock_RO(coord);
-        top_content = block->getContent();
+        top_content = m_owner->getBlockType(coord);
     }
 
-    BlockContent bottom_content = CONTENT_AIR;
+    BlockType bottom_content = BT_AIR;
     if (!bottom_edge) {
         LocalGrid coord(x, y - 1, z);
-        const Block *block = m_owner->getBlock_RO(coord);
-        bottom_content = block->getContent();
+        bottom_content = m_owner->getBlockType(coord);
     }
 
     // Check each of the faces.
-    bool west_flag  = IsContentEmpty(west_content);
-    bool east_flag  = IsContentEmpty(east_content);
+    bool west_flag   = IsBlockTypeEmpty(west_content);
+    bool east_flag   = IsBlockTypeEmpty(east_content);
 
-    bool south_flag  = IsContentEmpty(south_content);
-    bool north_flag  = IsContentEmpty(north_content);
+    bool south_flag  = IsBlockTypeEmpty(south_content);
+    bool north_flag  = IsBlockTypeEmpty(north_content);
 
-    bool top_flag    = IsContentEmpty(top_content);
-    bool bottom_flag = IsContentEmpty(bottom_content);
+    bool top_flag    = IsBlockTypeEmpty(top_content);
+    bool bottom_flag = IsBlockTypeEmpty(bottom_content);
 
     current.setExposure(FACE_SOUTH,  south_flag);
     current.setExposure(FACE_NORTH,  north_flag);
@@ -198,7 +188,7 @@ void ChunkStripe::addVertsForBlock(ChunkVertLists *pOut, int local_z)
     const Block &current = m_blocks[local_z];
 
     // If this block is empty, it doesn't generate any faces.
-    if (current.isEmpty()) {
+    if (IsBlockTypeEmpty(current.getBlockType())) {
         return;
     }
 

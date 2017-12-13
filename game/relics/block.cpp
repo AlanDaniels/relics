@@ -6,11 +6,17 @@
 #include "utils.h"
 
 
-// Return true if content is considered "empty".
-// That is, it shouldn't generate landscape surfaces.
-bool IsContentEmpty(BlockContent content)
+// Return true if a block type should generate ever landscape surfaces.
+bool IsBlockTypeFilled(BlockType block_type)
 {
-    return (content == CONTENT_AIR);
+    return (block_type != BT_AIR);
+}
+
+
+// And the opposite.
+bool IsBlockTypeEmpty(BlockType block_type)
+{
+    return (block_type == BT_AIR);
 }
 
 

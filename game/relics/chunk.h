@@ -123,8 +123,8 @@ public:
 
     bool IsGlobalGridWithin(const GlobalGrid &coord) const;
 
-    const Block *getBlock_RO(const LocalGrid &coord) const;
-    Block *getBlock(const LocalGrid &coord);
+    BlockType getBlockType(const LocalGrid &coord) const;
+    void setBlockType(const LocalGrid &coord, BlockType block_type);
 
     MyVec4 localGridToWorldPos(int local_x, int local_y, int local_z) const;
 

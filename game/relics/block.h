@@ -5,16 +5,17 @@
 #include "utils.h"
 
 
-enum BlockContent
+enum BlockType
 {
-    CONTENT_AIR,
-    CONTENT_GRASS,
-    CONTENT_DIRT,
-    CONTENT_STONE
+    BT_AIR,
+    BT_GRASS, // TODO: Kill this.
+    BT_DIRT,
+    BT_STONE
 };
 
 
-bool IsContentEmpty(BlockContent content);
+bool IsBlockTypeFilled(BlockType block_type);
+bool IsBlockTypeEmpty(BlockType block_type);
 
 
 enum BlockSurface
@@ -30,7 +31,7 @@ class Block
 {
 public:
     Block() :
-        m_content(CONTENT_AIR),
+        m_content(BT_AIR),
         m_west_exposed(false),
         m_east_exposed(false),
         m_south_exposed(false),
@@ -38,23 +39,20 @@ public:
         m_top_exposed(false),
         m_bottom_exposed(false) {}
 
-    BlockContent getContent() const { return m_content; }
-    void setContent(BlockContent val) { m_content = val; }
+    BlockType getBlockType() const { return m_content; }
+    void setBlockType(BlockType val) { m_content = val; }
 
     void clearExposureFlags();
 
     bool getExposure(FaceEnum face) const;
     void setExposure(FaceEnum face, bool val);
 
-    bool isEmpty()  const { return  IsContentEmpty(m_content); }
-    bool isFilled() const { return !IsContentEmpty(m_content); }
-
 private:
     // Disallow copying.
     Block(const Block &that) = delete;
     void operator=(const Block &that) = delete;
 
-    BlockContent m_content;
+    BlockType m_content;
     bool m_west_exposed;
     bool m_east_exposed;
     bool m_south_exposed;

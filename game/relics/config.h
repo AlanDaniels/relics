@@ -9,6 +9,15 @@ struct lua_State;
 
 // We'll have lots of config settings, so let's dispense with
 // the formalities, and just go for plain structs for now.
+struct ConfigWorld
+{
+    ConfigWorld() :
+        file_name("") {}
+
+    std::string file_name;
+};
+
+
 struct ConfigDebug
 {
     ConfigDebug() :
@@ -148,6 +157,7 @@ public:
 
     bool loadFromFile();
 
+    ConfigWorld  world;
     ConfigDebug  debug;
     ConfigWindow window;
     ConfigRender render;

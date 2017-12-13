@@ -31,7 +31,14 @@ enum BlockSurface
 class Block
 {
 public:
-    Block();
+    Block() :
+        m_content(CONTENT_AIR),
+        m_west_exposed(false),
+        m_east_exposed(false),
+        m_south_exposed(false),
+        m_north_exposed(false),
+        m_top_exposed(false),
+        m_bottom_exposed(false) {}
 
     BlockContent getContent() const { return m_content; }
     void setContent(BlockContent val) { m_content = val; }

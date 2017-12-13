@@ -14,13 +14,6 @@ bool IsContentEmpty(BlockContent content)
 }
 
 
-// Block ctor.
-Block::Block() :
-    m_content(CONTENT_AIR)
-{
-}
-
-
 // Clear the exposure flags.
 void Block::clearExposureFlags()
 {

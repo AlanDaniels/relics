@@ -103,63 +103,63 @@ void ChunkStripe::recalcExposureForBlock(int local_z)
     // Get our six neigbors, straddling across chunk boundaries if necessary.
     BlockContent west_content = CONTENT_AIR;
     if (west_edge) {
-        const Chunk *neighbor = m_pOwner->getNeighborWest();
+        const Chunk *neighbor = m_owner->getNeighborWest();
         if (neighbor != nullptr) {
             const Block *block = neighbor->getBlockLocal_RO(CHUNK_WIDTH - 1, y, z);
             west_content = block->getContent();
         }
     }
     else {
-        const Block *block = m_pOwner->getBlockLocal_RO(x - 1, y, z);
+        const Block *block = m_owner->getBlockLocal_RO(x - 1, y, z);
         west_content = block->getContent();
     }
 
     BlockContent east_content = CONTENT_AIR;
     if (east_edge) {
-        const Chunk *neighbor = m_pOwner->getNeighborEast();
+        const Chunk *neighbor = m_owner->getNeighborEast();
         if (neighbor != nullptr) {
             const Block * block = neighbor->getBlockLocal_RO(0, y, z);
             east_content = block->getContent();
         }
     }
     else {
-        const Block *block = m_pOwner->getBlockLocal_RO(x + 1, y, z);
+        const Block *block = m_owner->getBlockLocal_RO(x + 1, y, z);
         east_content = block->getContent();
     }
 
     BlockContent south_content = CONTENT_AIR;
     if (south_edge) {
-        const Chunk *neighbor = m_pOwner->getNeighborSouth();
+        const Chunk *neighbor = m_owner->getNeighborSouth();
         if (neighbor != nullptr) {
             const Block *block = neighbor->getBlockLocal_RO(x, y, CHUNK_WIDTH - 1);
             south_content = block->getContent();
         }
     }
     else {
-        const Block *block = m_pOwner->getBlockLocal_RO(x, y, z - 1);
+        const Block *block = m_owner->getBlockLocal_RO(x, y, z - 1);
         south_content = block->getContent();
     }
 
     BlockContent north_content = CONTENT_AIR;
     if (north_edge) {
-        const Chunk *neighbor = m_pOwner->getNeighborNorth();
+        const Chunk *neighbor = m_owner->getNeighborNorth();
         if (neighbor != nullptr) {
             const Block *block = neighbor->getBlockLocal_RO(x, y, 0);
             north_content = block->getContent();
         }
     }
     else {
-        const Block *block = m_pOwner->getBlockLocal_RO(x, y, z + 1);
+        const Block *block = m_owner->getBlockLocal_RO(x, y, z + 1);
         north_content = block->getContent();
     }
 
     BlockContent top_content = top_edge ?
         CONTENT_AIR : 
-        m_pOwner->getBlockLocal_RO(x, y + 1, z)->getContent();
+        m_owner->getBlockLocal_RO(x, y + 1, z)->getContent();
 
     BlockContent bottom_content = bottom_edge ?
         CONTENT_AIR : 
-        m_pOwner->getBlockLocal_RO(x, y - 1, z)->getContent();
+        m_owner->getBlockLocal_RO(x, y - 1, z)->getContent();
 
     // Check each of the faces.
     bool west_flag  = IsContentEmpty(west_content);
@@ -198,7 +198,7 @@ void ChunkStripe::addVertsForBlock(ChunkVertLists *pOut, int local_z)
 
     // Top face.
     if (current.getExposure(FACE_TOP)) {
-        Brady brady(*m_pOwner, local_coord, FACE_TOP);
+        Brady brady(*m_owner, local_coord, FACE_TOP);
         BlockSurface surf = calcSurfaceForBlock(local_z, FACE_TOP);
         VertList_PNT *pList = pOut->get(surf);
         brady.addToVertList_PNT(pList);
@@ -206,7 +206,7 @@ void ChunkStripe::addVertsForBlock(ChunkVertLists *pOut, int local_z)
 
     // Bottom face.
     if (current.getExposure(FACE_BOTTOM)) {
-        Brady brady(*m_pOwner, local_coord, FACE_BOTTOM);
+        Brady brady(*m_owner, local_coord, FACE_BOTTOM);
         BlockSurface surf = calcSurfaceForBlock(local_z, FACE_BOTTOM);
         VertList_PNT *pList = pOut->get(surf);
         brady.addToVertList_PNT(pList);
@@ -214,7 +214,7 @@ void ChunkStripe::addVertsForBlock(ChunkVertLists *pOut, int local_z)
 
     // Southern face.
     if (current.getExposure(FACE_SOUTH)) {
-        Brady brady(*m_pOwner, local_coord, FACE_SOUTH);
+        Brady brady(*m_owner, local_coord, FACE_SOUTH);
         BlockSurface surf = calcSurfaceForBlock(local_z, FACE_SOUTH);
         VertList_PNT *pList = pOut->get(surf);
         brady.addToVertList_PNT(pList);
@@ -222,7 +222,7 @@ void ChunkStripe::addVertsForBlock(ChunkVertLists *pOut, int local_z)
 
     // Northern face.
     if (current.getExposure(FACE_NORTH)) {
-        Brady brady(*m_pOwner, local_coord, FACE_NORTH);
+        Brady brady(*m_owner, local_coord, FACE_NORTH);
         BlockSurface surf = calcSurfaceForBlock(local_z, FACE_NORTH);
         VertList_PNT *pList = pOut->get(surf);
         brady.addToVertList_PNT(pList);
@@ -230,7 +230,7 @@ void ChunkStripe::addVertsForBlock(ChunkVertLists *pOut, int local_z)
 
     // Eastern face.
     if (current.getExposure(FACE_EAST)) {
-        Brady brady(*m_pOwner, local_coord, FACE_EAST);
+        Brady brady(*m_owner, local_coord, FACE_EAST);
         BlockSurface surf = calcSurfaceForBlock(local_z, FACE_EAST);
         VertList_PNT *pList = pOut->get(surf);
         brady.addToVertList_PNT(pList);
@@ -238,7 +238,7 @@ void ChunkStripe::addVertsForBlock(ChunkVertLists *pOut, int local_z)
 
     // Western face.
     if (current.getExposure(FACE_WEST)) {
-        Brady brady(*m_pOwner, local_coord, FACE_WEST);
+        Brady brady(*m_owner, local_coord, FACE_WEST);
         BlockSurface surf = calcSurfaceForBlock(local_z, FACE_WEST);
         VertList_PNT *pList = pOut->get(surf);
         brady.addToVertList_PNT(pList);

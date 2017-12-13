@@ -33,25 +33,31 @@ WorldData::~WorldData()
 
 // Save our world to the database.
 bool WorldData::saveToDatabase(const std::string &fname) {
-    
+
     std::int64_t start_msec = wxGetLocalTimeMillis().GetValue();
 
     wxBeginBusyCursor();
     int blocks_written = 0;
-    bool result = actualSaveToDatabase(fname, &blocks_written);
+    bool success = actualSaveToDatabase(fname, &blocks_written);
     wxEndBusyCursor();
 
     std::int64_t end_msec = wxGetLocalTimeMillis().GetValue();
     double elapsed = (end_msec - start_msec) / 1000.0;
 
     std::unique_ptr<char[]> buffer(new char[256]);
-    sprintf(buffer.get(),
-        "Blocks written: %d\n"
-        "Elapsed time: %0.3f seconds",
-        blocks_written, elapsed);
+    if (success) {
+        sprintf(buffer.get(),
+            "Blocks written: %d\n"
+            "Elapsed time: %0.1f seconds",
+            blocks_written, elapsed);
+    }
+    else {
+        sprintf(buffer.get(), "SQL Error! Check your logs.");
+    }
+
     wxLogMessage(buffer.get());
 
-    return result;
+    return success;
 }
 
 
@@ -84,15 +90,28 @@ bool WorldData::actualSaveToDatabase(const std::string &fname, int *pOut_blocks_
     }
 
     // Create our main "blocks" table.
-    const char *create_blocks_sql =
+    success = SQL_exec(db,
         "CREATE TABLE blocks ("
         "x INTEGER, "
         "y INTEGER, "
         "z INTEGER, "
         "block_type VARCHAR(10) NOT NULL, "
-        "PRIMARY KEY (x, y, z))";
+        "PRIMARY KEY (x, y, z))");
+    if (!success) {
+        return false;
+    }
 
-    success = SQL_exec(db, create_blocks_sql);
+    success = SQL_exec(db, "CREATE INDEX idx_blocks_x ON blocks (x ASC)");
+    if (!success) {
+        return false;
+    }
+
+    success = SQL_exec(db, "CREATE INDEX idx_blocks_y ON blocks (y ASC)");
+    if (!success) {
+        return false;
+    }
+
+    success = SQL_exec(db, "CREATE INDEX idx_blocks_z ON blocks (z ASC)");
     if (!success) {
         return false;
     }
@@ -103,13 +122,10 @@ bool WorldData::actualSaveToDatabase(const std::string &fname, int *pOut_blocks_
         return false;
     }
 
-    // We'll be calling "insert" on the blocks table a
-    // few million times, so use a prepared statement.
-    const char *insert_sql =
+    // Create our "insert blocks" statement.
+    sqlite3_stmt *insert_stmt = SQL_prepare(db,
         "INSERT INTO blocks (x, y, z, block_type) "
-        "VALUES (?1, ?2, ?3, 'dirt')";
-
-    sqlite3_stmt* insert_stmt = SQL_prepare(db, insert_sql);
+        "VALUES (?1, ?2, ?3, 'dirt_top')");
     if (insert_stmt == nullptr) {
         return false;
     }
@@ -128,14 +144,14 @@ bool WorldData::actualSaveToDatabase(const std::string &fname, int *pOut_blocks_
             unsigned char green = pixel_iter.Green();
             unsigned char blue  = pixel_iter.Blue();
 
-            int dirt_top = (red + green + blue) / 3;
-            if (dirt_top > 0) {
-                int true_x = x - (width  / 2);
-                int true_y = y - (height / 2);
+            int height = (red + green + blue) / 3;
+            if (height > 0) {
+                int landscape_x =  x - (width  / 2);
+                int landscape_z = -y + (height / 2);
 
-                sqlite3_bind_int(insert_stmt, 1, x);
-                sqlite3_bind_int(insert_stmt, 2, y);
-                sqlite3_bind_int(insert_stmt, 3, dirt_top);
+                sqlite3_bind_int(insert_stmt, 1, landscape_x);
+                sqlite3_bind_int(insert_stmt, 2, height);
+                sqlite3_bind_int(insert_stmt, 3, landscape_z);
 
                 ret_code = sqlite3_step(insert_stmt);
                 if (ret_code != SQLITE_DONE) {

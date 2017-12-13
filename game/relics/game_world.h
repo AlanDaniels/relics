@@ -6,18 +6,21 @@
 #include "chunk_loader.h"
 
 
-class DrawState_PCT;
-class DrawState_PT;
-class EventStateMsg;
-class ChunkOrigin;
+struct sqlite3;
+class  DrawState_PCT;
+class  DrawState_PT;
+class  EventStateMsg;
+class  ChunkOrigin;
 
 
 // Our game state.
 class GameWorld
 {
 public:
-    GameWorld();
+    static GameWorld *Create();
     ~GameWorld();
+
+    sqlite3 *getDatabase() { return m_database; }
 
     void setPaused(bool paused) { m_paused = paused; }
     bool isPaused() const { return m_paused; }
@@ -49,7 +52,11 @@ public:
     void deleteBlockInFrontOfUs();
 
 private: 
-    // Disallow copying.
+    // Our constructor is private, and can only be called via "create".
+    GameWorld(sqlite3 *database);
+
+    // Disallow default ctor and copying.
+    GameWorld() = delete;
     GameWorld(const GameWorld &that) = delete;
     void operator=(const GameWorld &that) = delete;
 
@@ -61,14 +68,16 @@ private:
     void clampRotations();
     void calcHitTest();
 
+    sqlite3 *m_database;
+
     bool m_paused;
     int  m_time_msec;
     
-    MyVec4  m_camera_pos;
     GLfloat m_camera_pitch;
     GLfloat m_camera_yaw;
+    MyVec4  m_camera_pos;
 
-    GridCoord m_current_grid_coord;
+    GridCoord   m_current_grid_coord;
     ChunkOrigin m_current_chunk_origin;
 
     std::map<ChunkOrigin, Chunk *> m_chunk_map;

@@ -127,29 +127,23 @@ void ChunkVertLists::resetLists()
 // Realize any lists we've created so far.
 void ChunkVertLists::realizeLists() 
 {
-    bool did_realizing = false;
-
     if (m_grass_list != nullptr) {
         m_grass_list->realize();
-        did_realizing = true;
     }
 
     if (m_dirt_list != nullptr) {
         m_dirt_list->realize();
-        did_realizing = true;
     }
 
     if (m_stone_list != nullptr) {
         m_stone_list->realize();
-        did_realizing = true;
     }
 
     if (m_bedrock_list != nullptr) {
         m_bedrock_list->realize();
-        did_realizing = true;
     }
 
-    m_realized = did_realizing;
+    m_realized = true;
 }
 
 
@@ -351,10 +345,15 @@ MyVec4 Chunk::localToWorldCoord(int x, int y, int z) const
 // Convert a global coord to a local coord.
 GridCoord Chunk::globalToLocalCoord(const GridCoord &global_coord) const
 {
-    return GridCoord(
-        global_coord.x() - m_origin.x(),
-        global_coord.y(),
-        global_coord.z() - m_origin.z());
+    int local_x = global_coord.x() - m_origin.x();
+    int local_y = global_coord.y();
+    int local_z = global_coord.z() - m_origin.z();
+
+    assert((local_x >= 0) && (local_x <= CHUNK_WIDTH));
+    assert((local_y >= 0) && (local_y <= CHUNK_HEIGHT));
+    assert((local_z >= 0) && (local_z <= CHUNK_WIDTH));
+
+    return GridCoord(local_x, local_y, local_z);
 }
 
 

@@ -13,8 +13,10 @@ class ChunkVertLists;
 class ChunkStripe
 {
 public:
-    ChunkStripe(const Chunk *pOwner, int local_x, int local_y) :
-        m_pOwner(pOwner), m_local_x(local_x), m_local_y(local_y) {}
+    ChunkStripe(const Chunk *owner, int local_x, int local_y) :
+        m_owner(owner),
+        m_local_x(local_x), 
+        m_local_y(local_y) {}
 
     const Block *getBlock_RO(int local_z) const;
     Block *getBlock_RW(int local_z);
@@ -33,7 +35,7 @@ private:
     void recalcExposureForBlock(int local_z);
     void addVertsForBlock(ChunkVertLists *pOut, int local_z);
 
-    const Chunk *m_pOwner;
+    const Chunk *m_owner;
     int m_local_x;
     int m_local_y;
 

@@ -1,107 +1,65 @@
 
 #include "stdafx.h"
 #include "chunk_loader.h"
+#include "common_util.h"
 
 #include "block.h"
 #include "chunk.h"
-#include "simplex_noise.h"
+#include "game_world.h"
 #include "utils.h"
+#include "sqlite3.h"
 
 
-// Just throw a mutex around any time we're sampling the height image map.
-std::atomic_bool s_initialized = false;
-std::mutex s_mutex;
-static sf::Image s_height_map_image;
-
-
-
-// Init our chunk loader.
-// Thread-safe via a mutex.
-bool Init()
-{
-    std::lock_guard<std::mutex> guard(s_mutex);
-
-    std::string fname = "map/map.png";
-    if (!ReadImageResource(&s_height_map_image, fname)) {
-        s_initialized = true;
-        return false;
-    }
-
-    s_height_map_image.flipVertically();
-    s_initialized = true;
-    return true;
-}
-
-
-// Sample a point off the height map.
-// Thread safe via a mutex.
-int SampleHeightMap(int x, int y)
-{
-    std::lock_guard<std::mutex> guard(s_mutex);
-
-    sf::Vector2u dims = s_height_map_image.getSize();
-    int dim_x = dims.x;
-    int dim_y = dims.y;
-
-    int offset_x = (dim_x / 2) + x;
-    int offset_y = (dim_y / 2) + y;
-
-    // If we're completely off the image, don't bother.
-    if ((offset_x < 0) || (offset_x >= dim_x) ||
-        (offset_y < 0) || (offset_y >= dim_y)) {
-        return 0;
-    }
-
-    sf::Color color = s_height_map_image.getPixel(offset_x, offset_y);
-
-    // Meh, just go with intensity for now.
-    int intensity = (color.r + color.g + color.b) / 3;
-
-    // And, scale it down so we don't end up with monstrous mountains.
-    intensity /= 8;
-    return intensity;
-}
-
-
-// Load a chunk. This should ideally be called via "std::async".
+// Load a chunk from our SQLite file.
 // This just deals with the block data. The landscape is are dealt with later.
-Chunk *LoadChunkAsync(const GameWorld *pWorld, const ChunkOrigin &origin)
+Chunk *LoadChunk(GameWorld *pWorld, const ChunkOrigin &origin)
 {
-    if (!s_initialized) {
-        if (!Init()) {
-            return nullptr;
-        }
+    sqlite3 *db = pWorld->getDatabase();
+
+    std::unique_ptr<char[]> buffer(new char[512]);
+
+    sprintf(buffer.get(),
+        "SELECT x, y, z, block_type FROM blocks "
+        "WHERE x >= %d AND x < %d "
+        "AND   z >= %d AND z < %d "
+        "ORDER BY x, z, y",
+        origin.x(), origin.x() + CHUNK_WIDTH,
+        origin.z(), origin.z() + CHUNK_WIDTH);
+    sqlite3_stmt *stmt = SQL_prepare(db, buffer.get());
+    if (stmt == nullptr) {
+        assert(false);
+        return nullptr;
     }
 
     Chunk *result = new Chunk(pWorld, origin);
 
-    // First, figure out the content type, from height-map sampling.
-    for     (int x = 0; x < CHUNK_WIDTH; x++) {
-        for (int z = 0; z < CHUNK_WIDTH; z++) {
-            int dirt_level = SampleHeightMap(origin.x() + x, origin.z() + z);
+    int ret_code = sqlite3_step(stmt);
+    while (ret_code == SQLITE_ROW) {
+        int block_x = sqlite3_column_int(stmt, 0);
+        int block_y = sqlite3_column_int(stmt, 1);
+        int block_z = sqlite3_column_int(stmt, 2);
 
-            // TODO: Meh, flatten it for now.
-            dirt_level = dirt_level / 2;
+        const unsigned char *raw_text = sqlite3_column_text(stmt, 3);
+        std::string text(reinterpret_cast<const char*>(raw_text));
 
-            for (int y = 0; y < CHUNK_HEIGHT; y++) {
-                BlockContent content;
-                if (y == 0) {
-                    content = CONTENT_BEDROCK;
-                }
-                else if (y < dirt_level) {
-                    content = CONTENT_DIRT;
-                }
-                else if (y == dirt_level) {
-                    content = CONTENT_GRASS;
-                }
-                else {
-                    content = CONTENT_AIR;
-                }
+        if (text == "dirt_top") {
+            GridCoord global_coord(block_x, block_y, block_z);
+            GridCoord local_coord = result->globalToLocalCoord(global_coord);
 
-                result->getBlockLocal(x, y, z)->setContent(content);
+            int local_x = local_coord.x();
+            int local_z = local_coord.z();
+            assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
+            assert((local_z >= 0) && (local_z < CHUNK_WIDTH));
+
+            for (int y = 0; y < block_y; y++) {
+                result->getBlockLocal(local_x, y, local_z)->setContent(CONTENT_DIRT);
             }
         }
+
+        ret_code = sqlite3_step(stmt);
     }
+
+    sqlite3_finalize(stmt);
 
     return result;
 }

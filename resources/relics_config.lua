@@ -1,6 +1,11 @@
 -- Our main config file.
 -- All through this file, we use human measurements: Meters, and Seconds.
 
+-- The world itself.
+world = {
+    file_name = 'worlds/blerm1.world'
+}
+
 -- Debugging.
 debug = {
     opengl = true,

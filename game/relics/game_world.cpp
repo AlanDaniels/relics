@@ -13,19 +13,45 @@
 #include "my_math.h"
 #include "utils.h"
 
+#include "sqlite3.h"
+#include <boost/filesystem.hpp>
+
 
 // TODO: Add the final part: Background threads as we move around the map.
 // Touch each chunk when it's drawn. After we haven't seen a chunk in say, one minute, we can unload it. Simpler than an LRU list.
 // Also, stop using references to ownership. Use pointers instead. More sane that way.
 
 
+// Initialize the game world.
+// There's one per database file, and if we can't open it, there's no world.
+GameWorld *GameWorld::Create() 
+{
+    std::string fname = GetConfig().world.file_name;
+    std::string full_name = RESOURCE_PATH;
+    full_name.append(fname);
+
+    if (!boost::filesystem::is_regular_file(full_name)) {
+        PrintDebug("Database file %s does not exist.", full_name.c_str());
+        return nullptr;
+    }
+
+    sqlite3 *database = SQL_open(full_name);
+    if (database == nullptr) {
+        return nullptr;
+    }
+
+    return new GameWorld(database);
+}
+
+
 // Our game world.
-GameWorld::GameWorld() :
+GameWorld::GameWorld(sqlite3 *database) :
+    m_database(database),
     m_paused(false),
     m_time_msec(0),
-    m_camera_pos(getCameraStartPos()),
     m_camera_pitch(0.0f),
-    m_camera_yaw(0.0f)
+    m_camera_yaw(0.0f),
+    m_camera_pos(getCameraStartPos())
 {
     // Figure out the size of our drawing region.
     // We load one border larger than what we will actually draw.
@@ -38,7 +64,7 @@ GameWorld::GameWorld() :
     for     (int x = load_region.west();  x <= load_region.east();  x += CHUNK_WIDTH) {
         for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
-            m_chunk_map[origin] = LoadChunkAsync(this, origin);
+            m_chunk_map[origin] = LoadChunk(this, origin);
             count++;
         }
     }
@@ -55,13 +81,21 @@ GameWorld::GameWorld() :
             pChunk->realizeLandscape();
         }
     }
+
+    // Sanity check.
+    for (auto iter : m_chunk_map) {
+        Chunk *chunk = iter.second;
+        if (!chunk->isLandcsapeRealized()) {
+            assert(false);
+        }
+    }
 }
 
 
 // Game world destructor.
 GameWorld::~GameWorld()
 {
-    // TODO: What to do here? Finish out threads I guess.
+    sqlite3_close(m_database);
 }
 
 
@@ -242,8 +276,6 @@ void GameWorld::updateWorld()
     EvalRegion draw_region = WorldToEvalRegion(m_camera_pos, eval_blocks);
     EvalRegion load_region = draw_region.expand();
 
-    PrintDebug("Draw Region = %s\n", draw_region.toDebugStr().c_str());
-
     // For any chunk at the "edge" of the load region, load it if we don't have it already.
     for     (int x = load_region.west();  x <= load_region.east();  x += CHUNK_WIDTH) {
         for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {
@@ -251,7 +283,7 @@ void GameWorld::updateWorld()
 
             if (NOT(draw_region.containsOrigin(origin))) {
                 if (m_chunk_map.find(origin) == m_chunk_map.end()) {
-                    Chunk *chunk = LoadChunkAsync(this, origin);;
+                    Chunk *chunk = LoadChunk(this, origin);;
                     m_chunk_map[origin] = chunk;
                 }
             }

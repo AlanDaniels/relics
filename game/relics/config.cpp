@@ -70,6 +70,13 @@ bool Config::loadFromFile()
         return false;
     }
 
+    // Read the "world" table.
+    lua_getglobal(L, "world");
+    if (lua_istable(L, -1)) {
+        world.file_name = getStringField(L, "file_name");
+    }
+    lua_pop(L, 1);
+
     // Read the "debug" table.
     lua_getglobal(L, "debug");
     if (lua_istable(L, -1)) {
@@ -306,7 +313,9 @@ bool Config::validate() const
 {
     bool success = true;
 
-    // Landscape resources.
+    // Landscape resources. 
+    if (!validateResource("world.file_name", world.file_name)) { success = false;  }
+
     if (!validateResource("render.landscape.vert_shader", render.landscape.vert_shader)) { success = false; }
     if (!validateResource("render.landscape.frag_shader", render.landscape.frag_shader)) { success = false; }
 

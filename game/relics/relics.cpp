@@ -153,17 +153,21 @@ int WINAPI wWinMain(
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
     // The game world.
-    GameWorld game_world;
+    GameWorld *game_world = GameWorld::Create();
+    if (game_world == nullptr) {
+        PrintDebug("Could not create the game world!\n");
+        return 1;
+    }
 
     // The renderer.
-    Renderer renderer(window, game_world);
+    Renderer renderer(window, *game_world);
     if (!renderer.init()) {
         PrintDebug("Could not init the renderer.\n");
         return 1;
     }
 
     // The event handler.
-    EventHandler event_handler(window, game_world, renderer);
+    EventHandler event_handler(window, *game_world, renderer);
 
     // The GUI.
     OverlayGUI overlay_gui(window);
@@ -224,7 +228,7 @@ int WINAPI wWinMain(
         RenderStats stats = renderer.renderWorld();
 
         // Render the GUI overlay.
-        overlay_gui.render(game_world, stats, fps_snapshot);
+        overlay_gui.render(*game_world, stats, fps_snapshot);
 
         // All done. Flip to the new results.
         window.display();

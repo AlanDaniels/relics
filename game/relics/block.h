@@ -10,8 +10,7 @@ enum BlockContent
     CONTENT_AIR,
     CONTENT_GRASS,
     CONTENT_DIRT,
-    CONTENT_STONE,
-    CONTENT_BEDROCK,
+    CONTENT_STONE
 };
 
 
@@ -23,8 +22,7 @@ enum BlockSurface
     SURF_NONE,
     SURF_GRASS,
     SURF_DIRT,
-    SURF_STONE,
-    SURF_BEDROCK,
+    SURF_STONE
 };
 
 

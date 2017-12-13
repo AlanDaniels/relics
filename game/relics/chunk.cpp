@@ -28,11 +28,6 @@ ChunkVertLists::~ChunkVertLists()
         m_stone_list = nullptr;
     }
 
-    if (m_bedrock_list != nullptr) {
-        delete m_bedrock_list;
-        m_bedrock_list = nullptr;
-    }
-
     m_realized = false;
 }
 
@@ -41,10 +36,9 @@ ChunkVertLists::~ChunkVertLists()
 int ChunkVertLists::getCount(BlockSurface surf) const 
 {
     switch (surf) {
-    case SURF_GRASS:   return (m_grass_list   == nullptr) ? 0 : m_grass_list->getByteCount();
-    case SURF_DIRT:    return (m_dirt_list    == nullptr) ? 0 : m_dirt_list->getByteCount();
-    case SURF_STONE:   return (m_stone_list   == nullptr) ? 0 : m_stone_list->getByteCount();
-    case SURF_BEDROCK: return (m_bedrock_list == nullptr) ? 0 : m_bedrock_list->getByteCount();
+    case SURF_GRASS: return (m_grass_list   == nullptr) ? 0 : m_grass_list->getByteCount();
+    case SURF_DIRT:  return (m_dirt_list    == nullptr) ? 0 : m_dirt_list->getByteCount();
+    case SURF_STONE: return (m_stone_list   == nullptr) ? 0 : m_stone_list->getByteCount();
     default:
         PrintTheImpossible(__FILE__, __LINE__, surf);
         return 0;
@@ -60,7 +54,6 @@ const VertList_PNT *ChunkVertLists::get_RO(BlockSurface surf) const
     case SURF_GRASS:   return m_grass_list;
     case SURF_DIRT:    return m_dirt_list;
     case SURF_STONE:   return m_stone_list;
-    case SURF_BEDROCK: return m_bedrock_list;
     default:
         PrintTheImpossible(__FILE__, __LINE__, surf);
         return nullptr;
@@ -91,12 +84,6 @@ VertList_PNT *ChunkVertLists::get(BlockSurface surf)
         }
         return m_stone_list;
 
-    case SURF_BEDROCK:
-        if (m_bedrock_list == nullptr) {
-            m_bedrock_list = new VertList_PNT;
-        }
-        return m_bedrock_list;
-
     default:
         PrintTheImpossible(__FILE__, __LINE__, surf);
         return nullptr;
@@ -116,9 +103,6 @@ void ChunkVertLists::resetLists()
     if (m_stone_list != nullptr) {
         m_stone_list->reset();
     }
-    if (m_bedrock_list != nullptr) {
-        m_bedrock_list->reset();
-    }
 
     m_realized = false;
 }
@@ -137,10 +121,6 @@ void ChunkVertLists::realizeLists()
 
     if (m_stone_list != nullptr) {
         m_stone_list->realize();
-    }
-
-    if (m_bedrock_list != nullptr) {
-        m_bedrock_list->realize();
     }
 
     m_realized = true;

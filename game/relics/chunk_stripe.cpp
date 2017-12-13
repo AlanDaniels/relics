@@ -43,7 +43,6 @@ BlockSurface ChunkStripe::calcSurfaceForBlock(int local_z, FaceEnum face)
     case CONTENT_GRASS:   return SURF_GRASS;
     case CONTENT_DIRT:    return SURF_DIRT;
     case CONTENT_STONE:   return SURF_STONE;
-    case CONTENT_BEDROCK: return SURF_BEDROCK;
     default:
         PrintTheImpossible(__FILE__, __LINE__, content);
         return SURF_NONE;

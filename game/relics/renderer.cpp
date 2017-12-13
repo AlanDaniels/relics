@@ -292,7 +292,6 @@ RenderStats Renderer::renderWorld()
     renderLandscapeList(SURF_GRASS,   chunk_list, *m_grass_tex,   &stats);
     renderLandscapeList(SURF_DIRT,    chunk_list, *m_dirt_tex,    &stats);
     renderLandscapeList(SURF_STONE,   chunk_list, *m_stone_tex,   &stats);
-    renderLandscapeList(SURF_BEDROCK, chunk_list, *m_bedrock_tex, &stats);
 
     // Finally, render our hit test.
     renderHitTest(&stats);

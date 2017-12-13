@@ -19,7 +19,6 @@ public:
         m_grass_list(nullptr),
         m_dirt_list(nullptr),
         m_stone_list(nullptr),
-        m_bedrock_list(nullptr),
         m_realized(false) {}
 
     ~ChunkVertLists();
@@ -40,7 +39,6 @@ private:
     VertList_PNT *m_grass_list;
     VertList_PNT *m_dirt_list;
     VertList_PNT *m_stone_list;
-    VertList_PNT *m_bedrock_list;
 
     bool m_realized;
 };

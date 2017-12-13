@@ -31,45 +31,45 @@ Brady::Brady(const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face) :
 
     switch (face) {
     case FACE_TOP:
-        point_ll = chunk.localToWorldCoord(x,     y + 1, z);
-        point_lr = chunk.localToWorldCoord(x + 1, y + 1, z);
-        point_ul = chunk.localToWorldCoord(x,     y + 1, z + 1);
-        point_ur = chunk.localToWorldCoord(x + 1, y + 1, z + 1);
+        point_ll = chunk.localGridToWorldPos(x,     y + 1, z);
+        point_lr = chunk.localGridToWorldPos(x + 1, y + 1, z);
+        point_ul = chunk.localGridToWorldPos(x,     y + 1, z + 1);
+        point_ur = chunk.localGridToWorldPos(x + 1, y + 1, z + 1);
         break;
 
     case FACE_BOTTOM:
-        point_ll = chunk.localToWorldCoord(x,     y, z + 1);
-        point_lr = chunk.localToWorldCoord(x + 1, y, z + 1);
-        point_ul = chunk.localToWorldCoord(x,     y, z);
-        point_ur = chunk.localToWorldCoord(x + 1, y, z);
+        point_ll = chunk.localGridToWorldPos(x,     y, z + 1);
+        point_lr = chunk.localGridToWorldPos(x + 1, y, z + 1);
+        point_ul = chunk.localGridToWorldPos(x,     y, z);
+        point_ur = chunk.localGridToWorldPos(x + 1, y, z);
         break;
 
     case FACE_NORTH:
-        point_ll = chunk.localToWorldCoord(x + 1, y,     z + 1);
-        point_lr = chunk.localToWorldCoord(x,     y,     z + 1);
-        point_ul = chunk.localToWorldCoord(x + 1, y + 1, z + 1);
-        point_ur = chunk.localToWorldCoord(x,     y + 1, z + 1);
+        point_ll = chunk.localGridToWorldPos(x + 1, y,     z + 1);
+        point_lr = chunk.localGridToWorldPos(x,     y,     z + 1);
+        point_ul = chunk.localGridToWorldPos(x + 1, y + 1, z + 1);
+        point_ur = chunk.localGridToWorldPos(x,     y + 1, z + 1);
         break;
 
     case FACE_SOUTH:
-        point_ll = chunk.localToWorldCoord(x,     y, z);
-        point_lr = chunk.localToWorldCoord(x + 1, y, z);
-        point_ul = chunk.localToWorldCoord(x,     y + 1, z);
-        point_ur = chunk.localToWorldCoord(x + 1, y + 1, z);
+        point_ll = chunk.localGridToWorldPos(x,     y, z);
+        point_lr = chunk.localGridToWorldPos(x + 1, y, z);
+        point_ul = chunk.localGridToWorldPos(x,     y + 1, z);
+        point_ur = chunk.localGridToWorldPos(x + 1, y + 1, z);
         break;
 
     case FACE_EAST:
-        point_ll = chunk.localToWorldCoord(x + 1, y,     z);
-        point_lr = chunk.localToWorldCoord(x + 1, y,     z + 1);
-        point_ul = chunk.localToWorldCoord(x + 1, y + 1, z);
-        point_ur = chunk.localToWorldCoord(x + 1, y + 1, z + 1);
+        point_ll = chunk.localGridToWorldPos(x + 1, y,     z);
+        point_lr = chunk.localGridToWorldPos(x + 1, y,     z + 1);
+        point_ul = chunk.localGridToWorldPos(x + 1, y + 1, z);
+        point_ur = chunk.localGridToWorldPos(x + 1, y + 1, z + 1);
         break;
 
     case FACE_WEST:
-        point_ll = chunk.localToWorldCoord(x, y,     z + 1);
-        point_lr = chunk.localToWorldCoord(x, y,     z);
-        point_ul = chunk.localToWorldCoord(x, y + 1, z + 1);
-        point_ur = chunk.localToWorldCoord(x, y + 1, z);
+        point_ll = chunk.localGridToWorldPos(x, y,     z + 1);
+        point_lr = chunk.localGridToWorldPos(x, y,     z);
+        point_ul = chunk.localGridToWorldPos(x, y + 1, z + 1);
+        point_ur = chunk.localGridToWorldPos(x, y + 1, z);
         break;
 
     default:

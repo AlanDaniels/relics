@@ -123,27 +123,22 @@ class Chunk
 public:
     Chunk(const GameWorld *pWorld, const ChunkOrigin &origin);
 
-    bool isCoordWithin(const GlobalGrid &coord) const;
+    bool IsGlobalGridWithin(const GlobalGrid &coord) const;
 
-    const Block *getBlockGlobal_RO(const GlobalGrid &coord) const;
-    Block *getBlockGlobal(const GlobalGrid &coord);
+    const Block *getBlock_RO(const LocalGrid &coord) const;
+    Block *getBlock(const LocalGrid &coord);
 
-    const Block *getBlockLocal_RO(int local_x, int local_y, int local_z) const;
-    Block *getBlockLocal(int local_x, int local_y, int local_z);
-
-    MyVec4 localToWorldCoord(int local_x, int local_y, int local_z) const;
+    MyVec4 localGridToWorldPos(int local_x, int local_y, int local_z) const;
 
     void recalcExposures();
     void realizeLandscape();
 
-    bool areExposuresCurrent()  const { return m_exposures_are_current; }
-    bool isLandcsapeRealized() const  { return m_vert_lists.areListsRealized();  }
-
     bool isAbovePlane(const MyPlane &plane) const;
 
     const ChunkOrigin getOrigin() const { return m_origin; }
-
     const ChunkVertLists &getVertLists() const { return m_vert_lists; }
+    bool areExposuresCurrent()  const { return m_exposures_are_current; }
+    bool isLandcsapeRealized() const { return m_vert_lists.areListsRealized(); }
 
     const Chunk *getNeighborNorth() const;
     const Chunk *getNeighborSouth() const;

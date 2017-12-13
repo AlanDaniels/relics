@@ -68,11 +68,12 @@ static bool CheckSouthFaces(
         GLfloat distance;
         HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
         if (hit == HITTEST_SUCCESS) {
-            GlobalGrid coord = WorldPosToGlobalGrid(impact, NUDGE_NORTH);
-            if (chunk.isCoordWithin(coord)) {
-                const Block *block = chunk.getBlockGlobal_RO(coord);
+            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_NORTH);
+            if (chunk.IsGlobalGridWithin(global_coord)) {
+                LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
+                const Block *block = chunk.getBlock_RO(local_coord);
                 if (block->isFilled()) {
-                    *pOut_coord    = coord;
+                    *pOut_coord    = global_coord;
                     *pOut_impact   = impact;
                     *pOut_distance = distance;
                     return true;
@@ -100,11 +101,12 @@ static bool CheckNorthFaces(
         GLfloat distance;
         HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
         if (hit == HITTEST_SUCCESS) {
-            GlobalGrid coord = WorldPosToGlobalGrid(impact, NUDGE_SOUTH);
-            if (chunk.isCoordWithin(coord)) {
-                const Block *block = chunk.getBlockGlobal_RO(coord);
+            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_SOUTH);
+            if (chunk.IsGlobalGridWithin(global_coord)) {
+                LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
+                const Block *block = chunk.getBlock_RO(local_coord);
                 if (block->isFilled()) {
-                    *pOut_coord    = coord;
+                    *pOut_coord    = global_coord;
                     *pOut_impact   = impact;
                     *pOut_distance = distance;
                     return true;
@@ -132,11 +134,12 @@ static bool CheckWestFaces(
         GLfloat distance;
         HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
         if (hit == HITTEST_SUCCESS) {
-            GlobalGrid coord = WorldPosToGlobalGrid(impact, NUDGE_EAST);
-            if (chunk.isCoordWithin(coord)) {
-                const Block *block = chunk.getBlockGlobal_RO(coord);
+            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_EAST);
+            if (chunk.IsGlobalGridWithin(global_coord)) {
+                LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
+                const Block *block = chunk.getBlock_RO(local_coord);
                 if (block->isFilled()) {
-                    *pOut_coord    = coord;
+                    *pOut_coord    = global_coord;
                     *pOut_impact   = impact;
                     *pOut_distance = distance;
                     return true;
@@ -164,11 +167,12 @@ static bool CheckEastFaces(
         GLfloat distance;
         HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
         if (hit == HITTEST_SUCCESS) {
-            GlobalGrid coord = WorldPosToGlobalGrid(impact, NUDGE_WEST);
-            if (chunk.isCoordWithin(coord)) {
-                const Block *block = chunk.getBlockGlobal_RO(coord);
+            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_WEST);
+            if (chunk.IsGlobalGridWithin(global_coord)) {
+                LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
+                const Block *block = chunk.getBlock_RO(local_coord);
                 if (block->isFilled()) {
-                    *pOut_coord    = coord;
+                    *pOut_coord    = global_coord;
                     *pOut_impact   = impact;
                     *pOut_distance = distance;
                     return true;
@@ -196,11 +200,12 @@ static bool CheckTopFaces(
         GLfloat distance;
         HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
         if (hit == HITTEST_SUCCESS) {
-            GlobalGrid coord = WorldPosToGlobalGrid(impact, NUDGE_DOWN);
-            if (chunk.isCoordWithin(coord)) {
-                const Block *block = chunk.getBlockGlobal_RO(coord);
+            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_DOWN);
+            if (chunk.IsGlobalGridWithin(global_coord)) {
+                LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
+                const Block *block = chunk.getBlock_RO(local_coord);
                 if (block->isFilled()) {
-                    *pOut_coord    = coord;
+                    *pOut_coord    = global_coord;
                     *pOut_impact   = impact;
                     *pOut_distance = distance;
                     return true;
@@ -228,11 +233,12 @@ static bool CheckBottomFaces(
         GLfloat distance;
         HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
         if (hit == HITTEST_SUCCESS) {
-            GlobalGrid coord = WorldPosToGlobalGrid(impact, NUDGE_UP);
-            if (chunk.isCoordWithin(coord)) {
-                const Block *block = chunk.getBlockGlobal_RO(coord);
+            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_UP);
+            if (chunk.IsGlobalGridWithin(global_coord)) {
+                LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
+                const Block *block = chunk.getBlock_RO(local_coord);
                 if (block->isFilled()) {
-                    *pOut_coord    = coord;
+                    *pOut_coord    = global_coord;
                     *pOut_impact   = impact;
                     *pOut_distance = distance;
                     return true;

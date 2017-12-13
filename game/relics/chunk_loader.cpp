@@ -52,7 +52,8 @@ Chunk *LoadChunk(GameWorld *pWorld, const ChunkOrigin &origin)
             assert((local_z >= 0) && (local_z < CHUNK_WIDTH));
 
             for (int y = 0; y < block_y; y++) {
-                result->getBlockLocal(local_x, y, local_z)->setContent(CONTENT_DIRT);
+                LocalGrid lookup(local_x, y, local_z);
+                result->getBlock(lookup)->setContent(CONTENT_DIRT);
             }
         }
 

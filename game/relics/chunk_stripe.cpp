@@ -104,12 +104,14 @@ void ChunkStripe::recalcExposureForBlock(int local_z)
     if (west_edge) {
         const Chunk *neighbor = m_owner->getNeighborWest();
         if (neighbor != nullptr) {
-            const Block *block = neighbor->getBlockLocal_RO(CHUNK_WIDTH - 1, y, z);
+            LocalGrid coord(CHUNK_WIDTH - 1, y, z);
+            const Block *block = neighbor->getBlock_RO(coord);
             west_content = block->getContent();
         }
     }
     else {
-        const Block *block = m_owner->getBlockLocal_RO(x - 1, y, z);
+        LocalGrid coord(x - 1, y, z);
+        const Block *block = m_owner->getBlock_RO(coord);
         west_content = block->getContent();
     }
 
@@ -117,12 +119,14 @@ void ChunkStripe::recalcExposureForBlock(int local_z)
     if (east_edge) {
         const Chunk *neighbor = m_owner->getNeighborEast();
         if (neighbor != nullptr) {
-            const Block * block = neighbor->getBlockLocal_RO(0, y, z);
+            LocalGrid coord(0, y, z);
+            const Block * block = neighbor->getBlock_RO(coord);
             east_content = block->getContent();
         }
     }
     else {
-        const Block *block = m_owner->getBlockLocal_RO(x + 1, y, z);
+        LocalGrid coord(x + 1, y, z);
+        const Block *block = m_owner->getBlock_RO(coord);
         east_content = block->getContent();
     }
 
@@ -130,12 +134,14 @@ void ChunkStripe::recalcExposureForBlock(int local_z)
     if (south_edge) {
         const Chunk *neighbor = m_owner->getNeighborSouth();
         if (neighbor != nullptr) {
-            const Block *block = neighbor->getBlockLocal_RO(x, y, CHUNK_WIDTH - 1);
+            LocalGrid coord(x, y, CHUNK_WIDTH - 1);
+            const Block *block = neighbor->getBlock_RO(coord);
             south_content = block->getContent();
         }
     }
     else {
-        const Block *block = m_owner->getBlockLocal_RO(x, y, z - 1);
+        LocalGrid coord(x, y, z - 1);
+        const Block *block = m_owner->getBlock_RO(coord);
         south_content = block->getContent();
     }
 
@@ -143,22 +149,30 @@ void ChunkStripe::recalcExposureForBlock(int local_z)
     if (north_edge) {
         const Chunk *neighbor = m_owner->getNeighborNorth();
         if (neighbor != nullptr) {
-            const Block *block = neighbor->getBlockLocal_RO(x, y, 0);
+            LocalGrid coord(x, y, 0);
+            const Block *block = neighbor->getBlock_RO(coord);
             north_content = block->getContent();
         }
     }
     else {
-        const Block *block = m_owner->getBlockLocal_RO(x, y, z + 1);
+        LocalGrid coord(x, y, z + 1);
+        const Block *block = m_owner->getBlock_RO(coord);
         north_content = block->getContent();
     }
 
-    BlockContent top_content = top_edge ?
-        CONTENT_AIR : 
-        m_owner->getBlockLocal_RO(x, y + 1, z)->getContent();
+    BlockContent top_content = CONTENT_AIR;
+    if (!top_edge) {
+        LocalGrid coord(x, y + 1, z);
+        const Block *block = m_owner->getBlock_RO(coord);
+        top_content = block->getContent();
+    }
 
-    BlockContent bottom_content = bottom_edge ?
-        CONTENT_AIR : 
-        m_owner->getBlockLocal_RO(x, y - 1, z)->getContent();
+    BlockContent bottom_content = CONTENT_AIR;
+    if (!bottom_edge) {
+        LocalGrid coord(x, y - 1, z);
+        const Block *block = m_owner->getBlock_RO(coord);
+        bottom_content = block->getContent();
+    }
 
     // Check each of the faces.
     bool west_flag  = IsContentEmpty(west_content);

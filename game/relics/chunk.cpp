@@ -198,7 +198,7 @@ ChunkStripe *Chunk::getStripe(int local_x, int local_y)
 
 
 // Return true if a grid coord is within this chunk.
-bool Chunk::isCoordWithin(const GlobalGrid &coord) const
+bool Chunk::IsGlobalGridWithin(const GlobalGrid &coord) const
 {
     int local_x = coord.x() - m_origin.x();
     int local_y = coord.y();
@@ -212,51 +212,17 @@ bool Chunk::isCoordWithin(const GlobalGrid &coord) const
 }
 
 
-// Get the block at a particular grid coord, read-only version.
-const Block *Chunk::getBlockGlobal_RO(const GlobalGrid &coord) const
-{
-    assert(isCoordWithin(coord));
-
-    int local_x = coord.x() - m_origin.x();
-    int local_y = coord.y();
-    int local_z = coord.z() - m_origin.z();
-
-    return getStripe_RO(local_x, local_y)->getBlock_RO(local_z);
-}
-
-
-// Get the block at a particular grid coord, read-only version.
-Block *Chunk::getBlockGlobal(const GlobalGrid &coord)
-{
-    assert(isCoordWithin(coord));
-
-    int local_x = coord.x() - m_origin.x();
-    int local_y = coord.y();
-    int local_z = coord.z() - m_origin.z();
-
-    return getStripe(local_x, local_y)->getBlock_RW(local_z);
-}
-
-
 // Get the block at a particular local coord, read-only version.
-const Block *Chunk::getBlockLocal_RO(int local_x, int local_y, int local_z) const
+const Block *Chunk::getBlock_RO(const LocalGrid &coord) const
 {
-    assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
-    assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
-    assert((local_z >= 0) && (local_z < CHUNK_WIDTH));
-
-    return getStripe_RO(local_x, local_y)->getBlock_RO(local_z);
+    return getStripe_RO(coord.x(), coord.y())->getBlock_RO(coord.z());
 }
 
 
 // Get the block at a particular local coord, writeable version.
-Block *Chunk::getBlockLocal(int local_x, int local_y, int local_z)
+Block *Chunk::getBlock(const LocalGrid &coord)
 {
-    assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
-    assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
-    assert((local_z >= 0) && (local_z < CHUNK_WIDTH));
-
-    return getStripe(local_x, local_y)->getBlock_RW(local_z);
+    return getStripe(coord.x(), coord.y())->getBlock_RW(coord.z());
 }
 
 
@@ -327,7 +293,7 @@ bool Chunk::isAbovePlane(const MyPlane &plane) const
 
 
 // Convert a local coord to a graphics coord.
-MyVec4 Chunk::localToWorldCoord(int x, int y, int z) const
+MyVec4 Chunk::localGridToWorldPos(int x, int y, int z) const
 {
     // Note the "less than or equal" to allow for edge cases.
     assert((x >= 0) && (x <= CHUNK_WIDTH));
@@ -394,7 +360,9 @@ std::string Chunk::toDescription() const
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int z = 0; z < CHUNK_WIDTH; z++) {
             for (int y = 0; y < CHUNK_HEIGHT; y++) {
-                const Block *pBlock = getBlockLocal_RO(x, y, z);
+                LocalGrid coord(x, y, z);
+                const Block *pBlock = getBlock_RO(coord);
+
                 switch (pBlock->getContent()) {
                 case CONTENT_DIRT:  dirt_blocks++; break;
                 case CONTENT_STONE: stone_blocks++; break;

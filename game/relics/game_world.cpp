@@ -388,17 +388,18 @@ void GameWorld::calcHitTest()
 void GameWorld::deleteBlockInFrontOfUs()
 {
     if (m_hit_test_success) {
-        ChunkOrigin origin = m_hit_test_detail.getChunkOrigin();
-        GlobalGrid coord    = m_hit_test_detail.getGlobalCoord();
+        ChunkOrigin origin       = m_hit_test_detail.getChunkOrigin();
+        GlobalGrid  global_coord = m_hit_test_detail.getGlobalCoord();
+        LocalGrid   local_coord  = GlobalGridToLocal(global_coord, origin);
 
         const auto &iter = m_chunk_map.find(origin);
-        Chunk *pChunk = iter->second;
+        Chunk *chunk = iter->second;
 
-        assert(pChunk != nullptr);
-        assert(pChunk->isCoordWithin(coord));
+        assert(chunk != nullptr);
+        assert(chunk->IsGlobalGridWithin(global_coord));
 
-        pChunk->getBlockGlobal(coord)->setContent(CONTENT_AIR);
-        pChunk->recalcExposures();
-        pChunk->realizeLandscape();
+        chunk->getBlock(local_coord)->setContent(CONTENT_AIR);
+        chunk->recalcExposures();
+        chunk->realizeLandscape();
     }
 }

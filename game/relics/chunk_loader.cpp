@@ -12,11 +12,13 @@
 
 // Load a chunk from our SQLite file.
 // This just deals with the block data. The landscape is are dealt with later.
-Chunk *LoadChunk(GameWorld *pWorld, const ChunkOrigin &origin)
+std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
 {
-    sqlite3 *db = pWorld->getDatabase();
+    PrintDebug("Loading chunk [%d, %d]: ", origin.x(), origin.z());
 
-    std::unique_ptr<char[]> buffer(new char[512]);
+    sqlite3 *db = world.getDatabase();
+
+    std::unique_ptr<char[]> buffer(new char[1024]);
 
     sprintf(buffer.get(),
         "SELECT x, y, z, block_type FROM blocks "
@@ -31,10 +33,15 @@ Chunk *LoadChunk(GameWorld *pWorld, const ChunkOrigin &origin)
         return nullptr;
     }
 
-    Chunk *result = new Chunk(pWorld, origin);
+    std::unique_ptr<Chunk> result = std::make_unique<Chunk>(world, origin);
 
+    int count = 0;
     int ret_code = sqlite3_step(stmt);
     while (ret_code == SQLITE_ROW) {
+        if (MAGIC_BREAKPOINT) {
+            printf("");
+        }
+
         int block_x = sqlite3_column_int(stmt, 0);
         int block_y = sqlite3_column_int(stmt, 1);
         int block_z = sqlite3_column_int(stmt, 2);
@@ -48,12 +55,10 @@ Chunk *LoadChunk(GameWorld *pWorld, const ChunkOrigin &origin)
 
             int local_x = local_coord.x();
             int local_z = local_coord.z();
-            assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
-            assert((local_z >= 0) && (local_z < CHUNK_WIDTH));
-
             for (int y = 0; y < block_y; y++) {
                 LocalGrid lookup(local_x, y, local_z);
                 result->setBlockType(lookup, BT_DIRT);
+                count++;
             }
         }
 
@@ -61,6 +66,6 @@ Chunk *LoadChunk(GameWorld *pWorld, const ChunkOrigin &origin)
     }
 
     sqlite3_finalize(stmt);
-
+    PrintDebug("Found %d blocks.\n", count);
     return result;
 }

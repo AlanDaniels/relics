@@ -10,6 +10,16 @@
 #include "utils.h"
 
 
+// Chunk Vert Lists default ctor.
+ChunkVertLists::ChunkVertLists() :
+    m_grass_list(nullptr),
+    m_dirt_list(nullptr),
+    m_stone_list(nullptr),
+    m_realized(false)
+{
+}
+
+
 // Chunk Vert Lists destructor.
 ChunkVertLists::~ChunkVertLists()
 {
@@ -140,40 +150,24 @@ ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos)
 }
 
 
-// Chunk values ctor.
-// We have to use an array of pointers here, since we want each stripe to be aware
-// of its owner and position. So, we can't use references since that would get all circular.
-// Once that's done, feel free to use "getStripe" everywhere else.
-Chunk::Chunk(const GameWorld *world, const ChunkOrigin &origin) :
-    m_world(world),
-    m_origin(origin),
-    m_exposures_are_current(false)
-{
-    for (int x = 0; x < CHUNK_WIDTH; x++) {
-        for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            m_stripes[x][y] = new ChunkStripe(this, x, y);
-        }
-    }
-}
-
-
 // Get a chunk stripe, read-only version.
-const ChunkStripe *Chunk::getStripe_RO(int local_x, int local_y) const
+const ChunkStripe &Chunk::getStripe_RO(int local_x, int local_y) const
 {
     assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
     assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
 
-    return m_stripes[local_x][local_y];
+    int offset = getArrayOffset(local_x, local_y);
+    return m_stripes[offset];
 }
 
 
 // Gert a chunk stripe, writeable version.
-ChunkStripe *Chunk::getStripe(int local_x, int local_y)
+ChunkStripe &Chunk::getStripe(int local_x, int local_y)
 {
     assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
     assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
-
-    return m_stripes[local_x][local_y];
+    int offset = getArrayOffset(local_x, local_y);
+    return m_stripes[offset];
 }
 
 
@@ -195,9 +189,9 @@ bool Chunk::IsGlobalGridWithin(const GlobalGrid &coord) const
 // Get the type of a block.
 BlockType Chunk::getBlockType(const LocalGrid &coord) const
 {
-    const ChunkStripe *stripe = getStripe_RO(coord.x(), coord.y());
-    const Block *block = stripe->getBlock_RO(coord.z());
-    return block->getBlockType();
+    const ChunkStripe &stripe = getStripe_RO(coord.x(), coord.y());
+    BlockType result = stripe.getBlockType(coord.z());
+    return result;
 }
 
 
@@ -205,9 +199,8 @@ BlockType Chunk::getBlockType(const LocalGrid &coord) const
 // TODO: This should invalidate everything.
 void Chunk::setBlockType(const LocalGrid &coord, BlockType block_type)
 {
-    ChunkStripe *stripe = getStripe(coord.x(), coord.y());
-    Block *block = stripe->getBlock_RW(coord.z());
-    block->setBlockType(block_type);
+    ChunkStripe &stripe = getStripe(coord.x(), coord.y());
+    stripe.setBlockType(coord.z(), block_type);
 }
 
 
@@ -217,11 +210,11 @@ void Chunk::recalcExposures()
 {
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            getStripe(x, y)->recalcExposures();
+            getStripe(x, y).recalcExposures(*this, x, y);
         }
     }
 
-    m_exposures_are_current = true;
+    m_up_to_date = true;
 }
 
 
@@ -229,13 +222,13 @@ void Chunk::recalcExposures()
 void Chunk::realizeLandscape()
 {
     // We must only call this when our landscape is current.
-    assert(m_exposures_are_current);
+    assert(m_up_to_date);
 
     m_vert_lists.resetLists();
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            getStripe(x, y)->addToVertLists(&m_vert_lists);
+            getStripe(x, y).addToVertLists(*this, x, y, &m_vert_lists);
         }
     }
 
@@ -299,7 +292,7 @@ const Chunk *Chunk::getNeighborNorth() const
 {
     int x = m_origin.x();
     int z = m_origin.z() + CHUNK_WIDTH;
-    return m_world->getOptionalChunk(ChunkOrigin(x, z));
+    return m_world.getOptionalChunk(ChunkOrigin(x, z));
 }
 
 
@@ -309,7 +302,7 @@ const Chunk *Chunk::getNeighborSouth() const
 {
     int x = m_origin.x();
     int z = m_origin.z() - CHUNK_WIDTH;
-    return m_world->getOptionalChunk(ChunkOrigin(x, z));
+    return m_world.getOptionalChunk(ChunkOrigin(x, z));
 }
 
 
@@ -319,7 +312,7 @@ const Chunk *Chunk::getNeighborEast() const
 {
     int x = m_origin.x() + CHUNK_WIDTH;
     int z = m_origin.z();
-    return m_world->getOptionalChunk(ChunkOrigin(x, z));
+    return m_world.getOptionalChunk(ChunkOrigin(x, z));
 }
 
 
@@ -329,7 +322,7 @@ const Chunk *Chunk::getNeighborWest() const
 {
     int x = m_origin.x() - CHUNK_WIDTH;
     int z = m_origin.z();
-    return m_world->getOptionalChunk(ChunkOrigin(x, z));
+    return m_world.getOptionalChunk(ChunkOrigin(x, z));
 }
 
 
@@ -362,25 +355,25 @@ std::string Chunk::toDescription() const
     int dirt_surfaces  = m_vert_lists.getCount(SURF_DIRT);
     int stone_surfaces = m_vert_lists.getCount(SURF_STONE);
 
-    const char *exposures_true = areExposuresCurrent()  ? "true" : "false";
-    const char *realized_true  = isLandcsapeRealized() ? "true" : "false";
+    const char *exposures_str = isUpToDate()  ? "true" : "false";
+    const char *realized_str  = isLandcsapeRealized()  ? "true" : "false";
 
-    char msg[64];
+    std::unique_ptr<char[]> buffer(new char[1024]);
 
-    sprintf(msg, "Chunk at [%d, %d]\n", m_origin.x(), m_origin.z());
-    result += msg;
-    sprintf(msg, "  Exposures: %s, Realized: %s\n", exposures_true, realized_true);
-    result += msg;
-    sprintf(msg, "  Block = dirt: %d\n",  dirt_blocks);
-    result += msg;
-    sprintf(msg, "  Block = stone: %d\n", stone_blocks);
-    result += msg;
-    sprintf(msg, "  Surface = grass: %d\n", grass_surfaces);
-    result += msg;
-    sprintf(msg, "  Surface = dirt:  %d\n", dirt_surfaces);
-    result += msg;
-    sprintf(msg, "  Surface = stone: %d\n", stone_surfaces);
-    result += msg;
+    sprintf(buffer.get(), "Chunk at [%d, %d]\n", m_origin.x(), m_origin.z());
+    result += buffer.get();
+    sprintf(buffer.get(), "  Exposures: %s, Realized: %s\n", exposures_str, realized_str);
+    result += buffer.get();
+    sprintf(buffer.get(), "  Block = dirt: %d\n",  dirt_blocks);
+    result += buffer.get();
+    sprintf(buffer.get(), "  Block = stone: %d\n", stone_blocks);
+    result += buffer.get();
+    sprintf(buffer.get(), "  Surface = grass: %d\n", grass_surfaces);
+    result += buffer.get();
+    sprintf(buffer.get(), "  Surface = dirt:  %d\n", dirt_surfaces);
+    result += buffer.get();
+    sprintf(buffer.get(), "  Surface = stone: %d\n", stone_surfaces);
+    result += buffer.get();
 
     return result;
 }

@@ -182,36 +182,37 @@ Brady::Brady(const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face) :
 std::string Brady::toString() const
 {
     std::string result;
-    char buffer[128];
+    std::unique_ptr<char[]> buffer(new char[1024]);
 
-    sprintf(buffer,
+    LocalGrid local_coord = m_local_coord;
+    sprintf(buffer.get(),
         "Brady for [%d %d %d], face %s\n",
-        m_local_coord.x(), m_local_coord.y(), m_local_coord.z(),
+        local_coord.x(), local_coord.y(), local_coord.z(),
         FaceEnumToString(m_face));
-    result += buffer;
+    result += buffer.get();
 
-    sprintf(buffer, "Points:\n");
-    result += buffer;
+    result += "Points:\n";
 
     for (int y = 3; y >= 0; y--) {
-        sprintf(buffer, "  [%s] [%s] [%s] [%s]\n",
+        sprintf(buffer.get(), 
+            "  [%s] [%s] [%s] [%s]\n",
             m_verts[0][y].position.toString().c_str(),
             m_verts[1][y].position.toString().c_str(),
             m_verts[2][y].position.toString().c_str(),
             m_verts[3][y].position.toString().c_str());
-        result += buffer;
+        result += buffer.get();
     }
 
-    sprintf(buffer, "UVs:\n");
-    result += buffer;
+    result += "UVs:\n";
 
     for (int y = 3; y >= 0; y--) {
-        sprintf(buffer, "  [%s] [%s] [%s] [%s]\n",
+        sprintf(buffer.get(),
+            "  [%s] [%s] [%s] [%s]\n",
             m_verts[0][y].texuv.toString().c_str(),
             m_verts[1][y].texuv.toString().c_str(),
             m_verts[2][y].texuv.toString().c_str(),
             m_verts[3][y].texuv.toString().c_str());
-        result += buffer;
+        result += buffer.get();
     }
 
     return result;

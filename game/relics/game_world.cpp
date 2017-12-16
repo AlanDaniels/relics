@@ -14,39 +14,11 @@
 #include "utils.h"
 
 #include "sqlite3.h"
-#include <boost/filesystem.hpp>
-
-
-// TODO: Add the final part: Background threads as we move around the map.
-// Touch each chunk when it's drawn. After we haven't seen a chunk in say, one minute, we can unload it. Simpler than an LRU list.
-// Also, stop using references to ownership. Use pointers instead. More sane that way.
-
-
-// Initialize the game world.
-// There's one per database file, and if we can't open it, there's no world.
-GameWorld *GameWorld::Create() 
-{
-    std::string fname = GetConfig().world.file_name;
-    std::string full_name = RESOURCE_PATH;
-    full_name.append(fname);
-
-    if (!boost::filesystem::is_regular_file(full_name)) {
-        PrintDebug("Database file %s does not exist.", full_name.c_str());
-        return nullptr;
-    }
-
-    sqlite3 *database = SQL_open(full_name);
-    if (database == nullptr) {
-        return nullptr;
-    }
-
-    return new GameWorld(database);
-}
 
 
 // Our game world.
-GameWorld::GameWorld(sqlite3 *database) :
-    m_database(database),
+GameWorld::GameWorld(sqlite3 *db) :
+    m_database(db),
     m_paused(false),
     m_time_msec(0),
     m_camera_pitch(0.0f),
@@ -64,7 +36,7 @@ GameWorld::GameWorld(sqlite3 *database) :
     for     (int x = load_region.west();  x <= load_region.east();  x += CHUNK_WIDTH) {
         for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
-            m_chunk_map[origin] = LoadChunk(this, origin);
+            m_chunk_map[origin] = LoadChunk(*this, origin);
             count++;
         }
     }
@@ -76,16 +48,14 @@ GameWorld::GameWorld(sqlite3 *database) :
     for     (int x = load_region.west();  x <= load_region.east();  x += CHUNK_WIDTH) {
         for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
-            Chunk *pChunk = m_chunk_map[origin];
-            pChunk->recalcExposures();
-            pChunk->realizeLandscape();
+            m_chunk_map[origin].get()->recalcExposures();
+            m_chunk_map[origin].get()->realizeLandscape();
         }
     }
 
     // Sanity check.
-    for (auto iter : m_chunk_map) {
-        Chunk *chunk = iter.second;
-        if (!chunk->isLandcsapeRealized()) {
+    for (auto &iter : m_chunk_map) {
+        if (NOT(iter.second->isLandcsapeRealized())) {
             assert(false);
         }
     }
@@ -96,6 +66,10 @@ GameWorld::GameWorld(sqlite3 *database) :
 GameWorld::~GameWorld()
 {
     sqlite3_close(m_database);
+    for (auto &iter : m_chunk_map) {
+        ChunkOrigin origin = iter.first;
+        m_chunk_map[origin] = nullptr;
+    }
 }
 
 
@@ -122,19 +96,6 @@ void GameWorld::resetCamera()
 }
 
 
-// Get the chunk the player is standing in.
-// This should never be null. Otherwise, how would we be here?
-const Chunk *GameWorld::getPlayersChunk() const
-{
-    auto iter = m_chunk_map.find(m_current_chunk_origin);
-    assert(iter != m_chunk_map.end());
-
-    const Chunk *pResult = iter->second;
-    assert(pResult != nullptr);
-    return pResult;
-}
-
-
 // Look up a chunk that absolutely must have been loaded already,
 // such as the player position, or the current drawing area.
 const Chunk *GameWorld::getRequiredChunk(const ChunkOrigin &origin) const
@@ -142,7 +103,7 @@ const Chunk *GameWorld::getRequiredChunk(const ChunkOrigin &origin) const
     auto iter = m_chunk_map.find(origin);
     assert(iter != m_chunk_map.end());
 
-    const Chunk *result = iter->second;
+    const Chunk *result = iter->second.get();
     assert(result != nullptr);
     return result;
 }
@@ -157,7 +118,7 @@ const Chunk *GameWorld::getOptionalChunk(const ChunkOrigin &origin) const
         return nullptr;
     }
 
-    const Chunk *pResult = iter->second;
+    const Chunk *pResult = iter->second.get();
     assert(pResult != nullptr);
     return pResult;
 }
@@ -283,8 +244,7 @@ void GameWorld::updateWorld()
 
             if (NOT(draw_region.containsOrigin(origin))) {
                 if (m_chunk_map.find(origin) == m_chunk_map.end()) {
-                    Chunk *chunk = LoadChunk(this, origin);;
-                    m_chunk_map[origin] = chunk;
+                    m_chunk_map[origin] = LoadChunk(*this, origin);
                 }
             }
         }
@@ -295,16 +255,15 @@ void GameWorld::updateWorld()
         for (int z = draw_region.south(); z <= draw_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
 
-            auto &chunk_iter = m_chunk_map.find(origin);
-            assert(chunk_iter != m_chunk_map.end());
+            auto &iter = m_chunk_map.find(origin);
+            assert(iter != m_chunk_map.end());
 
             // Finally, rebuild the landscape as needed.
-            Chunk *chunk = chunk_iter->second;
-            if (NOT(chunk->areExposuresCurrent())) {
-                chunk->recalcExposures();
+            if (NOT(iter->second->isUpToDate())) {
+                iter->second->recalcExposures();
             }
-            if (NOT(chunk->isLandcsapeRealized())) {
-                chunk->realizeLandscape();
+            if (NOT(iter->second->isLandcsapeRealized())) {
+                iter->second->realizeLandscape();
             }
         }
     }
@@ -347,14 +306,14 @@ void GameWorld::calcHitTest()
     for     (int x = region.west();  x <= region.east();  x += CHUNK_WIDTH) {
         for (int z = region.south(); z <= region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
-            Chunk *pChunk = m_chunk_map[origin];
+            Chunk *chunk = m_chunk_map[origin].get();
 
             ChunkHitTestDetail detail;
-            bool this_test = DoChunkHitTest(*pChunk, eye_ray, &detail);
+            bool this_test = DoChunkHitTest(*chunk, eye_ray, &detail);
             if (this_test && (detail.getDist() < best_distance)) {
                 success       = true;
                 best_distance = detail.getDist();
-                best_chunk    = pChunk;
+                best_chunk    = chunk;
                 best_detail   = detail;
             }
         }
@@ -393,7 +352,7 @@ void GameWorld::deleteBlockInFrontOfUs()
         LocalGrid   local_coord  = GlobalGridToLocal(global_coord, origin);
 
         const auto &iter = m_chunk_map.find(origin);
-        Chunk *chunk = iter->second;
+        Chunk *chunk = iter->second.get();
 
         assert(chunk != nullptr);
         assert(chunk->IsGlobalGridWithin(global_coord));

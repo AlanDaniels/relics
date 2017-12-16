@@ -5,7 +5,6 @@
 
 #include "utils.h"
 
-
 // Return true if a block type should generate ever landscape surfaces.
 bool IsBlockTypeFilled(BlockType block_type)
 {
@@ -17,6 +16,18 @@ bool IsBlockTypeFilled(BlockType block_type)
 bool IsBlockTypeEmpty(BlockType block_type)
 {
     return (block_type == BT_AIR);
+}
+
+// Default ctor. This is a plain struct, so it's all we need.
+Block::Block() :
+    m_block_type(BT_AIR),
+    m_west_exposed(false),
+    m_east_exposed(false),
+    m_south_exposed(false),
+    m_north_exposed(false),
+    m_top_exposed(false),
+    m_bottom_exposed(false) 
+{
 }
 
 

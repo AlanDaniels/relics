@@ -4,6 +4,8 @@
 #include "draw_state_pt.h"
 #include "utils.h"
 
+class Chunk;
+
 
 enum BlockType
 {
@@ -30,17 +32,10 @@ enum BlockSurface
 class Block
 {
 public:
-    Block() :
-        m_content(BT_AIR),
-        m_west_exposed(false),
-        m_east_exposed(false),
-        m_south_exposed(false),
-        m_north_exposed(false),
-        m_top_exposed(false),
-        m_bottom_exposed(false) {}
+    Block();
 
-    BlockType getBlockType() const { return m_content; }
-    void setBlockType(BlockType val) { m_content = val; }
+    BlockType getBlockType() const { return m_block_type; }
+    void setBlockType(BlockType val) { m_block_type = val; }
 
     void clearExposureFlags();
 
@@ -48,11 +43,8 @@ public:
     void setExposure(FaceEnum face, bool val);
 
 private:
-    // Disallow copying.
-    Block(const Block &that) = delete;
-    void operator=(const Block &that) = delete;
+    BlockType m_block_type;
 
-    BlockType m_content;
     bool m_west_exposed;
     bool m_east_exposed;
     bool m_south_exposed;

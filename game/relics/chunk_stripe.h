@@ -13,31 +13,25 @@ class ChunkVertLists;
 class ChunkStripe
 {
 public:
-    ChunkStripe(const Chunk *owner, int local_x, int local_y) :
-        m_owner(owner),
-        m_local_x(local_x), 
-        m_local_y(local_y) {}
+    ChunkStripe() {}
+    ~ChunkStripe() {}
 
-    const Block *getBlock_RO(int local_z) const;
-    Block *getBlock_RW(int local_z);
+    BlockType getBlockType(int local_z) const;
+    void setBlockType(int local_z, BlockType block_type);
 
-    void fillStripe(BlockType block_type);
-    void recalcExposures();
-    void addToVertLists(ChunkVertLists *pOut);
+    void recalcExposures(const Chunk &owner, int local_x, int local_y);
+    void addToVertLists(const Chunk &owner, int local_x, int local_y, ChunkVertLists *pOut);
 
 private:
-    // Disallow copying, and default ctor.
-    ChunkStripe() = delete;
+    // Disallow moving and copying.
     ChunkStripe(const ChunkStripe &that) = delete;
     void operator=(const ChunkStripe &that) = delete;
+    ChunkStripe(ChunkStripe &&that) = delete;
+    void operator=(ChunkStripe &&that) = delete;
 
     BlockSurface calcSurfaceForBlock(int local_z, FaceEnum face);
-    void recalcExposureForBlock(int local_z);
-    void addVertsForBlock(ChunkVertLists *pOut, int local_z);
+    void recalcExposureForBlock(const Chunk &chunk, const LocalGrid local_coord);
+    void addVertsForBlock(const Chunk &owner, const LocalGrid &local_coord, ChunkVertLists *pOut);
 
-    const Chunk *m_owner;
-    int m_local_x;
-    int m_local_y;
-
-    Block m_blocks[CHUNK_WIDTH];
+    std::array<Block, CHUNK_WIDTH> m_blocks;
 };

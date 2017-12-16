@@ -40,3 +40,9 @@
 
 // SFML headers.
 #include <SFML/Graphics.hpp>
+
+
+// TODO: This adds memory leak detection.
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>

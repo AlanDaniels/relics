@@ -14,6 +14,8 @@
 #include "renderer.h"
 #include "utils.h"
 
+#include <boost/filesystem.hpp>
+
 
 const int INITIAL_SCREEN_WIDTH  = 1920;
 const int INITIAL_SCREEN_HEIGHT = 1080;
@@ -78,11 +80,37 @@ void APIENTRY MyOGLErrorCallback(
 }
 
 
+// Initialize the game world.
+sqlite3 *OpenDatabase()
+{
+    std::string fname = GetConfig().world.file_name;
+    std::string full_name = RESOURCE_PATH;
+    full_name.append(fname);
+
+    if (!boost::filesystem::is_regular_file(full_name)) {
+        PrintDebug("Database file %s does not exist.", full_name.c_str());
+        return nullptr;
+    }
+
+    sqlite3 *database = SQL_open(full_name);
+    return database;
+}
+
+
 // And away we go. Forgive the Microsoft SAL annotations here. We'll make sure this is portable later.
 int WINAPI wWinMain(
     _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
-    _In_ LPWSTR lpCmdLine,    _In_ int nShowCmd)
+    _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
+    // TODO: I don't know why the fuck I'm leaking memory.
+#if 0
+    _CrtSetBreakAlloc(9554);
+    _CrtSetBreakAlloc(9553);
+    _CrtSetBreakAlloc(9552);
+#endif
+
     // Hello and welcome! Read our config file.
     if (!LoadConfig()) {
         return 1;
@@ -152,8 +180,15 @@ int WINAPI wWinMain(
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
+    // Open our database file.
+    sqlite3 *database = OpenDatabase();
+    if (database == nullptr) {
+        PrintDebug("Could not open database file!\n");
+        return 1;
+    }
+
     // The game world.
-    GameWorld *game_world = GameWorld::Create();
+    std::unique_ptr<GameWorld> game_world = std::make_unique<GameWorld>(database);
     if (game_world == nullptr) {
         PrintDebug("Could not create the game world!\n");
         return 1;
@@ -236,5 +271,9 @@ int WINAPI wWinMain(
 
     // All done.
     window.setMouseCursorVisible(true);
+
+    // Let's find where our memory leaks were.
+    _CrtDumpMemoryLeaks();
+
     return 0;
 }

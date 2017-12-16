@@ -17,7 +17,7 @@ class  ChunkOrigin;
 class GameWorld
 {
 public:
-    static GameWorld *Create();
+    GameWorld(sqlite3 *db);
     ~GameWorld();
 
     sqlite3 *getDatabase() { return m_database; }
@@ -34,7 +34,6 @@ public:
     GLfloat getCameraYaw()   const { return m_camera_yaw; }
     const MyVec4 &getCameraPos() const { return m_camera_pos; }
 
-    const Chunk *getPlayersChunk() const;
     const Chunk *getRequiredChunk(const ChunkOrigin &origin) const;
     const Chunk *getOptionalChunk(const ChunkOrigin &origin) const;
     int getChunksInMemoryCount() const { return m_chunk_map.size(); }
@@ -52,11 +51,10 @@ public:
     void deleteBlockInFrontOfUs();
 
 private: 
-    // Our constructor is private, and can only be called via "create".
-    GameWorld(sqlite3 *database);
-
-    // Disallow default ctor and copying.
+    // Disallow the default ctor, moving and copying.
     GameWorld() = delete;
+    GameWorld(GameWorld &&that) = delete;
+    void operator=(GameWorld &&that) = delete;
     GameWorld(const GameWorld &that) = delete;
     void operator=(const GameWorld &that) = delete;
 
@@ -80,7 +78,7 @@ private:
     GlobalGrid   m_current_grid_coord;
     ChunkOrigin m_current_chunk_origin;
 
-    std::map<ChunkOrigin, Chunk *> m_chunk_map;
+    std::map<ChunkOrigin, std::unique_ptr<Chunk>> m_chunk_map;
     bool m_hit_test_success;
     ChunkHitTestDetail m_hit_test_detail;
     VertList_PT m_hit_test_vert_list;

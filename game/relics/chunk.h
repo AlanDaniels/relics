@@ -15,12 +15,7 @@ class GameWorld;
 // aren't that many lists anyway, so I'm hard-coding them here.
 class ChunkVertLists {
 public:
-    ChunkVertLists() :
-        m_grass_list(nullptr),
-        m_dirt_list(nullptr),
-        m_stone_list(nullptr),
-        m_realized(false) {}
-
+    ChunkVertLists();
     ~ChunkVertLists();
 
     int getCount(BlockSurface surf) const;
@@ -32,9 +27,11 @@ public:
     bool areListsRealized() const { return m_realized; }
 
 private:
-    // Forbid copies.
+    // Forbid moving and copying..
     ChunkVertLists(const ChunkVertLists &that) = delete;
     void operator=(const ChunkVertLists &that) = delete;
+    ChunkVertLists(ChunkVertLists &&that) = delete;
+    void operator=(ChunkVertLists &&that) = delete;
 
     VertList_PNT *m_grass_list;
     VertList_PNT *m_dirt_list;
@@ -119,7 +116,13 @@ ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos);
 class Chunk
 {
 public:
-    Chunk(const GameWorld *pWorld, const ChunkOrigin &origin);
+    // Chunk values ctor.
+    Chunk::Chunk(const GameWorld &world, const ChunkOrigin &origin) :
+        m_world(world),
+        m_origin(origin),
+        m_up_to_date(false) {}
+
+    Chunk::~Chunk() {}
 
     bool IsGlobalGridWithin(const GlobalGrid &coord) const;
 
@@ -135,7 +138,8 @@ public:
 
     const ChunkOrigin getOrigin() const { return m_origin; }
     const ChunkVertLists &getVertLists() const { return m_vert_lists; }
-    bool areExposuresCurrent()  const { return m_exposures_are_current; }
+
+    bool isUpToDate() const { return m_up_to_date; }
     bool isLandcsapeRealized() const { return m_vert_lists.areListsRealized(); }
 
     const Chunk *getNeighborNorth() const;
@@ -146,17 +150,26 @@ public:
     std::string toDescription() const;
 
 private:
-    // Disallow copying.
+    // Disallow default ctor, moving, and copying.
+    Chunk() = delete;
     Chunk(const Chunk &that) = delete;
     void operator=(const Chunk &that) = delete;
+    Chunk(Chunk &&that) = delete;
+    void operator=(Chunk &&that) = delete;
 
-    const ChunkStripe *getStripe_RO(int local_x, int local_y) const;
-    ChunkStripe *getStripe(int local_x, int local_y);
+    const ChunkStripe &getStripe_RO(int local_x, int local_y) const;
+    ChunkStripe &getStripe(int local_x, int local_y);
 
-    const GameWorld *m_world;
+    int getArrayOffset(int x, int y) const { 
+        int result = x + (y * CHUNK_WIDTH); 
+        assert((result >= 0) && (result < (CHUNK_WIDTH * CHUNK_HEIGHT)));
+        return result;
+    }
+
+    const GameWorld &m_world;
     ChunkOrigin m_origin;
 
-    bool m_exposures_are_current;
-    ChunkStripe *m_stripes[CHUNK_WIDTH][CHUNK_HEIGHT];
+    bool m_up_to_date;
     ChunkVertLists m_vert_lists;
+    std::array<ChunkStripe, CHUNK_WIDTH * CHUNK_HEIGHT> m_stripes;
 };

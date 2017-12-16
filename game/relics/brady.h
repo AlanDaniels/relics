@@ -5,6 +5,7 @@
 #include "draw_state_pt.h"
 
 
+class Block;
 class Chunk;
 enum  FaceEnum;
 enum  EdgeEnum;
@@ -22,13 +23,14 @@ public:
     void addToVertList_PT(VertList_PT *pOut);
 
 private:
-    // Forbid copying, and default ctor.
+    // Forbid default ctor, moving and copying.
     Brady() = delete;
     Brady(const Brady &that) = delete;
     void operator=(const Brady &that) = delete;
+    Brady(Brady &&that) = delete;
+    void operator=(Brady &&that) = delete;
 
     LocalGrid m_local_coord;
     FaceEnum  m_face;
-
     Vertex_PNT m_verts[4][4];
 };

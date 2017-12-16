@@ -9,4 +9,4 @@ class ChunkOrigin;
 
 
 // Load a chunk.
-Chunk *LoadChunk(GameWorld *pWorld, const ChunkOrigin &origin);
+std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin);

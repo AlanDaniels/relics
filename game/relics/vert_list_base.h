@@ -31,15 +31,17 @@ public:
     GLuint getVertexBufferID() const { return m_vertex_buffer_ID; }
 
 private:
-    // Disallow copying.
+    // Disallow moving and copying.
     VertList_Base(const VertList_Base &that)  = delete;
     void operator=(const VertList_Base &that) = delete;
-
-    std::vector<T> m_verts;
+    VertList_Base(VertList_Base &&that)  = delete;
+    void operator=(VertList_Base &&that) = delete;
 
     GLuint m_vertex_buffer_ID;
     int    m_item_count;
     int    m_triangle_count;
+
+    std::vector<T> m_verts;
 };
 
 

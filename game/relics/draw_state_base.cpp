@@ -18,12 +18,11 @@ static void ShowInfoLog(GLuint object, PFNGLGETSHADERIVPROC glGet__iv, PFNGLGETS
 {
     GLint len;
     glGet__iv(object, GL_INFO_LOG_LENGTH, &len);
-    char * msg = new char[len + 1];
+    std::unique_ptr<char[]> msg(new char[len + 1]);
     msg[len] = '\0';
 
-    glGet__InfoLog(object, len, NULL, msg);
-    PrintDebug(msg);
-    delete[] msg;
+    glGet__InfoLog(object, len, NULL, msg.get());
+    PrintDebug(msg.get());
 }
 
 

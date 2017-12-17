@@ -16,6 +16,8 @@ enum  EdgeEnum;
 class Brady
 {
 public:
+    static const int VERTS_PER_BRADY = 24;
+
     Brady(const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face);
     std::string toString() const;
 

@@ -49,75 +49,15 @@ SurfaceType CalcSurfaceType(BlockType block_type, FaceEnum face, BlockType other
 }
 
 
-// Surface totals ctor.
-SurfaceTotals::SurfaceTotals()
-{
-    for (int i = 0; i < SURF_MAX_COUNT; i++) {
-        m_counts[i] = 0;
-    }
-}
-
-
-// Surface totals ctor.
-void SurfaceTotals::reset()
-{
-    for (int i = 0; i < SURF_MAX_COUNT; i++) {
-        m_counts[i] = 0;
-    }
-}
-
-
-// Increment our surface type.
-void SurfaceTotals::increment(SurfaceType surf)
-{
-    if (surf == SURF_NOTHING) {
-        return;
-    }
-
-    assert(surf < SURF_MAX_COUNT);
-    m_counts[surf]++;
-}
-
-
-// Add another.
-void SurfaceTotals::add(const SurfaceTotals &that) 
-{
-    for (int i = 0; i < SURF_MAX_COUNT; i++) {
-        m_counts[i] += that.m_counts[i];
-    }
-}
-
-
-// Get the count.
-int SurfaceTotals::get(SurfaceType surf) const 
-{
-    assert(surf < SURF_MAX_COUNT);
-    return m_counts[surf];
-}
-
-
-// Do we have anything at all?
-bool SurfaceTotals::hasAnything() const 
-{
-    for (int i = 0; i < SURF_MAX_COUNT; i++) {
-        if (m_counts[i] > 0) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
 // Default ctor. This is a plain struct, so it's all we need.
 Block::Block() :
     m_block_type(BT_AIR),
-    m_west_surface(SURF_NOTHING),
-    m_east_surface(SURF_NOTHING),
-    m_south_surface(SURF_NOTHING),
-    m_north_surface(SURF_NOTHING),
-    m_top_surface(SURF_NOTHING),
-    m_bottom_surface(SURF_NOTHING)
+    m_west_surf(SURF_NOTHING),
+    m_east_surf(SURF_NOTHING),
+    m_south_surf(SURF_NOTHING),
+    m_north_surf(SURF_NOTHING),
+    m_top_surf(SURF_NOTHING),
+    m_bottom_surf(SURF_NOTHING)
 {
 }
 
@@ -125,12 +65,12 @@ Block::Block() :
 // Clear the exposure flags.
 void Block::clearSurfaces()
 {
-    m_west_surface   = SURF_NOTHING;
-    m_east_surface   = SURF_NOTHING;
-    m_south_surface  = SURF_NOTHING;
-    m_north_surface  = SURF_NOTHING;
-    m_top_surface    = SURF_NOTHING;
-    m_bottom_surface = SURF_NOTHING;
+    m_west_surf   = SURF_NOTHING;
+    m_east_surf   = SURF_NOTHING;
+    m_south_surf  = SURF_NOTHING;
+    m_north_surf  = SURF_NOTHING;
+    m_top_surf    = SURF_NOTHING;
+    m_bottom_surf = SURF_NOTHING;
 }
 
 
@@ -138,12 +78,12 @@ void Block::clearSurfaces()
 SurfaceType Block::getSurface(FaceEnum face) const
 {
     switch (face) {
-    case FACE_WEST:   return m_west_surface;
-    case FACE_EAST:   return m_east_surface;
-    case FACE_SOUTH:  return m_south_surface;
-    case FACE_NORTH:  return m_north_surface;
-    case FACE_TOP:    return m_top_surface;
-    case FACE_BOTTOM: return m_bottom_surface;
+    case FACE_WEST:   return m_west_surf;
+    case FACE_EAST:   return m_east_surf;
+    case FACE_SOUTH:  return m_south_surf;
+    case FACE_NORTH:  return m_north_surf;
+    case FACE_TOP:    return m_top_surf;
+    case FACE_BOTTOM: return m_bottom_surf;
     default:
         PrintTheImpossible(__FILE__, __LINE__, face);
         return SURF_NOTHING;
@@ -155,28 +95,14 @@ SurfaceType Block::getSurface(FaceEnum face) const
 void Block::setSurface(FaceEnum face, SurfaceType val)
 {
     switch (face) {
-    case FACE_WEST:   m_west_surface   = val; break;
-    case FACE_EAST:   m_east_surface   = val; break;
-    case FACE_SOUTH:  m_south_surface  = val; break;
-    case FACE_NORTH:  m_north_surface  = val; break;
-    case FACE_TOP:    m_top_surface    = val; break;
-    case FACE_BOTTOM: m_bottom_surface = val; break;
+    case FACE_WEST:   m_west_surf   = val; break;
+    case FACE_EAST:   m_east_surf   = val; break;
+    case FACE_SOUTH:  m_south_surf  = val; break;
+    case FACE_NORTH:  m_north_surf  = val; break;
+    case FACE_TOP:    m_top_surf    = val; break;
+    case FACE_BOTTOM: m_bottom_surf = val; break;
     default:
         PrintTheImpossible(__FILE__, __LINE__, face);
         return;
     }
-}
-
-
-// Return true if this block has any exposed faces.
-SurfaceTotals Block::getSurfaceTotals() const
-{
-    SurfaceTotals result;
-    result.increment(m_west_surface);
-    result.increment(m_east_surface);
-    result.increment(m_south_surface);
-    result.increment(m_north_surface);
-    result.increment(m_top_surface);
-    result.increment(m_bottom_surface);
-    return result;
 }

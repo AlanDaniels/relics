@@ -7,6 +7,33 @@
 #include "block.h"
 #include "chunk.h"
 
+// Surface totals ctor.
+SurfaceTotals::SurfaceTotals()
+{
+    for (int i = 0; i < SURF_MAX_COUNT; i++) {
+        m_counts[i] = 0;
+    }
+}
+
+
+// Increment our surface type.
+void SurfaceTotals::increment(SurfaceType surf)
+{
+    if (surf != SURF_NOTHING) {
+        assert(surf < SURF_MAX_COUNT);
+        m_counts[surf]++;
+    }
+}
+
+
+// Get the count.
+int SurfaceTotals::get(SurfaceType surf) const
+{
+    assert(surf < SURF_MAX_COUNT);
+    return m_counts[surf];
+}
+
+
 // Get the type of a block.
 BlockType ChunkStripe::getBlockType(int z) const
 {
@@ -25,16 +52,18 @@ void ChunkStripe::setBlockType(int z, BlockType block_type)
 
 // Recalc the exposed faces for one stripe.
 // Return true if any of the blocks changed.
-SurfaceTotals ChunkStripe::recalcExposures(const Chunk &owner, int local_x, int local_y)
+void ChunkStripe::recalcAllExposures(const Chunk &owner, int local_x, int local_y, SurfaceTotals *pOut)
 {
-    m_surface_totals.reset();
+    bool anything = false;
 
     for (int z = 0; z < CHUNK_WIDTH; z++) {
         LocalGrid local_coord(local_x, local_y, z);
-        m_surface_totals.add(recalcExposureForBlock(owner, local_coord));
+        if (recalcExposureForBlock(owner, local_coord, pOut)) {
+            anything = true;
+        }
     }
 
-    return m_surface_totals;
+    m_has_exposures = anything;
 }
 
 
@@ -42,7 +71,7 @@ SurfaceTotals ChunkStripe::recalcExposures(const Chunk &owner, int local_x, int 
 // If we don't have any exposed faces, we can skip this step.
 void ChunkStripe::addToSurfaceLists(Chunk &owner, int local_x, int local_y)
 {
-    if (!m_surface_totals.hasAnything()) {
+    if (!m_has_exposures) {
         return;
     }
 
@@ -55,10 +84,9 @@ void ChunkStripe::addToSurfaceLists(Chunk &owner, int local_x, int local_y)
 
 // Figure out which faces of a block are exposed.
 // Return a surface totals object, showing what we added.
-SurfaceTotals ChunkStripe::recalcExposureForBlock(const Chunk &owner, const LocalGrid local_coord)
+bool ChunkStripe::recalcExposureForBlock(
+    const Chunk &owner, const LocalGrid local_coord, SurfaceTotals *pOut)
 {
-    SurfaceTotals totals;
-
     Block &current = m_blocks[local_coord.z()];
 
     current.clearSurfaces();
@@ -66,7 +94,7 @@ SurfaceTotals ChunkStripe::recalcExposureForBlock(const Chunk &owner, const Loca
     // If this block is empty, it doesn't generate any faces.
     BlockType block_type = current.getBlockType();
     if (IsBlockTypeEmpty(block_type)) {
-        return totals;
+        return false;
     }
 
     // Check for edge cases.
@@ -149,23 +177,37 @@ SurfaceTotals ChunkStripe::recalcExposureForBlock(const Chunk &owner, const Loca
     }
 
     // Check each of the faces.
-    SurfaceType west_surface   = CalcSurfaceType(block_type, FACE_WEST, west_block_type);
-    SurfaceType east_surface   = CalcSurfaceType(block_type, FACE_EAST, east_block_type);
+    SurfaceType west_surf   = CalcSurfaceType(block_type, FACE_WEST, west_block_type);
+    SurfaceType east_surf   = CalcSurfaceType(block_type, FACE_EAST, east_block_type);
 
-    SurfaceType south_surface  = CalcSurfaceType(block_type, FACE_SOUTH, south_block_type);
-    SurfaceType north_surface  = CalcSurfaceType(block_type, FACE_NORTH, north_block_type);
+    SurfaceType south_surf  = CalcSurfaceType(block_type, FACE_SOUTH, south_block_type);
+    SurfaceType north_surf  = CalcSurfaceType(block_type, FACE_NORTH, north_block_type);
 
-    SurfaceType top_surface    = CalcSurfaceType(block_type, FACE_TOP,    top_block_type);
-    SurfaceType bottom_surface = CalcSurfaceType(block_type, FACE_BOTTOM, bottom_block_type);
+    SurfaceType top_surf    = CalcSurfaceType(block_type, FACE_TOP,    top_block_type);
+    SurfaceType bottom_surf = CalcSurfaceType(block_type, FACE_BOTTOM, bottom_block_type);
 
-    current.setSurface(FACE_SOUTH,  south_surface);
-    current.setSurface(FACE_NORTH,  north_surface);
-    current.setSurface(FACE_WEST,   west_surface);
-    current.setSurface(FACE_EAST,   east_surface);
-    current.setSurface(FACE_TOP,    top_surface);
-    current.setSurface(FACE_BOTTOM, bottom_surface);
+    current.setSurface(FACE_SOUTH,  south_surf);
+    current.setSurface(FACE_NORTH,  north_surf);
+    current.setSurface(FACE_WEST,   west_surf);
+    current.setSurface(FACE_EAST,   east_surf);
+    current.setSurface(FACE_TOP,    top_surf);
+    current.setSurface(FACE_BOTTOM, bottom_surf);
 
-    return current.getSurfaceTotals();
+    pOut->increment(south_surf);
+    pOut->increment(north_surf);
+    pOut->increment(west_surf);
+    pOut->increment(east_surf);
+    pOut->increment(top_surf);
+    pOut->increment(bottom_surf);
+
+    // Return true if anything we calculated has exposures.
+    return (
+        (south_surf  != SURF_NOTHING) ||
+        (north_surf  != SURF_NOTHING) ||
+        (west_surf   != SURF_NOTHING) ||
+        (east_surf   != SURF_NOTHING) ||
+        (top_surf    != SURF_NOTHING) ||
+        (bottom_surf != SURF_NOTHING));
 }
 
 
@@ -187,47 +229,47 @@ void ChunkStripe::addVertsForBlock(Chunk &owner, const LocalGrid &local_coord)
     SurfaceType top_surf = current.getSurface(FACE_TOP);
     if (top_surf != SURF_NOTHING) {
         Brady brady(owner, local_coord, FACE_TOP);
-        VertList_PNT *pList = owner.getSurfaceList(top_surf);
-        brady.addToVertList_PNT(pList);
+        VertList_PNT &list = owner.getSurfaceListForWriting(top_surf);
+        brady.addToVertList_PNT(&list);
     }
 
     // Bottom face.
     SurfaceType bottom_surf = current.getSurface(FACE_BOTTOM);
     if (bottom_surf != SURF_NOTHING) {
         Brady brady(owner, local_coord, FACE_BOTTOM);
-        VertList_PNT *pList = owner.getSurfaceList(bottom_surf);
-        brady.addToVertList_PNT(pList);
+        VertList_PNT &list = owner.getSurfaceListForWriting(bottom_surf);
+        brady.addToVertList_PNT(&list);
     }
 
     // Southern face.
     SurfaceType south_surf = current.getSurface(FACE_SOUTH);
     if (south_surf != SURF_NOTHING) {
         Brady brady(owner, local_coord, FACE_SOUTH);
-        VertList_PNT *pList = owner.getSurfaceList(south_surf);
-        brady.addToVertList_PNT(pList);
+        VertList_PNT &list = owner.getSurfaceListForWriting(south_surf);
+        brady.addToVertList_PNT(&list);
     }
 
     // Northern face.
     SurfaceType north_surf = current.getSurface(FACE_NORTH);
     if (north_surf != SURF_NOTHING) {
         Brady brady(owner, local_coord, FACE_NORTH);
-        VertList_PNT *pList = owner.getSurfaceList(north_surf);
-        brady.addToVertList_PNT(pList);
+        VertList_PNT &list = owner.getSurfaceListForWriting(north_surf);
+        brady.addToVertList_PNT(&list);
     }
 
     // Eastern face.
     SurfaceType east_surf = current.getSurface(FACE_EAST);
     if (east_surf != SURF_NOTHING) {
         Brady brady(owner, local_coord, FACE_EAST);
-        VertList_PNT *pList = owner.getSurfaceList(east_surf);
-        brady.addToVertList_PNT(pList);
+        VertList_PNT &list = owner.getSurfaceListForWriting(east_surf);
+        brady.addToVertList_PNT(&list);
     }
 
     // Western face.
     SurfaceType west_surf = current.getSurface(FACE_WEST);
     if (west_surf != SURF_NOTHING) {
         Brady brady(owner, local_coord, FACE_WEST);
-        VertList_PNT *pList = owner.getSurfaceList(west_surf);
-        brady.addToVertList_PNT(pList);
+        VertList_PNT &list = owner.getSurfaceListForWriting(west_surf);
+        brady.addToVertList_PNT(&list);
     }
 }

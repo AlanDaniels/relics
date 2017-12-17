@@ -4,6 +4,7 @@
 #include "common_util.h"
 
 #include "block.h"
+#include "brady.h"
 #include "chunk_stripe.h"
 #include "draw_state_pnt.h"
 #include "game_world.h"
@@ -14,30 +15,19 @@
 // It's okay for a list to be null if it hasn't been used yet.
 const VertList_PNT *Chunk::getSurfaceList_RO(SurfaceType surf) const 
 {
-    switch (surf) {
-    case SURF_GRASS: return (m_grass_list != nullptr) ? m_grass_list.get() : nullptr;
-    case SURF_DIRT:  return (m_dirt_list  != nullptr) ? m_dirt_list.get()  : nullptr;
-    case SURF_STONE: return (m_stone_list != nullptr) ? m_stone_list.get() : nullptr;
-    default:
-        PrintTheImpossible(__FILE__, __LINE__, surf);
-        return nullptr;
-    }
+    const VertList_PNT *result = 
+        (m_vert_lists[surf] != nullptr) ? m_vert_lists[surf].get() : nullptr;
+    return result;
 }
 
 
 // Realize any lists we've created so far.
 void Chunk::realizeSurfaceLists() 
 {
-    if (m_grass_list != nullptr) {
-        m_grass_list->realize();
-    }
-
-    if (m_dirt_list != nullptr) {
-        m_dirt_list->realize();
-    }
-
-    if (m_stone_list != nullptr) {
-        m_stone_list->realize();
+    for (int i = 0; i < SURF_MAX_COUNT; i++) {
+        if (m_vert_lists[i] != nullptr) {
+            m_vert_lists[i]->realize();
+        }
     }
 
     m_realized = true;
@@ -47,19 +37,13 @@ void Chunk::realizeSurfaceLists()
 // Un-realize any lists we've created so far.
 void Chunk::unrealizeSurfaceLists()
 {
-    if (m_grass_list != nullptr) {
-        m_grass_list->unrealize();
+    for (int i = 0; i < SURF_MAX_COUNT; i++) {
+        if (m_vert_lists[i] != nullptr) {
+            m_vert_lists[i]->unrealize();
+        }
     }
 
-    if (m_dirt_list != nullptr) {
-        m_dirt_list->unrealize();
-    }
-
-    if (m_stone_list != nullptr) {
-        m_stone_list->unrealize();
-    }
-
-    m_realized = true;
+    m_realized = false;
 }
 
 
@@ -81,14 +65,9 @@ Chunk::Chunk(const GameWorld &world, const ChunkOrigin &origin) :
     m_world(world),
     m_origin(origin),
     m_up_to_date(false),
-    m_realized(false),
-    m_grass_list(nullptr),
-    m_dirt_list(nullptr),
-    m_stone_list(nullptr)
+    m_realized(false)
 {
 }
-
-
 
 
 // Get a chunk stripe, read-only version.
@@ -114,33 +93,14 @@ ChunkStripe &Chunk::getStripe(int local_x, int local_y)
 
 // Return a verison of the list, for writing.
 // If the list hasn't been created, do that now.
-VertList_PNT *Chunk::getSurfaceList(SurfaceType surf)
+VertList_PNT &Chunk::getSurfaceListForWriting(SurfaceType surf)
 {
-    int FIGURE_OUT_VALUE = 100;
+    int FUCK_ME = 100;
 
-    switch (surf) {
-    case SURF_GRASS:
-        if (m_grass_list == nullptr) {
-            m_grass_list = std::make_unique<VertList_PNT>(FIGURE_OUT_VALUE);
-        }
-        return m_grass_list.get();
-
-    case SURF_DIRT:
-        if (m_dirt_list == nullptr) {
-            m_dirt_list = std::make_unique<VertList_PNT>(FIGURE_OUT_VALUE);
-        }
-        return m_dirt_list.get();
-
-    case SURF_STONE:
-        if (m_stone_list == nullptr) {
-            m_stone_list = std::make_unique<VertList_PNT>(FIGURE_OUT_VALUE);
-        }
-        return m_stone_list.get();
-
-    default:
-        PrintTheImpossible(__FILE__, __LINE__, surf);
-        return nullptr;
+    if (m_vert_lists[surf] == nullptr) {
+        m_vert_lists[surf] = std::make_unique<VertList_PNT>(FUCK_ME);
     }
+    return *m_vert_lists[surf].get();
 }
 
 
@@ -180,39 +140,41 @@ void Chunk::setBlockType(const LocalGrid &coord, BlockType block_type)
 // Return the count for a particular surface type.
 int Chunk::getCountForSurface(SurfaceType surf) const
 {
-    switch (surf) {
-    case SURF_GRASS: return (m_grass_list == nullptr) ? 0 : m_grass_list->getByteCount();
-    case SURF_DIRT:  return (m_dirt_list == nullptr) ? 0 : m_dirt_list->getByteCount();
-    case SURF_STONE: return (m_stone_list == nullptr) ? 0 : m_stone_list->getByteCount();
-    default:
-        PrintTheImpossible(__FILE__, __LINE__, surf);
-        return 0;
-    }
+    int result = (m_vert_lists[surf] == nullptr) ? 0 : m_vert_lists[surf]->getByteCount();
+    return result;
 }
 
 
 // Recalc the entire chunk from scratch.
-// Note that this is a separate step from realizing our vert lists!
 void Chunk::recalcExposures()
 {
-    // Clear our any existing lists.
-    if (m_grass_list != nullptr) {
-        m_grass_list->reset();
-    }
-    if (m_dirt_list != nullptr) {
-        m_dirt_list->reset();
-    }
-    if (m_stone_list != nullptr) {
-        m_stone_list->reset();
-    }
-
+    // Recalc our exposures.
     SurfaceTotals totals;
+
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            totals.add(getStripe(x, y).recalcExposures(*this, x, y));
+            getStripe(x, y).recalcAllExposures(*this, x, y, &totals);
         }
     }
 
+    // Clear our any existing lists.
+    for (int i = 0; i < SURF_MAX_COUNT; i++) {
+        if (m_vert_lists[i] != nullptr) {
+            m_vert_lists[i]->reset();
+        }
+    }
+
+    // Create any needed lists with a good initial value.
+    for (int i = 0; i < SURF_MAX_COUNT; i++) {
+        SurfaceType surf = static_cast<SurfaceType>(i);
+        int count = totals.get(surf);
+        if (m_vert_lists[i] == nullptr) {
+            int initial = count * Brady::VERTS_PER_BRADY;
+            m_vert_lists[i] = std::make_unique<VertList_PNT>(initial);
+        }
+    }
+
+    // Finally, populate those surface lists.
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
             getStripe(x, y).addToSurfaceLists(*this, x, y);
@@ -343,7 +305,7 @@ std::string Chunk::toDescription() const
     int stone_surfaces = getCountForSurface(SURF_STONE);
 
     const char *exposures_str = isUpToDate()  ? "true" : "false";
-    const char *realized_str  = isLandcsapeRealized()  ? "true" : "false";
+    const char *realized_str  = isLandscapeRealized()  ? "true" : "false";
 
     std::unique_ptr<char[]> buffer(new char[1024]);
 

@@ -37,22 +37,6 @@ enum SurfaceType
 SurfaceType CalcSurfaceType(BlockType block_type, FaceEnum face, BlockType other);
 
 
-// As we rebuild, keep track of how many surfaces there are.
-class SurfaceTotals
-{
-public:
-    SurfaceTotals();
-    void reset();
-    void increment(SurfaceType surf_type);
-    void add(const SurfaceTotals &that);
-    int  get(SurfaceType surf) const;
-    bool hasAnything() const;
-
-private:
-    std::array<int, SURF_MAX_COUNT> m_counts;
-};
-
-
 // The block data itself.
 class Block
 {
@@ -66,15 +50,14 @@ public:
 
     SurfaceType getSurface(FaceEnum face) const;
     void setSurface(FaceEnum face, SurfaceType val);
-    SurfaceTotals getSurfaceTotals() const;
 
 private:
     BlockType m_block_type;
 
-    SurfaceType m_west_surface;
-    SurfaceType m_east_surface;
-    SurfaceType m_south_surface;
-    SurfaceType m_north_surface;
-    SurfaceType m_top_surface;
-    SurfaceType m_bottom_surface;
+    SurfaceType m_west_surf;
+    SurfaceType m_east_surf;
+    SurfaceType m_south_surf;
+    SurfaceType m_north_surf;
+    SurfaceType m_top_surf;
+    SurfaceType m_bottom_surf;
 };

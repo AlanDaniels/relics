@@ -3,6 +3,7 @@
 #include "game_world.h"
 #include "common_util.h"
 
+#include "brady.h"
 #include "chunk.h"
 #include "chunk_hit_test.h"
 #include "chunk_loader.h"
@@ -24,11 +25,12 @@ GameWorld::GameWorld(sqlite3 *db) :
     m_camera_pitch(0.0f),
     m_camera_yaw(0.0f),
     m_camera_pos(getCameraStartPos()),
-    m_hit_test_vert_list(18)
+    m_hit_test_vert_list(Brady::VERTS_PER_BRADY)
 {
     // Figure out the size of our drawing region.
     // We load one border larger than what we will actually draw.
-    int        eval_blocks = GetConfig().logic.eval_blocks;
+    int eval_blocks = GetConfig().logic.eval_blocks;
+
     EvalRegion draw_region = WorldPosToEvalRegion(m_camera_pos, eval_blocks);
     EvalRegion load_region = draw_region.expand();
 
@@ -56,7 +58,7 @@ GameWorld::GameWorld(sqlite3 *db) :
 
     // Sanity check.
     for (auto &iter : m_chunk_map) {
-        if (NOT(iter.second->isLandcsapeRealized())) {
+        if (NOT(iter.second->isLandscapeRealized())) {
             assert(false);
         }
     }
@@ -259,7 +261,7 @@ void GameWorld::updateWorld()
         }
     }
 
-    // Then, only recalc the chunks within the draw region.
+    // Then, recalc the chunks within the draw region.
     for     (int x = draw_region.west();  x <= draw_region.east();  x += CHUNK_WIDTH) {
         for (int z = draw_region.south(); z <= draw_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
@@ -272,7 +274,7 @@ void GameWorld::updateWorld()
                 if (NOT(iter->second->isUpToDate())) {
                     iter->second->recalcExposures();
                 }
-                if (NOT(iter->second->isLandcsapeRealized())) {
+                if (NOT(iter->second->isLandscapeRealized())) {
                     iter->second->realizeSurfaceLists();
                 }
             }

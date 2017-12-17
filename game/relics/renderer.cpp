@@ -257,7 +257,7 @@ void Renderer::getChunksToRender(std::vector<const Chunk *> *pOut_list, RenderSt
             const Chunk *chunk = m_world.getRequiredChunk(origin);
 
             // These must have been realized already.
-            assert(chunk->isLandcsapeRealized());
+            assert(chunk->isLandscapeRealized());
 
             // Only keep the chunks within the view frustum.
             bool keep = chunk->isAbovePlane(left_clip_plane) &&

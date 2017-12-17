@@ -10,44 +10,37 @@ class Chunk;
 class GameWorld;
 
 
-#if 0
-    int getCount(BlockSurface surf) const;
-    const VertList_PNT *get_RO(BlockSurface surf) const;
-    VertList_PNT *get(BlockSurface surf);
-#endif
-
-
 // The starting X and Z grid coords for a chunk.
 class ChunkOrigin
 {
 public:
     ChunkOrigin() :
-        m_x(0),
-        m_z(0),
         m_debug_x(0),
-        m_debug_z(0) {}
+        m_debug_z(0),
+        m_x(0),
+        m_z(0) {}
 
     // Chunks always have to start at regular boundaries.
     ChunkOrigin(int x, int z) :
+        m_debug_x(x / CHUNK_WIDTH),
+        m_debug_z(z / CHUNK_WIDTH),
         m_x(x),
         m_z(z) {
         assert((x % CHUNK_WIDTH) == 0);
         assert((z % CHUNK_WIDTH) == 0);
-        m_debug_x = x / CHUNK_WIDTH;
-        m_debug_z = z / CHUNK_WIDTH;
     }
 
     ChunkOrigin(const ChunkOrigin &that) :
-        m_x(that.m_x),
-        m_z(that.m_z),
         m_debug_x(that.m_debug_x),
-        m_debug_z(that.m_debug_z) {}
+        m_debug_z(that.m_debug_z),
+        m_x(that.m_x),
+        m_z(that.m_z) {}
 
     ChunkOrigin &operator=(const ChunkOrigin &that) {
-        m_x = that.m_x;
-        m_z = that.m_z;
         m_debug_x = that.m_debug_x;
         m_debug_z = that.m_debug_z;
+        m_x = that.m_x;
+        m_z = that.m_z;
         return *this;
     }
 
@@ -104,7 +97,7 @@ public:
 
     int  getCountForSurface(SurfaceType surf) const;
     const VertList_PNT *getSurfaceList_RO(SurfaceType surf) const;
-    VertList_PNT *getSurfaceList(SurfaceType surf);
+    VertList_PNT &getSurfaceListForWriting(SurfaceType surf);
 
     void recalcExposures();
     void realizeSurfaceLists();
@@ -115,7 +108,7 @@ public:
     const ChunkOrigin getOrigin() const { return m_origin; }
 
     bool isUpToDate() const { return m_up_to_date; }
-    bool isLandcsapeRealized() const { return m_realized; }
+    bool isLandscapeRealized() const { return m_realized; }
 
     const Chunk *getNeighborNorth() const;
     const Chunk *getNeighborSouth() const;
@@ -143,9 +136,8 @@ private:
 
     bool m_up_to_date;
     bool m_realized;
-    std::unique_ptr<VertList_PNT> m_grass_list;
-    std::unique_ptr<VertList_PNT> m_dirt_list;
-    std::unique_ptr<VertList_PNT> m_stone_list;
+
+    std::array<std::unique_ptr<VertList_PNT>, SURF_MAX_COUNT> m_vert_lists;
 
     std::array<ChunkStripe, CHUNK_WIDTH * CHUNK_HEIGHT> m_stripes;
 };

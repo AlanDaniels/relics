@@ -256,8 +256,7 @@ void Brady::addToVertList_PNT(VertList_PNT *pOut)
     };
 
     int vert_count = 24;
-    int triangle_count = 18;
-    pOut->add(verts, vert_count, triangle_count);
+    pOut->add(verts, vert_count);
 }
 
 
@@ -305,6 +304,5 @@ void Brady::addToVertList_PT(VertList_PT *pOut)
     };
 
     int vert_count = 24;
-    int triangle_count = 18;
-    pOut->add(verts, vert_count, triangle_count);
+    pOut->add(verts, vert_count);
 }

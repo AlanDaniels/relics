@@ -13,6 +13,8 @@ struct Vertex_P
     MyVec4 position;
 };
 
+static_assert(sizeof(Vertex_P) == 16, "Vertex_P should be 16 bytes.");
+
 
 typedef VertList_Base<Vertex_P> VertList_P;
 
@@ -28,8 +30,10 @@ public:
     bool render(const VertList_P &vert_list);
 
 private:
-    // Forbid copying, and default ctor.
+    // Disallow default ctor, copying, and moving.
     DrawState_P() = delete;
     DrawState_P(const DrawState_P &that) = delete;
     void operator=(const DrawState_P &that) = delete;
+    DrawState_P(DrawState_P &&that) = delete;
+    void operator=(DrawState_P &&that) = delete;
 };

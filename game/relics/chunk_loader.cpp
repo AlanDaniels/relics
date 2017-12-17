@@ -14,7 +14,7 @@
 // This just deals with the block data. The landscape is are dealt with later.
 std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
 {
-    PrintDebug("Loading chunk [%d, %d]: ", origin.x(), origin.z());
+    PrintDebug("Loading chunk [%d, %d]: ", origin.debugX(), origin.debugZ());
 
     sqlite3 *db = world.getDatabase();
 
@@ -68,4 +68,12 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
     sqlite3_finalize(stmt);
     PrintDebug("Found %d blocks.\n", count);
     return result;
+}
+
+
+// TODO: Figure this out later.
+void SaveChunk(std::unique_ptr<Chunk> chunk)
+{
+    // All done. Bye bye.
+    chunk = nullptr;
 }

@@ -17,6 +17,9 @@ struct Vertex_PNT
 };
 
 
+static_assert(sizeof(Vertex_PNT) == 40, "Vertex_PNT should be 40 bytes.");
+
+
 typedef VertList_Base<Vertex_PNT> VertList_PNT;
 
 
@@ -31,8 +34,10 @@ public:
     bool render(const VertList_PNT &vert_list);
 
 private:
-    // Forbid copying, and default ctor.
+    // Disallow default ctor, moving and copying.
     DrawState_PNT() = delete;
     DrawState_PNT(const DrawState_PNT &that) = delete;
     void operator=(const DrawState_PNT &that) = delete;
+    DrawState_PNT(DrawState_PNT &&that) = delete;
+    void operator=(DrawState_PNT &&that) = delete;
 };

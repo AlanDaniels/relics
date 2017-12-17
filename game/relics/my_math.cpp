@@ -460,13 +460,13 @@ bool EvalRegion::operator!=(const EvalRegion &that) const
 
 
 // Return true if an eval region contains a chunk origin.
-bool EvalRegion::containsOrigin(const ChunkOrigin &origin) const
+bool EvalRegion::contains(const ChunkOrigin &origin) const
 {
     int x = origin.x();
     int z = origin.z();
     return (
-        (m_west  <= x) && (x < m_east) &&
-        (m_south <= z) && (z < m_north));
+        (m_west  <= x) && (x <= m_east) &&
+        (m_south <= z) && (z <= m_north));
 }
 
 

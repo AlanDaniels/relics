@@ -17,6 +17,9 @@ struct Vertex_PCT
 };
 
 
+static_assert(sizeof(Vertex_PCT) == 40, "Vertex_PCT should be 40 bytes.");
+
+
 typedef VertList_Base<Vertex_PCT> VertList_PCT;
 
 
@@ -31,8 +34,10 @@ public:
     bool render(const VertList_PCT &vert_list);
 
 private:
-    // Forbid copying, and default ctor.
+    // Disallow default ctor, copying, and moving.
     DrawState_PCT() = delete;
     DrawState_PCT(const DrawState_PCT &that) = delete;
     void operator=(const DrawState_PCT &that) = delete;
+    DrawState_PCT(DrawState_PCT &&that) = delete;
+    void operator=(DrawState_PCT &&that) = delete;
 };

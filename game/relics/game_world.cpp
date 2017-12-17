@@ -51,7 +51,7 @@ GameWorld::GameWorld(sqlite3 *db) :
     for     (int x = load_region.west();  x <= load_region.east();  x += CHUNK_WIDTH) {
         for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
-            m_chunk_map[origin].get()->recalcExposures();
+            m_chunk_map[origin].get()->recalcAllExposures();
             m_chunk_map[origin].get()->realizeSurfaceLists();
         }
     }
@@ -240,22 +240,15 @@ void GameWorld::updateWorld()
     EvalRegion draw_region = WorldPosToEvalRegion(m_camera_pos, eval_blocks);
     EvalRegion load_region = draw_region.expand();
 
-    // For any chunk outside the draw region, unrealize it immediately.
-    for (auto &iter : m_chunk_map) {
-        const ChunkOrigin &origin = iter.first;
-        if (!draw_region.containsOrigin(origin)) {
-            iter.second->unrealizeSurfaceLists();
-        }
-   }
-
     // For any chunk at the "edge" of the load region, load it if we don't have it already.
     for     (int x = load_region.west();  x <= load_region.east();  x += CHUNK_WIDTH) {
         for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
 
-            if (NOT(draw_region.containsOrigin(origin))) {
+            if (!draw_region.contains(origin)) {
                 if (m_chunk_map.find(origin) == m_chunk_map.end()) {
                     m_chunk_map[origin] = LoadChunk(*this, origin);
+                    m_chunk_map[origin]->recalcAllExposures();
                 }
             }
         }
@@ -265,24 +258,50 @@ void GameWorld::updateWorld()
     for     (int x = draw_region.west();  x <= draw_region.east();  x += CHUNK_WIDTH) {
         for (int z = draw_region.south(); z <= draw_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
-
             auto &iter = m_chunk_map.find(origin);
-            assert(iter != m_chunk_map.end());
 
-            if (draw_region.containsOrigin(origin)) {
-                
-                if (NOT(iter->second->isUpToDate())) {
-                    iter->second->recalcExposures();
-                }
-                if (NOT(iter->second->isLandscapeRealized())) {
-                    iter->second->realizeSurfaceLists();
-                }
+            // The "edge" case above should have loaded this chunk already.
+            assert(iter != m_chunk_map.end());
+            Chunk &chunk = *iter->second;
+
+            if (!chunk.isUpToDate()) {
+                chunk.recalcAllExposures();
+            }
+            if (!chunk.isLandscapeRealized()) {
+                chunk.realizeSurfaceLists();
             }
         }
     }
 
-    // For any chunk outside of our draw region, unrealize it immediately.
-    // TODO: CONTINUE HERE.
+    // Once that's done, do some housecleaning.
+    for (auto &it : m_chunk_map) {
+        ChunkOrigin origin = it.first;
+
+        // If a chunk is outside our drawing region,
+        // unrealize it to take it easier on the video card.
+        if (!draw_region.contains(origin)) {
+            Chunk &chunk = *it.second;
+            chunk.unrealizeSurfaceLists();
+        }
+
+        // If a chunk is outside or loading region,
+        // save its contents and delete it.
+        if (!load_region.contains(origin)) {
+            SaveChunk(std::move(it.second));
+        }
+    }
+
+    // Clear our any nulls. The "std::map" type has no filtering that
+    // doesn't involve horrible template errors, so we have to get clever.
+    auto it = m_chunk_map.begin();
+    while (it != m_chunk_map.end()) {
+        if (it->second == nullptr) {
+            it = m_chunk_map.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
 }
 
 
@@ -374,7 +393,7 @@ void GameWorld::deleteBlockInFrontOfUs()
         assert(chunk->IsGlobalGridWithin(global_coord));
 
         chunk->setBlockType(local_coord, BT_AIR);
-        chunk->recalcExposures();
+        chunk->recalcAllExposures();
         chunk->realizeSurfaceLists();
     }
 }

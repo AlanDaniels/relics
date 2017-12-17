@@ -16,6 +16,7 @@ public:
     SurfaceTotals();
     void increment(SurfaceType surf_type);
     int  get(SurfaceType surf) const;
+    int  getGrandTotal() const;
 
 private:
     std::array<int, SURF_MAX_COUNT> m_counts;

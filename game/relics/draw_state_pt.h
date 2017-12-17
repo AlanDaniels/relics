@@ -14,6 +14,8 @@ struct Vertex_PT
     MyVec2 texuv;
 };
 
+static_assert(sizeof(Vertex_PT) == 24, "Vertex_PT should be 24 bytes.");
+
 
 typedef VertList_Base<Vertex_PT> VertList_PT;
 
@@ -29,8 +31,10 @@ public:
     bool render(const VertList_PT &vert_list);
 
 private:
-    // Forbid copying, and default ctor.
+    // Disallow default ctor, copying, and moving.
     DrawState_PT() = delete;
     DrawState_PT(const DrawState_PT &that) = delete;
     void operator=(const DrawState_PT &that) = delete;
+    DrawState_PT(DrawState_PT &&that) = delete;
+    void operator=(DrawState_PT &&that) = delete;
 };

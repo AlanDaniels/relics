@@ -65,6 +65,8 @@ public:
         else { return false; }
     }
 
+    inline int debugX() const { return m_debug_x; }
+    inline int debugZ() const { return m_debug_z; }
     inline int x() const { return m_x; }
     inline int z() const { return m_z; }
 
@@ -99,7 +101,7 @@ public:
     const VertList_PNT *getSurfaceList_RO(SurfaceType surf) const;
     VertList_PNT &getSurfaceListForWriting(SurfaceType surf);
 
-    void recalcExposures();
+    void recalcAllExposures();
     void realizeSurfaceLists();
     void unrealizeSurfaceLists();
 

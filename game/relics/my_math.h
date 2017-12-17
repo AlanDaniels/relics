@@ -42,6 +42,8 @@ private:
     GLfloat m_alpha;
 };
 
+static_assert(sizeof(MyColor) == 16, "MyColor should be 16 bytes.");
+
 
 // Simple colors for debugging.
 extern const MyColor MY_WHITE;
@@ -80,6 +82,8 @@ private:
     GLfloat m_x;
     GLfloat m_y;
 };
+
+static_assert(sizeof(MyVec2) == 8, "MyVec2 should be 8 bytes.");
 
 
 MyVec2 FourWayLerp2(
@@ -159,6 +163,8 @@ private:
     GLfloat m_z;
     GLfloat m_w;
 };
+
+static_assert(sizeof(MyVec4) == 16, "MyVec4 should be 8 bytes.");
 
 
 MyVec4 FourWayLerp4(
@@ -408,7 +414,7 @@ public:
     inline int south() const { return m_south; }
     inline int north() const { return m_north; }
 
-    bool containsOrigin(const ChunkOrigin &origin) const;
+    bool contains(const ChunkOrigin &origin) const;
     EvalRegion expand() const;
 
     std::string toDebugStr() const;

@@ -24,13 +24,26 @@ const VertList_PNT *Chunk::getSurfaceList_RO(SurfaceType surf) const
 // Realize any lists we've created so far.
 void Chunk::realizeSurfaceLists() 
 {
+    int brady_count = 0;
     for (int i = 0; i < SURF_MAX_COUNT; i++) {
         if (m_vert_lists[i] != nullptr) {
             m_vert_lists[i]->realize();
+            brady_count += m_vert_lists[i]->getBradyCount();
         }
     }
 
     m_realized = true;
+
+    if (brady_count == 0) {
+        PrintDebug(
+            "Realized surface lists for [%d, %d].\n",
+            m_origin.debugX(), m_origin.debugZ());
+    }
+    else {
+        PrintDebug(
+            "Realized surface lists for [%d, %d], for %d bradies.\n",
+            m_origin.debugX(), m_origin.debugZ(), brady_count);
+    }
 }
 
 
@@ -44,6 +57,10 @@ void Chunk::unrealizeSurfaceLists()
     }
 
     m_realized = false;
+
+    PrintDebug(
+        "Un-realized surface lists for [%d, %d]\n",
+        m_origin.debugX(), m_origin.debugZ());
 }
 
 
@@ -129,7 +146,6 @@ BlockType Chunk::getBlockType(const LocalGrid &coord) const
 
 
 // Set the type of a block.
-
 void Chunk::setBlockType(const LocalGrid &coord, BlockType block_type)
 {
     ChunkStripe &stripe = getStripe(coord.x(), coord.y());
@@ -146,7 +162,7 @@ int Chunk::getCountForSurface(SurfaceType surf) const
 
 
 // Recalc the entire chunk from scratch.
-void Chunk::recalcExposures()
+void Chunk::recalcAllExposures()
 {
     // Recalc our exposures.
     SurfaceTotals totals;
@@ -182,6 +198,18 @@ void Chunk::recalcExposures()
     }
 
     m_up_to_date = true;
+
+    int grand_total = totals.getGrandTotal();
+    if (grand_total == 0) {
+        PrintDebug(
+            "Recalculated all exposures for [%d, %d].\n",
+            m_origin.debugX(), m_origin.debugZ());
+    }
+    else {
+        PrintDebug(
+            "Recalculated all exposures for [%d, %d]. Found %d surfaces total.\n",
+            m_origin.debugX(), m_origin.debugZ(), grand_total);
+    }
 }
 
 

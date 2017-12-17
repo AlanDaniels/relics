@@ -26,11 +26,23 @@ void SurfaceTotals::increment(SurfaceType surf)
 }
 
 
-// Get the count.
+// Get the count for one surface.
 int SurfaceTotals::get(SurfaceType surf) const
 {
     assert(surf < SURF_MAX_COUNT);
     return m_counts[surf];
+}
+
+
+// Get the count for all surfaces.
+int SurfaceTotals::getGrandTotal() const
+{
+    int result = 0;
+    for (int i = 0; i < SURF_MAX_COUNT; i++) {
+        result += m_counts[i];
+    }
+
+    return result;
 }
 
 

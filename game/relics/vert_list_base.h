@@ -10,26 +10,23 @@ class VertList_Base
 {
 public:
     VertList_Base(int initial_size) :
-        m_vertex_buffer_ID(0),
-        m_item_count(0),
-        m_triangle_count(0) {
+        m_vertex_buffer_ID(0) {
         m_verts.reserve(initial_size);
     }
 
     virtual ~VertList_Base() { reset(); }
 
     void addQuad(const T(&items)[4]);
-    void add(const T *items, int item_count, int triangle_count);
+    void add(const T *items, int count);
     void reset();
     bool realize();
     bool unrealize();
 
-    bool hasData()    const { return (m_verts.size() > 0); }
-    bool isRealized() const { return (m_vertex_buffer_ID != 0); }
-
-    int    getByteCount()      const { return m_item_count * sizeof(T); }
-    int    getItemCount()      const { return m_item_count; }
-    int    getTriangleCount()  const { return m_triangle_count; }
+    bool isRealized()    const { return (m_vertex_buffer_ID != 0); }
+    int  getItemCount()  const { return m_verts.size(); }
+    int  getByteCount()  const { return m_verts.size() * sizeof(T); }
+    int  getTriCount()   const { return m_verts.size() / 3; }
+    int  getBradyCount() const { return m_verts.size() / 24; }
     GLuint getVertexBufferID() const { return m_vertex_buffer_ID; }
 
 private:
@@ -40,58 +37,46 @@ private:
     VertList_Base(VertList_Base &&that)  = delete;
     void operator=(VertList_Base &&that) = delete;
 
+    // Private data.
     GLuint m_vertex_buffer_ID;
-    int    m_item_count;
-    int    m_triangle_count;
-
     std::vector<T> m_verts;
 };
 
 
-// Add a quad.
-// We must NOT be realized yet. You should check first.
+// Add a quad. Just a thin wrapper for the skybox.
+// TODO: You might want to kill this off later.
 template<typename T>
 void VertList_Base<T>::addQuad(const T(&items)[4])
 {
-    assert(NOT(isRealized()));
-
-    T quad_array[6] = {
+    std::array<T, 6> stuff = {
         items[0], items[1], items[2],
         items[2], items[1], items[3],
     };
 
-    m_verts.insert(m_verts.end(), &quad_array[0], &quad_array[6]);
-    m_item_count     += 6;
-    m_triangle_count += 3;
+    add(&stuff[0], 6);
 }
 
 
-// Add an arbitrary list of items. Call this when creating triangle strips.
-// We must NOT be realized yet. You should check first.
+// Add some triangles. We must NOT be realized yet.
 template<typename T>
-void VertList_Base<T>::add(const T *items, int item_count, int triangle_count)
+void VertList_Base<T>::add(const T *items, int count)
 {
-    assert(NOT(isRealized()));
-
-    m_verts.insert(m_verts.end(), &items[0], &items[item_count]);
-    m_item_count     += item_count;
-    m_triangle_count += triangle_count;
+    assert(m_vertex_buffer_ID == 0);
+    m_verts.insert(m_verts.end(), items, items + count);
 }
 
 
 // Empty out everything.
+// If we are realized, that's okay, but free that up first.
 template<typename T>
 void VertList_Base<T>::reset()
 {
-    // If we are realized, that's okay. Free that up.
-    if (isRealized()) {
+    if (m_vertex_buffer_ID != 0) {
         glDeleteBuffers(1, &m_vertex_buffer_ID);
         m_vertex_buffer_ID = 0;
     }
 
     m_verts.clear();
-    m_item_count     = 0;
-    m_triangle_count = 0;
 }
 
 
@@ -100,10 +85,11 @@ void VertList_Base<T>::reset()
 template<typename T>
 bool VertList_Base<T>::realize()
 {
-    if (NOT(hasData())) {
+    if (m_verts.size() == 0) {
         return false;
     }
-    if (isRealized()) {
+
+    if (m_vertex_buffer_ID != 0) {
         return false;
     }
 
@@ -112,6 +98,12 @@ bool VertList_Base<T>::realize()
 
     // Update the buffer.
     int byte_count = m_verts.size() * sizeof(T);
+    int item_count = m_verts.size();
+
+    // FUCK. Where does this come from?
+    if (item_count > 1000000) {
+        printf("%d", item_count);
+    }
 
     glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer_ID);
     glBufferData(GL_ARRAY_BUFFER, byte_count, &m_verts[0], GL_STATIC_DRAW);
@@ -124,7 +116,7 @@ bool VertList_Base<T>::realize()
 template<typename T>
 bool VertList_Base<T>::unrealize()
 {
-    if (NOT(isRealized())) {
+    if (m_vertex_buffer_ID == 0) {
         return false;
     }
 

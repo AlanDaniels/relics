@@ -257,6 +257,9 @@ void Renderer::getChunksToRender(std::vector<const Chunk *> *pOut_list, RenderSt
             const Chunk *chunk = m_world.getRequiredChunk(origin);
 
             // These must have been realized already.
+            if (!chunk->isLandscapeRealized()) {
+                printf("");
+            }
             assert(chunk->isLandscapeRealized());
 
             // Only keep the chunks within the view frustum.
@@ -361,7 +364,7 @@ void Renderer::renderLandscapeList(
             int item_count = vert_list->getItemCount();
             if (item_count > 0) {
                 m_landscape_DS->render(*vert_list);
-                pOut_stats->triangle_count += vert_list->getTriangleCount();
+                pOut_stats->triangle_count += vert_list->getTriCount();
             }
         }
     }
@@ -397,6 +400,6 @@ void Renderer::renderHitTest(RenderStats *pOut_stats)
         m_hit_test_DS->render(vert_list);
 
         pOut_stats->state_changes++;
-        pOut_stats->triangle_count += vert_list.getTriangleCount();
+        pOut_stats->triangle_count += vert_list.getTriCount();
     }
 }

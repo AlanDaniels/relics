@@ -23,7 +23,8 @@ GameWorld::GameWorld(sqlite3 *db) :
     m_time_msec(0),
     m_camera_pitch(0.0f),
     m_camera_yaw(0.0f),
-    m_camera_pos(getCameraStartPos())
+    m_camera_pos(getCameraStartPos()),
+    m_hit_test_vert_list(18)
 {
     // Figure out the size of our drawing region.
     // We load one border larger than what we will actually draw.

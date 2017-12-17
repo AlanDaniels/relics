@@ -102,9 +102,9 @@ public:
 
     MyVec4 localGridToWorldPos(int local_x, int local_y, int local_z) const;
 
-    int  getCountForSurface(BlockSurface surf) const;
-    const VertList_PNT *getSurfaceList_RO(BlockSurface surf) const;
-    VertList_PNT *getSurfaceList(BlockSurface surf);
+    int  getCountForSurface(SurfaceType surf) const;
+    const VertList_PNT *getSurfaceList_RO(SurfaceType surf) const;
+    VertList_PNT *getSurfaceList(SurfaceType surf);
 
     void recalcExposures();
     void realizeSurfaceLists();

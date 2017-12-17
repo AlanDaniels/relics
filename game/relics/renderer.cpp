@@ -322,7 +322,7 @@ void Renderer::renderSkybox(RenderStats *pOut_stats)
 
 // Render one of our landscapes. This should use standard depth testing, and no blending.
 void Renderer::renderLandscapeList(
-    BlockSurface surf, const std::vector<const Chunk *> &chunk_list, 
+    SurfaceType surf, const std::vector<const Chunk *> &chunk_list, 
     const DrawTexture &tex, RenderStats *pOut_stats)
 {
     bool worth_doing = false;

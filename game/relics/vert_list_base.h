@@ -9,11 +9,11 @@ template<typename T>
 class VertList_Base
 {
 public:
-    VertList_Base() :
+    VertList_Base(int initial_size) :
         m_vertex_buffer_ID(0),
         m_item_count(0),
         m_triangle_count(0) {
-        m_verts.reserve(INITIAL_SIZE);
+        m_verts.reserve(initial_size);
     }
 
     virtual ~VertList_Base() { reset(); }
@@ -33,10 +33,8 @@ public:
     GLuint getVertexBufferID() const { return m_vertex_buffer_ID; }
 
 private:
-    // I dunno, play around with this some.
-    static const int INITIAL_SIZE = 100000;
-
-    // Disallow moving and copying.
+    // Disallow default ctor, moving and copying.
+    VertList_Base() = delete;
     VertList_Base(const VertList_Base &that)  = delete;
     void operator=(const VertList_Base &that) = delete;
     VertList_Base(VertList_Base &&that)  = delete;

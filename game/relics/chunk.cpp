@@ -12,7 +12,7 @@
 
 // Return a read-only version of the list for a particular surface.
 // It's okay for a list to be null if it hasn't been used yet.
-const VertList_PNT *Chunk::getSurfaceList_RO(BlockSurface surf) const 
+const VertList_PNT *Chunk::getSurfaceList_RO(SurfaceType surf) const 
 {
     switch (surf) {
     case SURF_GRASS: return (m_grass_list != nullptr) ? m_grass_list.get() : nullptr;
@@ -114,24 +114,26 @@ ChunkStripe &Chunk::getStripe(int local_x, int local_y)
 
 // Return a verison of the list, for writing.
 // If the list hasn't been created, do that now.
-VertList_PNT *Chunk::getSurfaceList(BlockSurface surf)
+VertList_PNT *Chunk::getSurfaceList(SurfaceType surf)
 {
+    int FIGURE_OUT_VALUE = 100;
+
     switch (surf) {
     case SURF_GRASS:
         if (m_grass_list == nullptr) {
-            m_grass_list = std::make_unique<VertList_PNT>();
+            m_grass_list = std::make_unique<VertList_PNT>(FIGURE_OUT_VALUE);
         }
         return m_grass_list.get();
 
     case SURF_DIRT:
         if (m_dirt_list == nullptr) {
-            m_dirt_list = std::make_unique<VertList_PNT>();
+            m_dirt_list = std::make_unique<VertList_PNT>(FIGURE_OUT_VALUE);
         }
         return m_dirt_list.get();
 
     case SURF_STONE:
         if (m_stone_list == nullptr) {
-            m_stone_list = std::make_unique<VertList_PNT>();
+            m_stone_list = std::make_unique<VertList_PNT>(FIGURE_OUT_VALUE);
         }
         return m_stone_list.get();
 
@@ -176,7 +178,7 @@ void Chunk::setBlockType(const LocalGrid &coord, BlockType block_type)
 
 
 // Return the count for a particular surface type.
-int Chunk::getCountForSurface(BlockSurface surf) const
+int Chunk::getCountForSurface(SurfaceType surf) const
 {
     switch (surf) {
     case SURF_GRASS: return (m_grass_list == nullptr) ? 0 : m_grass_list->getByteCount();
@@ -204,9 +206,10 @@ void Chunk::recalcExposures()
         m_stone_list->reset();
     }
 
+    SurfaceTotals totals;
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            getStripe(x, y).recalcExposures(*this, x, y);
+            totals.add(getStripe(x, y).recalcExposures(*this, x, y));
         }
     }
 

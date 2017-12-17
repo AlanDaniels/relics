@@ -30,7 +30,8 @@ class Renderer
 public:
     Renderer(const sf::Window &window, const GameWorld &world) :
         m_window(window),
-        m_world(world) {}
+        m_world(world),
+        m_skybox_vert_list(6) {}
 
     bool init();
     RenderStats renderWorld();
@@ -41,6 +42,7 @@ private:
     Renderer(const Renderer &that) = delete;
     void operator=(const Renderer &that) = delete;
 
+    // Private methods.
     void rebuildUniformMatrices();
     void buildSkyboxVertList();
     void loadTextures();
@@ -51,13 +53,14 @@ private:
     void renderSkybox(RenderStats *pOut_stats);
 
     void renderLandscapeList(
-        BlockSurface surf, const std::vector<const Chunk *> &chunk_list,
+        SurfaceType surf, const std::vector<const Chunk *> &chunk_list,
         const DrawTexture &tex, RenderStats *pOut_stats);
 
     void renderHitTest(RenderStats *pOut_stats);
 
+    // Private data.
     const sf::Window &m_window;
-    const GameWorld &m_world;
+    const GameWorld  &m_world;
 
     MyMatrix4by4 m_frustum_matrix;
     MyMatrix4by4 m_frustum_rotate_matrix;

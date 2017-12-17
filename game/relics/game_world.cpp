@@ -49,7 +49,7 @@ GameWorld::GameWorld(sqlite3 *db) :
         for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
             m_chunk_map[origin].get()->recalcExposures();
-            m_chunk_map[origin].get()->realizeLandscape();
+            m_chunk_map[origin].get()->realizeSurfaceLists();
         }
     }
 
@@ -237,6 +237,14 @@ void GameWorld::updateWorld()
     EvalRegion draw_region = WorldPosToEvalRegion(m_camera_pos, eval_blocks);
     EvalRegion load_region = draw_region.expand();
 
+    // For any chunk outside the draw region, unrealize it immediately.
+    for (auto &iter : m_chunk_map) {
+        const ChunkOrigin &origin = iter.first;
+        if (!draw_region.containsOrigin(origin)) {
+            iter.second->unrealizeSurfaceLists();
+        }
+   }
+
     // For any chunk at the "edge" of the load region, load it if we don't have it already.
     for     (int x = load_region.west();  x <= load_region.east();  x += CHUNK_WIDTH) {
         for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {
@@ -258,15 +266,20 @@ void GameWorld::updateWorld()
             auto &iter = m_chunk_map.find(origin);
             assert(iter != m_chunk_map.end());
 
-            // Finally, rebuild the landscape as needed.
-            if (NOT(iter->second->isUpToDate())) {
-                iter->second->recalcExposures();
-            }
-            if (NOT(iter->second->isLandcsapeRealized())) {
-                iter->second->realizeLandscape();
+            if (draw_region.containsOrigin(origin)) {
+                
+                if (NOT(iter->second->isUpToDate())) {
+                    iter->second->recalcExposures();
+                }
+                if (NOT(iter->second->isLandcsapeRealized())) {
+                    iter->second->realizeSurfaceLists();
+                }
             }
         }
     }
+
+    // For any chunk outside of our draw region, unrealize it immediately.
+    // TODO: CONTINUE HERE.
 }
 
 
@@ -359,6 +372,6 @@ void GameWorld::deleteBlockInFrontOfUs()
 
         chunk->setBlockType(local_coord, BT_AIR);
         chunk->recalcExposures();
-        chunk->realizeLandscape();
+        chunk->realizeSurfaceLists();
     }
 }

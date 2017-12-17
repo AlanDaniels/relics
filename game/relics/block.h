@@ -41,14 +41,15 @@ public:
 
     bool getExposure(FaceEnum face) const;
     void setExposure(FaceEnum face, bool val);
+    bool hasExposures() const;
 
 private:
     BlockType m_block_type;
 
-    bool m_west_exposed;
-    bool m_east_exposed;
-    bool m_south_exposed;
-    bool m_north_exposed;
-    bool m_top_exposed;
-    bool m_bottom_exposed;
+    bool m_west_exposure;
+    bool m_east_exposure;
+    bool m_south_exposure;
+    bool m_north_exposure;
+    bool m_top_exposure;
+    bool m_bottom_exposure;
 };

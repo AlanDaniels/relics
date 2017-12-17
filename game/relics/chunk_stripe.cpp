@@ -41,29 +41,39 @@ BlockSurface ChunkStripe::calcSurfaceForBlock(int local_z, FaceEnum face)
 
 // Recalc the exposed faces for one stripe.
 // Return true if any of the blocks changed.
-void ChunkStripe::recalcExposures(const Chunk &owner, int local_x, int local_y)
+bool ChunkStripe::recalcExposures(const Chunk &owner, int local_x, int local_y)
 {
+    bool result = false;
     for (int z = 0; z < CHUNK_WIDTH; z++) {
         LocalGrid local_coord(local_x, local_y, z);
-        recalcExposureForBlock(owner, local_coord);
+        if (recalcExposureForBlock(owner, local_coord)) {
+            result = true;
+        }
     }
+
+    m_has_exposures = result;
+    return result;
 }
 
 
 // Rebuild the vertex list for one stripe.
-// Return the total number of faces added.
-void ChunkStripe::addToVertLists(const Chunk &owner, int local_x, int local_y, ChunkVertLists *pOut)
+// If we don't have any exposed faces, we can skip this step.
+void ChunkStripe::addToSurfaceLists(Chunk &owner, int local_x, int local_y)
 {
+    if (!m_has_exposures) {
+        return;
+    }
+
     for (int z = 0; z < CHUNK_WIDTH; z++) {
         LocalGrid local_coord(local_x, local_y, z);
-        addVertsForBlock(owner, local_coord, pOut);
+        addVertsForBlock(owner, local_coord);
     }
 }
 
 
 // Figure out which faces of a block are exposed.
-// Return true if the faces changed.
-void ChunkStripe::recalcExposureForBlock(const Chunk &owner, const LocalGrid local_coord)
+// Return true if we have any exposures for this block.
+bool ChunkStripe::recalcExposureForBlock(const Chunk &owner, const LocalGrid local_coord)
 {
     Block &current = m_blocks[local_coord.z()];
 
@@ -71,7 +81,7 @@ void ChunkStripe::recalcExposureForBlock(const Chunk &owner, const LocalGrid loc
 
     // If this block is empty, it doesn't generate any faces.
     if (IsBlockTypeEmpty(current.getBlockType())) {
-        return;
+        return false;
     }
 
     // Check for edge cases.
@@ -169,11 +179,13 @@ void ChunkStripe::recalcExposureForBlock(const Chunk &owner, const LocalGrid loc
     current.setExposure(FACE_EAST,   east_flag);
     current.setExposure(FACE_TOP,    top_flag);
     current.setExposure(FACE_BOTTOM, bottom_flag);
+
+    return current.hasExposures();
 }
 
 
 // Add the quads for a block.
-void ChunkStripe::addVertsForBlock(const Chunk &owner, const LocalGrid &local_coord, ChunkVertLists *pOut)
+void ChunkStripe::addVertsForBlock(Chunk &owner, const LocalGrid &local_coord)
 {
     const Block &current = m_blocks[local_coord.z()];
 
@@ -190,7 +202,7 @@ void ChunkStripe::addVertsForBlock(const Chunk &owner, const LocalGrid &local_co
     if (current.getExposure(FACE_TOP)) {
         Brady brady(owner, local_coord, FACE_TOP);
         BlockSurface surf = calcSurfaceForBlock(z, FACE_TOP);
-        VertList_PNT *pList = pOut->get(surf);
+        VertList_PNT *pList = owner.getSurfaceList(surf);
         brady.addToVertList_PNT(pList);
     }
 
@@ -198,7 +210,7 @@ void ChunkStripe::addVertsForBlock(const Chunk &owner, const LocalGrid &local_co
     if (current.getExposure(FACE_BOTTOM)) {
         Brady brady(owner, local_coord, FACE_BOTTOM);
         BlockSurface surf = calcSurfaceForBlock(z, FACE_BOTTOM);
-        VertList_PNT *pList = pOut->get(surf);
+        VertList_PNT *pList = owner.getSurfaceList(surf);
         brady.addToVertList_PNT(pList);
     }
 
@@ -206,7 +218,7 @@ void ChunkStripe::addVertsForBlock(const Chunk &owner, const LocalGrid &local_co
     if (current.getExposure(FACE_SOUTH)) {
         Brady brady(owner, local_coord, FACE_SOUTH);
         BlockSurface surf = calcSurfaceForBlock(z, FACE_SOUTH);
-        VertList_PNT *pList = pOut->get(surf);
+        VertList_PNT *pList = owner.getSurfaceList(surf);
         brady.addToVertList_PNT(pList);
     }
 
@@ -214,7 +226,7 @@ void ChunkStripe::addVertsForBlock(const Chunk &owner, const LocalGrid &local_co
     if (current.getExposure(FACE_NORTH)) {
         Brady brady(owner, local_coord, FACE_NORTH);
         BlockSurface surf = calcSurfaceForBlock(z, FACE_NORTH);
-        VertList_PNT *pList = pOut->get(surf);
+        VertList_PNT *pList = owner.getSurfaceList(surf);
         brady.addToVertList_PNT(pList);
     }
 
@@ -222,7 +234,7 @@ void ChunkStripe::addVertsForBlock(const Chunk &owner, const LocalGrid &local_co
     if (current.getExposure(FACE_EAST)) {
         Brady brady(owner, local_coord, FACE_EAST);
         BlockSurface surf = calcSurfaceForBlock(z, FACE_EAST);
-        VertList_PNT *pList = pOut->get(surf);
+        VertList_PNT *pList = owner.getSurfaceList(surf);
         brady.addToVertList_PNT(pList);
     }
 
@@ -230,7 +242,7 @@ void ChunkStripe::addVertsForBlock(const Chunk &owner, const LocalGrid &local_co
     if (current.getExposure(FACE_WEST)) {
         Brady brady(owner, local_coord, FACE_WEST);
         BlockSurface surf = calcSurfaceForBlock(z, FACE_WEST);
-        VertList_PNT *pList = pOut->get(surf);
+        VertList_PNT *pList = owner.getSurfaceList(surf);
         brady.addToVertList_PNT(pList);
     }
 }

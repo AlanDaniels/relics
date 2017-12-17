@@ -10,35 +10,11 @@ class Chunk;
 class GameWorld;
 
 
-// The landscape vert lists for a chunk. We tried this as a map of 
-// surface-enum-to-list, but the peformance was horrible, and there
-// aren't that many lists anyway, so I'm hard-coding them here.
-class ChunkVertLists {
-public:
-    ChunkVertLists();
-    ~ChunkVertLists();
-
+#if 0
     int getCount(BlockSurface surf) const;
     const VertList_PNT *get_RO(BlockSurface surf) const;
     VertList_PNT *get(BlockSurface surf);
-
-    void resetLists();
-    void realizeLists();
-    bool areListsRealized() const { return m_realized; }
-
-private:
-    // Forbid moving and copying..
-    ChunkVertLists(const ChunkVertLists &that) = delete;
-    void operator=(const ChunkVertLists &that) = delete;
-    ChunkVertLists(ChunkVertLists &&that) = delete;
-    void operator=(ChunkVertLists &&that) = delete;
-
-    VertList_PNT *m_grass_list;
-    VertList_PNT *m_dirt_list;
-    VertList_PNT *m_stone_list;
-
-    bool m_realized;
-};
+#endif
 
 
 // The starting X and Z grid coords for a chunk.
@@ -116,12 +92,7 @@ ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos);
 class Chunk
 {
 public:
-    // Chunk values ctor.
-    Chunk::Chunk(const GameWorld &world, const ChunkOrigin &origin) :
-        m_world(world),
-        m_origin(origin),
-        m_up_to_date(false) {}
-
+    Chunk::Chunk(const GameWorld &world, const ChunkOrigin &origin);
     Chunk::~Chunk() {}
 
     bool IsGlobalGridWithin(const GlobalGrid &coord) const;
@@ -131,16 +102,20 @@ public:
 
     MyVec4 localGridToWorldPos(int local_x, int local_y, int local_z) const;
 
+    int  getCountForSurface(BlockSurface surf) const;
+    const VertList_PNT *getSurfaceList_RO(BlockSurface surf) const;
+    VertList_PNT *getSurfaceList(BlockSurface surf);
+
     void recalcExposures();
-    void realizeLandscape();
+    void realizeSurfaceLists();
+    void unrealizeSurfaceLists();
 
     bool isAbovePlane(const MyPlane &plane) const;
 
     const ChunkOrigin getOrigin() const { return m_origin; }
-    const ChunkVertLists &getVertLists() const { return m_vert_lists; }
 
     bool isUpToDate() const { return m_up_to_date; }
-    bool isLandcsapeRealized() const { return m_vert_lists.areListsRealized(); }
+    bool isLandcsapeRealized() const { return m_realized; }
 
     const Chunk *getNeighborNorth() const;
     const Chunk *getNeighborSouth() const;
@@ -157,19 +132,20 @@ private:
     Chunk(Chunk &&that) = delete;
     void operator=(Chunk &&that) = delete;
 
+    // Private methods.
+    int getArrayOffset(int x, int y) const { return x + (CHUNK_WIDTH * y); }
     const ChunkStripe &getStripe_RO(int local_x, int local_y) const;
     ChunkStripe &getStripe(int local_x, int local_y);
 
-    int getArrayOffset(int x, int y) const { 
-        int result = x + (y * CHUNK_WIDTH); 
-        assert((result >= 0) && (result < (CHUNK_WIDTH * CHUNK_HEIGHT)));
-        return result;
-    }
-
+    // Private data.
     const GameWorld &m_world;
     ChunkOrigin m_origin;
 
     bool m_up_to_date;
-    ChunkVertLists m_vert_lists;
+    bool m_realized;
+    std::unique_ptr<VertList_PNT> m_grass_list;
+    std::unique_ptr<VertList_PNT> m_dirt_list;
+    std::unique_ptr<VertList_PNT> m_stone_list;
+
     std::array<ChunkStripe, CHUNK_WIDTH * CHUNK_HEIGHT> m_stripes;
 };

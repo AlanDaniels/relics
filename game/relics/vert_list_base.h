@@ -12,7 +12,9 @@ public:
     VertList_Base() :
         m_vertex_buffer_ID(0),
         m_item_count(0),
-        m_triangle_count(0) {}
+        m_triangle_count(0) {
+        m_verts.reserve(INITIAL_SIZE);
+    }
 
     virtual ~VertList_Base() { reset(); }
 
@@ -31,6 +33,9 @@ public:
     GLuint getVertexBufferID() const { return m_vertex_buffer_ID; }
 
 private:
+    // I dunno, play around with this some.
+    static const int INITIAL_SIZE = 100000;
+
     // Disallow moving and copying.
     VertList_Base(const VertList_Base &that)  = delete;
     void operator=(const VertList_Base &that) = delete;

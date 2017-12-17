@@ -3,7 +3,7 @@
 
 -- The world itself.
 world = {
-    file_name = 'worlds/blerm1.world'
+    file_name = 'worlds/small_cube.world'
 }
 
 -- Debugging.

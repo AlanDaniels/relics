@@ -13,14 +13,15 @@ class ChunkVertLists;
 class ChunkStripe
 {
 public:
-    ChunkStripe() {}
+    ChunkStripe() :
+        m_has_exposures(false) {}
     ~ChunkStripe() {}
 
     BlockType getBlockType(int local_z) const;
     void setBlockType(int local_z, BlockType block_type);
 
-    void recalcExposures(const Chunk &owner, int local_x, int local_y);
-    void addToVertLists(const Chunk &owner, int local_x, int local_y, ChunkVertLists *pOut);
+    bool recalcExposures(const Chunk &owner, int local_x, int local_y);
+    void addToSurfaceLists(Chunk &owner, int local_x, int local_y);
 
 private:
     // Disallow moving and copying.
@@ -30,8 +31,9 @@ private:
     void operator=(ChunkStripe &&that) = delete;
 
     BlockSurface calcSurfaceForBlock(int local_z, FaceEnum face);
-    void recalcExposureForBlock(const Chunk &chunk, const LocalGrid local_coord);
-    void addVertsForBlock(const Chunk &owner, const LocalGrid &local_coord, ChunkVertLists *pOut);
+    bool recalcExposureForBlock(const Chunk &chunk, const LocalGrid local_coord);
+    void addVertsForBlock(Chunk &owner, const LocalGrid &local_coord);
 
+    bool m_has_exposures;
     std::array<Block, CHUNK_WIDTH> m_blocks;
 };

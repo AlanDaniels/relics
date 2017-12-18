@@ -1,6 +1,7 @@
 
 #include "stdafx.h"
 #include "draw_state_p.h"
+
 #include "utils.h"
 
 
@@ -13,7 +14,7 @@ bool DrawState_P::create(const DrawStateSettings &settings)
 
 
 // This is where the rubber hits the road.
-bool DrawState_P::render(const VertList_P  &vert_list)
+bool DrawState_P::render(const VertList_P &vert_list)
 {
     // Make sure the vert list is realized.
     assert(vert_list.isRealized());

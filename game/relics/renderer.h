@@ -48,7 +48,7 @@ private:
     void loadTextures();
     bool loadShaders();
 
-    void getChunksToRender(std::vector<const Chunk *> *pOut_chunk_list, RenderStats *pOut_stats);
+    std::vector<const Chunk *> getChunksToRender(RenderStats *pOut_stats);
 
     void renderSkybox(RenderStats *pOut_stats);
 

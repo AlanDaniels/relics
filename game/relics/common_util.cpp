@@ -3,6 +3,50 @@
 #include "common_util.h"
 
 #include "sqlite3.h"
+#include <psapi.h>
+
+
+// Turn a number into a nice readable string.
+std::string ReadableNumber(int value) {
+    char buffer[32];
+
+    const int GB = 1024 * 1024 * 1024;
+    const int MB = 1024 * 1024;
+    const int KB = 1024;
+
+    if (value >= GB) {
+        sprintf(buffer, "%.1fG", value / float(GB));
+    }
+    else if (value >= MB) {
+        sprintf(buffer, "%.1fM", value / float(MB));
+    }
+    else if (value >= KB) {
+        sprintf(buffer, "%.1fK", value / float(KB));
+    }
+    else {
+        sprintf(buffer, "%d", value);
+    }
+
+    return std::string(buffer);
+}
+
+
+// Find out how much memory the app is using.
+int GetMemoryUsage()
+{
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+    memset(&pmc, 0, sizeof(pmc));
+    pmc.cb = sizeof(PROCESS_MEMORY_COUNTERS_EX);
+
+    HANDLE hProc = GetCurrentProcess();
+
+    GetProcessMemoryInfo(hProc, 
+        reinterpret_cast<PROCESS_MEMORY_COUNTERS *>(&pmc), 
+        sizeof(PROCESS_MEMORY_COUNTERS_EX));
+    int result = pmc.PrivateUsage;
+    return result;
+}
+
 
 // Print a debug message, both to the Visual Studio debugger, and stdout.
 // TODO: I'm not sure why, but using a "std::unique_ptr" to a new char array

@@ -43,11 +43,6 @@ GameWorld::GameWorld(sqlite3 *db) :
         }
     }
 
-    // FUCK. Okay, *now* break on a memory leak.
-    _CrtSetBreakAlloc(9554);
-    _CrtSetBreakAlloc(9553);
-    _CrtSetBreakAlloc(9552);
-
     PrintDebug("Created %d chunks.\n", count);
 
     // Recalc and realize every chunk that we've loaded.
@@ -114,7 +109,6 @@ const Chunk *GameWorld::getRequiredChunk(const ChunkOrigin &origin) const
     assert(result != nullptr);
     return result;
 }
-
 
 
 // Look up a chunk that may not necessarily be loaded yet.

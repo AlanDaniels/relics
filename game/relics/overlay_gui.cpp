@@ -1,9 +1,12 @@
 
 #include "stdafx.h"
 #include "overlay_gui.h"
+
 #include "config.h"
 #include "game_world.h"
 #include "renderer.h"
+
+#include "common_util.h"
 #include "utils.h"
 
 
@@ -78,7 +81,8 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     // Print our hit-test debugging info.
     if (config.debug.show_hit_test) {
         if (game_world.getHitTestSuccess()) {
-            sprintf(blah, "Hit Test: %s", game_world.getHitTestDetail().toDescription().c_str());
+            std::string descr = game_world.getHitTestDetail().toDescription();
+            sprintf(blah, "Hit Test: %s", descr.c_str());
         }
         else {
             sprintf(blah, "Hit Test: None");
@@ -88,11 +92,22 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
         m_text.move(0.0f, text_down);
     }
 
+    // Print our memory usage.
+    if (config.debug.show_memory_usage) {
+        int memory = GetMemoryUsage();
+        std::string readable = ReadableNumber(memory);
+        sprintf(blah, "Memory: %s", readable.c_str());
+        m_text.setString(blah);
+        m_window.draw(m_text);
+        m_text.move(0.0f, text_down);
+    }
+
     // Print our render stats.
     if (config.debug.show_render_stats) {
+        std::string readable = ReadableNumber(stats.triangle_count);
         sprintf(blah,
-            "Render: %d state changes, %d triangles",
-            stats.state_changes, stats.triangle_count);
+            "Render: %d states, %s tris",
+            stats.state_changes, readable.c_str());
         m_text.setString(blah);
         m_window.draw(m_text);
         m_text.move(0.0f, text_down);

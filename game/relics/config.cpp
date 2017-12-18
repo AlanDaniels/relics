@@ -81,12 +81,15 @@ bool Config::loadFromFile()
     lua_getglobal(L, "debug");
     if (lua_istable(L, -1)) {
         debug.opengl          = getBoolField(L, "opengl", false);
+        debug.check_for_leaks = getBoolField(L, "check_for_leaks", false);
+
         debug.show_camera     = getBoolField(L, "show_camera", false);
         debug.show_framerate  = getBoolField(L, "show_framerate", false);
         debug.show_game_clock = getBoolField(L, "show_game_clock", false);
         debug.show_hit_test   = getBoolField(L, "show_hit_test", false);
         debug.show_mouse_pos  = getBoolField(L, "show_mouse_pos", false);
 
+        debug.show_memory_usage = getBoolField(L, "show_memory_usage", false);
         debug.show_render_stats = getBoolField(L, "show_render_stats", false);
         debug.show_eval_region  = getBoolField(L, "show_eval_region",  false);
         debug.show_chunk_stats  = getBoolField(L, "show_chunk_stats", false);

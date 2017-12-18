@@ -65,6 +65,13 @@ public:
         else { return false; }
     }
 
+    // Convert this as a string.
+    std::string toString() const {
+        char buffer[32];
+        sprintf(buffer, "Origin [%d, %d]", m_debug_x, m_debug_z);
+        return std::string(buffer);
+    }
+
     inline int debugX() const { return m_debug_x; }
     inline int debugZ() const { return m_debug_z; }
     inline int x() const { return m_x; }

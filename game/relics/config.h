@@ -22,12 +22,15 @@ struct ConfigDebug
 {
     ConfigDebug() :
         opengl(true),
+        check_for_leaks(false),
+
         show_camera(false),
         show_framerate(false),
         show_game_clock(false),
         show_hit_test(false),
         show_mouse_pos(false),
 
+        show_memory_usage(false),
         show_render_stats(false),
         show_eval_region(false),
         show_chunk_stats(false),
@@ -37,12 +40,15 @@ struct ConfigDebug
         noclip_flight_speed(1.0f) {}
 
     bool opengl;
+    bool check_for_leaks;
+
     bool show_camera;
     bool show_framerate;
     bool show_game_clock;
     bool show_hit_test;
     bool show_mouse_pos;
 
+    bool show_memory_usage;
     bool show_render_stats;
     bool show_eval_region;
     bool show_chunk_stats;
@@ -56,12 +62,16 @@ struct ConfigDebug
 struct ConfigWindow
 {
     ConfigWindow() :
+        width(1024),
+        height(768),
         fullscreen(false),
         vertical_sync(true),
         mouse_degrees_per_pixel(0.1f) {}
 
-    bool    fullscreen;
-    bool    vertical_sync;
+    int  width;
+    int  height;
+    bool fullscreen;
+    bool vertical_sync;
     GLfloat mouse_degrees_per_pixel;
 };
 

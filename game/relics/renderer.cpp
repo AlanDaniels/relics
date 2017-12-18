@@ -213,8 +213,10 @@ bool Renderer::loadShaders()
 
 
 // Get the list of all the chunks we want to render.
-void Renderer::getChunksToRender(std::vector<const Chunk *> *pOut_list, RenderStats *pOut_stats)
+std::vector<const Chunk *> Renderer::getChunksToRender(RenderStats *pOut_stats)
 {
+    std::vector<const Chunk *> results;
+
     GLfloat field_of_view = GetConfig().render.field_of_view;
     int     eval_blocks   = GetConfig().logic.eval_blocks;
     GLfloat draw_distance = GetConfig().logic.getDrawDistanceCm();
@@ -226,10 +228,6 @@ void Renderer::getChunksToRender(std::vector<const Chunk *> *pOut_list, RenderSt
     
     pOut_stats->chunks_considered = 0;
     pOut_stats->chunks_rendered   = 0;
-
-    if (MAGIC_BREAKPOINT) {
-        printf("");
-    }
 
     // Build our left and right frustum planes.
     MyMatrix4by4 pitch_rotate = MyMatrix4by4::RotateX(-camera_pitch);
@@ -257,20 +255,19 @@ void Renderer::getChunksToRender(std::vector<const Chunk *> *pOut_list, RenderSt
             const Chunk *chunk = m_world.getRequiredChunk(origin);
 
             // These must have been realized already.
-            if (!chunk->isLandscapeRealized()) {
-                printf("");
-            }
             assert(chunk->isLandscapeRealized());
 
             // Only keep the chunks within the view frustum.
             bool keep = chunk->isAbovePlane(left_clip_plane) &&
                         chunk->isAbovePlane(right_clip_plane);
             if (keep) {
-                pOut_list->emplace_back(chunk);
+                results.emplace_back(chunk);
                 pOut_stats->chunks_rendered++;
             }
         }
     }
+
+    return std::move(results);
 }
 
 
@@ -288,13 +285,12 @@ RenderStats Renderer::renderWorld()
     renderSkybox(&stats);
 
     // Build a list of all our chunks.
-    std::vector<const Chunk *> chunk_list;
-    getChunksToRender(&chunk_list, &stats);
+    std::vector<const Chunk *> chunk_vec = getChunksToRender(&stats);
 
     // Render our surfaces.
-    renderLandscapeList(SURF_GRASS, chunk_list, *m_grass_tex, &stats);
-    renderLandscapeList(SURF_DIRT,  chunk_list, *m_dirt_tex,  &stats);
-    renderLandscapeList(SURF_STONE, chunk_list, *m_stone_tex, &stats);
+    renderLandscapeList(SURF_GRASS, chunk_vec, *m_grass_tex, &stats);
+    renderLandscapeList(SURF_DIRT,  chunk_vec, *m_dirt_tex,  &stats);
+    renderLandscapeList(SURF_STONE, chunk_vec, *m_stone_tex, &stats);
 
     // Finally, render our hit test.
     renderHitTest(&stats);
@@ -325,12 +321,12 @@ void Renderer::renderSkybox(RenderStats *pOut_stats)
 
 // Render one of our landscapes. This should use standard depth testing, and no blending.
 void Renderer::renderLandscapeList(
-    SurfaceType surf, const std::vector<const Chunk *> &chunk_list, 
+    SurfaceType surf, const std::vector<const Chunk *> &chunk_vec, 
     const DrawTexture &tex, RenderStats *pOut_stats)
 {
     bool worth_doing = false;
-    for (const Chunk *pChunk : chunk_list) {
-        if (pChunk->getCountForSurface(surf) > 0) {
+    for (auto &iter : chunk_vec) {
+        if (iter->getCountForSurface(surf) > 0) {
             worth_doing = true;
             break;
         }
@@ -358,8 +354,8 @@ void Renderer::renderLandscapeList(
 
     m_landscape_DS->updateUniformTexture(0, tex);
 
-    for (const Chunk *pChunk : chunk_list) {
-        const VertList_PNT *vert_list = pChunk->getSurfaceList_RO(surf);
+    for (auto iter : chunk_vec) {
+        const VertList_PNT *vert_list = iter->getSurfaceList_RO(surf);
         if (vert_list != nullptr) {
             int item_count = vert_list->getItemCount();
             if (item_count > 0) {

@@ -49,13 +49,13 @@ public:
     // ...but when we delete, free everything up.
     virtual ~DrawState_Base();
 
-    bool addUniformFloat(const char *name);
-    bool addUniformVec4(const char *name);
-    bool addUniformMatrix4by4(const char *name);
+    bool addUniformFloat(const std::string &name);
+    bool addUniformVec4(const std::string &name);
+    bool addUniformMatrix4by4(const std::string &name);
 
-    bool updateUniformFloat(const char *name, GLfloat val);
-    bool updateUniformVec4(const char *name, const MyVec4 &val);
-    bool updateUniformMatrix4by4(const char *name, const MyMatrix4by4 &val);
+    bool updateUniformFloat(const std::string &name, GLfloat val);
+    bool updateUniformVec4(const std::string &name, const MyVec4 &val);
+    bool updateUniformMatrix4by4(const std::string &name, const MyMatrix4by4 &val);
 
     bool updateUniformTexture(int index, const DrawTexture &texture);
     bool updateUniformCubemapTexture(int index, const DrawCubemapTexture &cubemap_texture);
@@ -63,17 +63,19 @@ public:
 protected:
     bool renderSetup();
     bool renderTeardown();
-    GLint getAttribute(const char *name) const;
+    GLint getAttribute(const std::string &name) const;
 
     bool create(const std::vector<std::string> &attrib_names, const DrawStateSettings &settings);
 
     DrawStateSettings m_settings;
 
 private:
-    // Forbid copying, and default ctor.
+    // Disallow default ctor, copying, and moving.
     DrawState_Base() = delete;
     DrawState_Base(const DrawState_Base &that) = delete;
     void operator=(const DrawState_Base &that) = delete;
+    DrawState_Base(DrawState_Base &&that) = delete;
+    void operator=(DrawState_Base &&that) = delete;
 
     bool m_initialized;
 

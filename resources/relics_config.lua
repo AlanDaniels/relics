@@ -3,24 +3,27 @@
 
 -- The world itself.
 world = {
-    file_name = 'worlds/big_mess.world'
+    file_name = 'worlds/small_cube.world'
 }
 
 -- Debugging.
 debug = {
     opengl = true,
-    show_camera = true,
+    check_for_leaks = false,
+
+    show_camera = false,
     show_game_clock = false,
     show_framerate = true,
-    show_hit_test = true,
+    show_hit_test = false,
     show_mouse_pos = false,
 
+    show_memory_usage = true,
     show_render_stats = true,
-    show_eval_region = true,
-    show_chunk_stats = true,
+    show_eval_region = false,
+    show_chunk_stats = false,
 
-    print_draw_state = true,
-    print_window_context = true,
+    print_draw_state = false,
+    print_window_context = false,
     
     noclip_flight_speed = 5.0
 }
@@ -28,6 +31,8 @@ debug = {
 -- Window details.
 -- NOTE: This should not affect the game logic in any way.
 window = {
+    width  = 1024,
+    height = 768,
     fullscreen = false,
     vertical_sync = true,
     mouse_degrees_per_pixel = 0.1

@@ -17,11 +17,6 @@
 #include <boost/filesystem.hpp>
 
 
-const int INITIAL_SCREEN_WIDTH  = 1920;
-const int INITIAL_SCREEN_HEIGHT = 1080;
-
-
-
 // Setting up a debugger callback.
 void APIENTRY MyOGLErrorCallback(
 	GLenum source_val, GLenum type_val, GLuint id, GLenum severity_val, GLsizei msg_len,
@@ -97,26 +92,63 @@ sqlite3 *OpenDatabase()
 }
 
 
-// And away we go. Forgive the Microsoft SAL annotations here. We'll make sure this is portable later.
+#if 0
+// A minimalist version to look for memory leaks in the initial setup.
 int WINAPI wWinMain(
     _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-    // TODO: I don't know why the fuck I'm leaking memory.
-#if 0
     _CrtSetBreakAlloc(9554);
     _CrtSetBreakAlloc(9553);
     _CrtSetBreakAlloc(9552);
+
+    LoadConfig();
+
+    sf::ContextSettings settings_in;
+    settings_in.depthBits   = 24;
+    settings_in.stencilBits = 8;
+    settings_in.antialiasingLevel = 4;
+    settings_in.majorVersion = 4;
+    settings_in.minorVersion = 5;
+
+    sf::Uint32 style = sf::Style::Resize | sf::Style::Titlebar | sf::Style::Close;
+    sf::RenderWindow window(sf::VideoMode(640, 480), "Relics", style, settings_in);
+
+    glewInit();
+
+    sqlite3 *database = OpenDatabase();
+    std::unique_ptr<GameWorld> game_world = std::make_unique<GameWorld>(database);
+
+    _CrtDumpMemoryLeaks();
+    return 0;
+}
 #endif
 
+
+// And away we go. Forgive the Microsoft SAL annotations here. We'll make sure this is portable later.
+int WINAPI wWinMain(
+    _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
+{
     // Hello and welcome! Read our config file.
     if (!LoadConfig()) {
         return 1;
     }
 
-	// Open the main window.
+    const Config &config = GetConfig();
+
+    // See if we should go into paranoid leaks mode.
+    bool check_for_leaks = config.debug.check_for_leaks;
+    if (check_for_leaks) {
+        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+        _CrtSetBreakAlloc(9554);
+        _CrtSetBreakAlloc(9553);
+        _CrtSetBreakAlloc(9552);
+    }
+
+    // Open the main window.
 	sf::ContextSettings settings_in;
 	settings_in.depthBits   = 24;
 	settings_in.stencilBits = 8;
@@ -125,17 +157,19 @@ int WINAPI wWinMain(
 	settings_in.minorVersion = 5;
 
     sf::Uint32 style;
-    if (GetConfig().window.fullscreen) {
+    if (config.window.fullscreen) {
         style = sf::Style::Fullscreen;
     }
     else {
         style = sf::Style::Resize | sf::Style::Titlebar | sf::Style::Close;
     }
 
-	sf::RenderWindow window(sf::VideoMode(INITIAL_SCREEN_WIDTH, INITIAL_SCREEN_HEIGHT), "Relics", style, settings_in);
+    int screen_width  = config.window.width;
+    int screen_height = config.window.height;
+	sf::RenderWindow window(sf::VideoMode(screen_width, screen_height), "Relics", style, settings_in);
 
     // See what context settings we actually got.
-    if (GetConfig().debug.print_window_context) {
+    if (config.debug.print_window_context) {
         sf::ContextSettings settings_out = window.getSettings();
         PrintDebug("Window Context Settings:\n");
         PrintDebug("    Depth bits: %d\n", settings_out.depthBits);
@@ -145,14 +179,14 @@ int WINAPI wWinMain(
     }
 
     // Set some window stuff.
-    bool vertical_sync = GetConfig().window.vertical_sync;
+    bool vertical_sync = config.window.vertical_sync;
     window.setVerticalSyncEnabled(vertical_sync);
 
     window.setMouseCursorVisible(false);
     window.setActive(true);
 
     // Start the mouse at the center.
-    sf::Mouse::setPosition(sf::Vector2i(INITIAL_SCREEN_WIDTH / 2, INITIAL_SCREEN_HEIGHT / 2), window);
+    sf::Mouse::setPosition(sf::Vector2i(screen_width / 2, screen_height / 2), window);
 
     // Fire up GLEW. We need to do this *after* we open the main window.
 	GLenum glew_result = glewInit();
@@ -162,14 +196,14 @@ int WINAPI wWinMain(
 	}
 
     // Turn on OpenGL debugging.
-    if (GetConfig().debug.opengl) {
+    if (config.debug.opengl) {
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
         glDebugMessageCallback(MyOGLErrorCallback, NULL);
     }
 
     // Set up initial GL stuff, which we'll never change.
-    const char* version = (const char*)glGetString(GL_VERSION);
+    const char* version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
     PrintDebug("Your OpenGL version is \"%s\".\n", version);
 
     // TODO: Review all these settings, and put them in the Renderer class.
@@ -272,8 +306,10 @@ int WINAPI wWinMain(
     // All done.
     window.setMouseCursorVisible(true);
 
-    // Let's find where our memory leaks were.
-    _CrtDumpMemoryLeaks();
+    // Finally, look for more potential leaks.
+    if (check_for_leaks) {
+        _CrtDumpMemoryLeaks();
+    }
 
     return 0;
 }

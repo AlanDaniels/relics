@@ -1,7 +1,7 @@
 
 #include "stdafx.h"
 #include "draw_state_pct.h"
-#include "game_world.h"
+
 #include "utils.h"
 
 

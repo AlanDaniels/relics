@@ -10,7 +10,7 @@
 class Chunk;
 
 
-enum BlockType
+enum BlockType : unsigned char
 {
     BT_AIR   = 0,
     BT_DIRT  = 1,
@@ -23,7 +23,7 @@ bool IsBlockTypeEmpty (BlockType block_type);
 
 
 
-enum SurfaceType
+enum SurfaceType : unsigned char
 {
     SURF_GRASS  = 0,
     SURF_DIRT   = 1,
@@ -61,3 +61,5 @@ private:
     SurfaceType m_top_surf;
     SurfaceType m_bottom_surf;
 };
+
+static_assert(sizeof(Block) == 7, "Make sure blocks are nice and small");

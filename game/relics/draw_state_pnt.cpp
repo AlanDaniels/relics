@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "draw_state_pnt.h"
 
-#include "game_world.h"
 #include "utils.h"
 
 

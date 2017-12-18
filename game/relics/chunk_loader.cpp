@@ -10,6 +10,9 @@
 #include "sqlite3.h"
 
 
+static const std::string DIRT_TOP("dirt_top");
+
+
 // Load a chunk from our SQLite file.
 // This just deals with the block data. The landscape is are dealt with later.
 std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
@@ -38,18 +41,15 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
     int count = 0;
     int ret_code = sqlite3_step(stmt);
     while (ret_code == SQLITE_ROW) {
-        if (MAGIC_BREAKPOINT) {
-            printf("");
-        }
-
         int block_x = sqlite3_column_int(stmt, 0);
         int block_y = sqlite3_column_int(stmt, 1);
         int block_z = sqlite3_column_int(stmt, 2);
 
         const unsigned char *raw_text = sqlite3_column_text(stmt, 3);
-        std::string text(reinterpret_cast<const char*>(raw_text));
+        const char *clean = reinterpret_cast<const char*>(raw_text);
+        std::string text(clean);
 
-        if (text == "dirt_top") {
+        if (text == DIRT_TOP) {
             GlobalGrid global_coord(block_x, block_y, block_z);
             LocalGrid  local_coord = GlobalGridToLocal(global_coord, origin);
 
@@ -66,8 +66,8 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
     }
 
     sqlite3_finalize(stmt);
-    PrintDebug("Found %d blocks.\n", count);
-    return result;
+
+    return std::move(result);
 }
 
 

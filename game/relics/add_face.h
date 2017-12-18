@@ -9,10 +9,7 @@ class Chunk;
 enum  FaceEnum;
 
 
-void AddFace_VertList_PNT(
-    const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face,
-    VertList_PNT *pOut);
-
-void AddFace_VertList_PT(
-    const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face,
-    VertList_PT *pOut);
+std::array<Vertex_PNT, 6> GetLandscapePatch_PNT(
+    const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face);
+std::array<Vertex_PT, 6> GetLandscapePatch_PT(
+    const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face);

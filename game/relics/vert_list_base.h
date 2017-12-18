@@ -9,28 +9,24 @@ template<typename T>
 class VertList_Base
 {
 public:
-    VertList_Base(int initial_size) :
-        m_vertex_buffer_ID(0) {
-        m_verts.reserve(initial_size);
-    }
-
-    virtual ~VertList_Base() { reset(); }
+    VertList_Base();
+    virtual ~VertList_Base();
 
     void addQuad(const T(&items)[4]);
     void add(const T *items, int count);
     void reset();
-    bool realize();
-    bool unrealize();
+    bool update();
 
-    bool isRealized()    const { return (m_vertex_buffer_ID != 0); }
-    int  getItemCount()  const { return m_verts.size(); }
-    int  getByteCount()  const { return m_verts.size() * sizeof(T); }
-    int  getTriCount()   const { return m_verts.size() / 3; }
+    void reserve(int cap) { m_verts.reserve(cap); }
+
+    bool isCurrent()    const { return m_current; }
+    int  getItemCount() const { return m_verts.size(); }
+    int  getByteCount() const { return m_verts.size() * sizeof(T); }
+    int  getTriCount()  const { return m_verts.size() / 3; }
     GLuint getVertexBufferID() const { return m_vertex_buffer_ID; }
 
 private:
-    // Disallow default ctor, moving and copying.
-    VertList_Base() = delete;
+    // Disallow moving and copying.
     VertList_Base(const VertList_Base &that)  = delete;
     void operator=(const VertList_Base &that) = delete;
     VertList_Base(VertList_Base &&that)  = delete;
@@ -38,8 +34,30 @@ private:
 
     // Private data.
     GLuint m_vertex_buffer_ID;
+    bool   m_current;
     std::vector<T> m_verts;
 };
+
+
+// Default ctor. Get our buffer ID.
+template<typename T>
+VertList_Base<T>::VertList_Base() :
+    m_vertex_buffer_ID(0),
+    m_current(false)
+{
+    glGenBuffers(1, &m_vertex_buffer_ID);
+    assert(m_vertex_buffer_ID != 0);
+}
+
+
+// Destructor.
+template<typename T>
+VertList_Base<T>::~VertList_Base()
+{
+    glDeleteBuffers(1, &m_vertex_buffer_ID);
+    m_vertex_buffer_ID = 0;
+}
+
 
 
 // Add a quad. Just a thin wrapper for the skybox.
@@ -56,11 +74,11 @@ void VertList_Base<T>::addQuad(const T(&items)[4])
 }
 
 
-// Add some triangles. We must NOT be realized yet.
+// Add some triangles.
 template<typename T>
 void VertList_Base<T>::add(const T *items, int count)
 {
-    assert(m_vertex_buffer_ID == 0);
+    m_current = false;
     m_verts.insert(m_verts.end(), items, items + count);
 }
 
@@ -70,53 +88,35 @@ void VertList_Base<T>::add(const T *items, int count)
 template<typename T>
 void VertList_Base<T>::reset()
 {
-    if (m_vertex_buffer_ID != 0) {
-        glDeleteBuffers(1, &m_vertex_buffer_ID);
-        m_vertex_buffer_ID = 0;
+    if (m_verts.size() > 0) {
+        m_current = false;
+        m_verts.clear();
     }
-
-    m_verts.clear();
 }
 
 
 // Send our data out to the video card.
 // We should only do this if we have data, and haven't done it already.
 template<typename T>
-bool VertList_Base<T>::realize()
+bool VertList_Base<T>::update()
 {
     if (m_verts.size() == 0) {
+        m_current = true;
         return false;
     }
 
-    if (m_vertex_buffer_ID != 0) {
+    if (m_current) {
         return false;
     }
-
-    // Get our buffer ID.
-    glGenBuffers(1, &m_vertex_buffer_ID);
 
     // Update the buffer.
     int byte_count = m_verts.size() * sizeof(T);
     int item_count = m_verts.size();
 
     glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer_ID);
-    glBufferData(GL_ARRAY_BUFFER, byte_count, &m_verts[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, byte_count, &m_verts.at(0), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // FUCK, what if I disable this?
-    // glBindBuffer(GL_ARRAY_BUFFER, 0);
-    return true;
-}
-
-
-// Clear our data out of the video card, but leave our vertices intact.
-template<typename T>
-bool VertList_Base<T>::unrealize()
-{
-    if (m_vertex_buffer_ID == 0) {
-        return false;
-    }
-
-    glDeleteBuffers(1, &m_vertex_buffer_ID);
-    m_vertex_buffer_ID = 0;
+    m_current = true;
     return true;
 }

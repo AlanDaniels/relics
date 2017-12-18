@@ -139,7 +139,8 @@ int WINAPI wWinMain(
 
     const Config &config = GetConfig();
 
-    // See if we should go into paranoid leaks mode.
+    // See if we should go into paranoid leaks mode. For super paranoia, turn on all the flags:
+    // _CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_DELAY_FREE_MEM_DF | _CRTDBG_LEAK_CHECK_DF.
     bool check_for_leaks = config.debug.check_for_leaks;
     if (check_for_leaks) {
         _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);

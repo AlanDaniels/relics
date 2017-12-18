@@ -16,8 +16,7 @@ bool DrawState_PCT::create(const DrawStateSettings &settings)
 // This is where the rubber hits the road.
 bool DrawState_PCT::render(const VertList_PCT &vert_list)
 {
-    // Make sure the vert list is realized.
-    assert(vert_list.isRealized());
+    assert(vert_list.isCurrent());
 
     // Set up our textures.
     if (!renderSetup()) {

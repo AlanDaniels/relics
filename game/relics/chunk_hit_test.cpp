@@ -370,7 +370,8 @@ void ChunkHitTestToQuad(const Chunk &chunk, const ChunkHitTestDetail &details, V
     LocalGrid  local_coord  = GlobalGridToLocal(global_coord, chunk.getOrigin());
 
     pOut->reset();
-    AddFace_VertList_PT(chunk, local_coord, details.getFace(), pOut);
-    pOut->realize();
+    auto tris = GetLandscapePatch_PT(chunk, local_coord, details.getFace());
+    pOut->add(tris.data(), tris.size());
+    pOut->update();
 }
 

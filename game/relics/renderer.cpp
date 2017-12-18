@@ -101,7 +101,7 @@ void Renderer::buildSkyboxVertList()
     m_skybox_vert_list.addQuad(south_quad);
     m_skybox_vert_list.addQuad(top_quad);
     m_skybox_vert_list.addQuad(bottom_quad);
-    m_skybox_vert_list.realize();
+    m_skybox_vert_list.update();
 }
 
 
@@ -254,9 +254,6 @@ std::vector<const Chunk *> Renderer::getChunksToRender(RenderStats *pOut_stats)
             ChunkOrigin origin(x, z);
             const Chunk *chunk = m_world.getRequiredChunk(origin);
 
-            // These must have been realized already.
-            assert(chunk->isLandscapeRealized());
-
             // Only keep the chunks within the view frustum.
             bool keep = chunk->isAbovePlane(left_clip_plane) &&
                         chunk->isAbovePlane(right_clip_plane);
@@ -355,13 +352,11 @@ void Renderer::renderLandscapeList(
     m_landscape_DS->updateUniformTexture(0, tex);
 
     for (auto iter : chunk_vec) {
-        const VertList_PNT *vert_list = iter->getSurfaceList_RO(surf);
-        if (vert_list != nullptr) {
-            int item_count = vert_list->getItemCount();
-            if (item_count > 0) {
-                m_landscape_DS->render(*vert_list);
-                pOut_stats->triangle_count += vert_list->getTriCount();
-            }
+        const VertList_PNT &vert_list = iter->getSurfaceList_RO(surf);
+        int item_count = vert_list.getItemCount();
+        if (item_count > 0) {
+            m_landscape_DS->render(vert_list);
+            pOut_stats->triangle_count += vert_list.getTriCount();
         }
     }
 

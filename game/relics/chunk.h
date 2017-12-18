@@ -95,7 +95,7 @@ class Chunk
 {
 public:
     Chunk::Chunk(const GameWorld &world, const ChunkOrigin &origin);
-    Chunk::~Chunk() {}
+    Chunk::~Chunk();
 
     bool IsGlobalGridWithin(const GlobalGrid &coord) const;
 
@@ -105,19 +105,15 @@ public:
     MyVec4 localGridToWorldPos(int local_x, int local_y, int local_z) const;
 
     int  getCountForSurface(SurfaceType surf) const;
-    const VertList_PNT *getSurfaceList_RO(SurfaceType surf) const;
+    const VertList_PNT &getSurfaceList_RO(SurfaceType surf) const;
     VertList_PNT &getSurfaceListForWriting(SurfaceType surf);
 
     void recalcAllExposures();
-    void realizeSurfaceLists();
-    void unrealizeSurfaceLists();
 
     bool isAbovePlane(const MyPlane &plane) const;
-
     const ChunkOrigin getOrigin() const { return m_origin; }
 
     bool isUpToDate() const { return m_up_to_date; }
-    bool isLandscapeRealized() const { return m_realized; }
 
     const Chunk *getNeighborNorth() const;
     const Chunk *getNeighborSouth() const;
@@ -135,18 +131,14 @@ private:
     void operator=(Chunk &&that) = delete;
 
     // Private methods.
-    int getArrayOffset(int x, int y) const { return x + (CHUNK_WIDTH * y); }
-    const ChunkStripe &getStripe_RO(int local_x, int local_y) const;
-    ChunkStripe &getStripe(int local_x, int local_y);
+    int offset(int x, int y) const { return x + (CHUNK_WIDTH * y); }
 
     // Private data.
     const GameWorld &m_world;
     ChunkOrigin m_origin;
 
     bool m_up_to_date;
-    bool m_realized;
 
     std::array<std::unique_ptr<VertList_PNT>, SURF_MAX_COUNT> m_vert_lists;
-
     std::array<ChunkStripe, CHUNK_WIDTH * CHUNK_HEIGHT> m_stripes;
 };

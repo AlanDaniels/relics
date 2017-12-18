@@ -11,9 +11,8 @@
 #include "utils.h"
 
 
-void AddFace_VertList_PNT(
-    const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face, 
-    VertList_PNT *pOut)
+std::array<Vertex_PNT, 6> GetLandscapePatch_PNT(
+    const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face)
 {
     int x = local_coord.x();
     int y = local_coord.y();
@@ -100,13 +99,12 @@ void AddFace_VertList_PNT(
     };
 
 
-    pOut->add(&triangles[0], 6);
+    return std::move(triangles);
 }
 
 
-void AddFace_VertList_PT(
-    const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face,
-    VertList_PT *pOut)
+std::array<Vertex_PT, 6> GetLandscapePatch_PT(
+    const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face)
 {
     int x = local_coord.x();
     int y = local_coord.y();
@@ -192,5 +190,5 @@ void AddFace_VertList_PT(
         Vertex_PT(point_lr, MyVec2(1.0f, 0.0f)), // LR
     };
 
-    pOut->add(&triangles[0], 6);
+    return std::move(triangles);
 }

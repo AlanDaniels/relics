@@ -22,9 +22,7 @@ GameWorld::GameWorld(sqlite3 *db) :
     m_paused(false),
     m_time_msec(0),
     m_camera_pitch(0.0f),
-    m_camera_yaw(0.0f),
-    m_camera_pos(getCameraStartPos()),
-    m_hit_test_vert_list(6) // Size of two triangles.
+    m_camera_yaw(0.0f)
 {
     // Figure out the size of our drawing region.
     // We load one border larger than what we will actually draw.
@@ -51,16 +49,10 @@ GameWorld::GameWorld(sqlite3 *db) :
         for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
             m_chunk_map[origin].get()->recalcAllExposures();
-            m_chunk_map[origin].get()->realizeSurfaceLists();
         }
     }
 
-    // Sanity check.
-    for (auto &iter : m_chunk_map) {
-        if (NOT(iter.second->isLandscapeRealized())) {
-            assert(false);
-        }
-    }
+    m_camera_pos = getCameraStartPos();
 }
 
 
@@ -83,6 +75,12 @@ MyVec4 GameWorld::getCameraStartPos() const
     GLfloat x = BLOCK_SCALE * CHUNK_WIDTH  * 0.5f;
     GLfloat y = BLOCK_SCALE * CHUNK_HEIGHT * 0.1f;
     GLfloat z = BLOCK_SCALE * CHUNK_WIDTH  * 0.5f;
+
+#if 0
+    // TODO: Find the top level.
+    ChunkOrigin origin(0, 0);
+    m_chunk_map[origin] @@@@;
+#endif
     return MyVec4(x, y, z);
 }
 
@@ -265,9 +263,6 @@ void GameWorld::updateWorld()
             if (!chunk.isUpToDate()) {
                 chunk.recalcAllExposures();
             }
-            if (!chunk.isLandscapeRealized()) {
-                chunk.realizeSurfaceLists();
-            }
         }
     }
 
@@ -275,12 +270,14 @@ void GameWorld::updateWorld()
     for (auto &it : m_chunk_map) {
         ChunkOrigin origin = it.first;
 
+#if 0
         // If a chunk is outside our drawing region,
         // unrealize it to take it easier on the video card.
         if (!draw_region.contains(origin)) {
             Chunk &chunk = *it.second;
             chunk.unrealizeSurfaceLists();
         }
+#endif
 
         // If a chunk is outside or loading region,
         // save its contents and delete it.
@@ -360,9 +357,11 @@ void GameWorld::calcHitTest()
     // Once we're done, *then* rebuild the quad list.
     m_hit_test_vert_list.reset();
     if (success) {
+#if 0
         ChunkHitTestToQuad(*best_chunk, best_detail, &m_hit_test_vert_list);
+#endif
     }
-    m_hit_test_vert_list.realize();
+    m_hit_test_vert_list.update();
 
     m_hit_test_success = success;
     if (success) {
@@ -392,6 +391,5 @@ void GameWorld::deleteBlockInFrontOfUs()
 
         chunk->setBlockType(local_coord, BT_AIR);
         chunk->recalcAllExposures();
-        chunk->realizeSurfaceLists();
     }
 }

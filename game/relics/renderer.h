@@ -30,8 +30,7 @@ class Renderer
 public:
     Renderer(const sf::Window &window, const GameWorld &world) :
         m_window(window),
-        m_world(world),
-        m_skybox_vert_list(6) {}
+        m_world(world) {}
 
     bool init();
     RenderStats renderWorld();

@@ -10,56 +10,36 @@
 #include "utils.h"
 
 
-// Return a read-only version of the list for a particular surface.
-// It's okay for a list to be null if it hasn't been used yet.
-const VertList_PNT *Chunk::getSurfaceList_RO(SurfaceType surf) const 
+// Ctor from values.
+Chunk::Chunk(const GameWorld &world, const ChunkOrigin &origin) :
+    m_world(world),
+    m_origin(origin),
+    m_up_to_date(false)
 {
-    const VertList_PNT *result = 
-        (m_vert_lists[surf] != nullptr) ? m_vert_lists[surf].get() : nullptr;
-    return result;
-}
-
-
-// Realize any lists we've created so far.
-void Chunk::realizeSurfaceLists() 
-{
-    int tri_count = 0;
+    // We only use pointers to our vert lists due to not having a default ctor.
     for (int i = 0; i < SURF_MAX_COUNT; i++) {
-        if (m_vert_lists[i] != nullptr) {
-            m_vert_lists[i]->realize();
-            tri_count += m_vert_lists[i]->getTriCount();
-        }
-    }
-
-    m_realized = true;
-
-    if (tri_count == 0) {
-        PrintDebug(
-            "Realized surface lists for [%d, %d].\n",
-            m_origin.debugX(), m_origin.debugZ());
-    }
-    else {
-        PrintDebug(
-            "Realized surface lists for [%d, %d], for %d triangles.\n",
-            m_origin.debugX(), m_origin.debugZ(), tri_count);
+        m_vert_lists[i] = std::make_unique<VertList_PNT>();
     }
 }
 
 
-// Un-realize any lists we've created so far.
-void Chunk::unrealizeSurfaceLists()
+// Destructor.
+Chunk::~Chunk()
 {
-    for (int i = 0; i < SURF_MAX_COUNT; i++) {
-        if (m_vert_lists[i] != nullptr) {
-            m_vert_lists[i]->unrealize();
-        }
-    }
+}
 
-    m_realized = false;
 
-    PrintDebug(
-        "Un-realized surface lists for [%d, %d]\n",
-        m_origin.debugX(), m_origin.debugZ());
+// Return a surface vert list, read-only.
+const VertList_PNT &Chunk::getSurfaceList_RO(SurfaceType surf) const 
+{
+    return *m_vert_lists[surf];
+}
+
+
+// Return a surface vert list, for writing.
+VertList_PNT &Chunk::getSurfaceListForWriting(SurfaceType surf)
+{
+    return *m_vert_lists[surf];
 }
 
 
@@ -73,50 +53,6 @@ ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos)
     int z = RoundDownInt(grid_z, CHUNK_WIDTH);
 
     return ChunkOrigin(x, z);
-}
-
-
-// Ctor from values.
-Chunk::Chunk(const GameWorld &world, const ChunkOrigin &origin) :
-    m_world(world),
-    m_origin(origin),
-    m_up_to_date(false),
-    m_realized(false)
-{
-}
-
-
-// Get a chunk stripe, read-only version.
-const ChunkStripe &Chunk::getStripe_RO(int local_x, int local_y) const
-{
-    assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
-    assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
-
-    int offset = getArrayOffset(local_x, local_y);
-    return m_stripes[offset];
-}
-
-
-// Gert a chunk stripe, writeable version.
-ChunkStripe &Chunk::getStripe(int local_x, int local_y)
-{
-    assert((local_x >= 0) && (local_x < CHUNK_WIDTH));
-    assert((local_y >= 0) && (local_y < CHUNK_HEIGHT));
-    int offset = getArrayOffset(local_x, local_y);
-    return m_stripes[offset];
-}
-
-
-// Return a verison of the list, for writing.
-// If the list hasn't been created, do that now.
-VertList_PNT &Chunk::getSurfaceListForWriting(SurfaceType surf)
-{
-    int FUCK_ME = 100;
-
-    if (m_vert_lists[surf] == nullptr) {
-        m_vert_lists[surf] = std::make_unique<VertList_PNT>(FUCK_ME);
-    }
-    return *m_vert_lists[surf].get();
 }
 
 
@@ -138,7 +74,7 @@ bool Chunk::IsGlobalGridWithin(const GlobalGrid &coord) const
 // Get the type of a block.
 BlockType Chunk::getBlockType(const LocalGrid &coord) const
 {
-    const ChunkStripe &stripe = getStripe_RO(coord.x(), coord.y());
+    const ChunkStripe &stripe = m_stripes[offset(coord.x(), coord.y())];
     BlockType result = stripe.getBlockType(coord.z());
     return result;
 }
@@ -147,7 +83,7 @@ BlockType Chunk::getBlockType(const LocalGrid &coord) const
 // Set the type of a block.
 void Chunk::setBlockType(const LocalGrid &coord, BlockType block_type)
 {
-    ChunkStripe &stripe = getStripe(coord.x(), coord.y());
+    ChunkStripe &stripe = m_stripes[offset(coord.x(), coord.y())];
     stripe.setBlockType(coord.z(), block_type);
 }
 
@@ -155,7 +91,7 @@ void Chunk::setBlockType(const LocalGrid &coord, BlockType block_type)
 // Return the count for a particular surface type.
 int Chunk::getCountForSurface(SurfaceType surf) const
 {
-    int result = (m_vert_lists[surf] == nullptr) ? 0 : m_vert_lists[surf]->getByteCount();
+    int result = m_vert_lists[surf]->getByteCount();
     return result;
 }
 
@@ -168,33 +104,25 @@ void Chunk::recalcAllExposures()
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            getStripe(x, y).recalcAllExposures(*this, x, y, &totals);
+            m_stripes[offset(x, y)].recalcAllExposures(*this, x, y, &totals);
         }
     }
 
-    // Clear our any existing lists.
+    // Clear out the surface lists.
     for (int i = 0; i < SURF_MAX_COUNT; i++) {
-        if (m_vert_lists[i] != nullptr) {
-            m_vert_lists[i]->reset();
-        }
+        m_vert_lists[i]->reset();
     }
 
-    // Create any needed lists with an initial value
-    // of the surface count times three (points in a triangle).
-    for (int i = 0; i < SURF_MAX_COUNT; i++) {
-        SurfaceType surf = static_cast<SurfaceType>(i);
-        int count = totals.get(surf);
-        if (m_vert_lists[i] == nullptr) {
-            int initial = count * 3;
-            m_vert_lists[i] = std::make_unique<VertList_PNT>(initial);
-        }
-    }
-
-    // Finally, populate those surface lists.
+    // Populate those surface lists.
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            getStripe(x, y).addToSurfaceLists(*this, x, y);
+            m_stripes[offset(x, y)].addToSurfaceLists(*this, x, y);
         }
+    }
+
+    // Update the surface lists.
+    for (int i = 0; i < SURF_MAX_COUNT; i++) {
+        m_vert_lists[i]->update();
     }
 
     m_up_to_date = true;
@@ -332,14 +260,13 @@ std::string Chunk::toDescription() const
     int dirt_surfaces  = getCountForSurface(SURF_DIRT);
     int stone_surfaces = getCountForSurface(SURF_STONE);
 
-    const char *exposures_str = isUpToDate()  ? "true" : "false";
-    const char *realized_str  = isLandscapeRealized()  ? "true" : "false";
+    const char *up_to_date_str = isUpToDate()  ? "true" : "false";
 
     std::unique_ptr<char[]> buffer(new char[1024]);
 
     sprintf(buffer.get(), "Chunk at [%d, %d]\n", m_origin.x(), m_origin.z());
     result += buffer.get();
-    sprintf(buffer.get(), "  Exposures: %s, Realized: %s\n", exposures_str, realized_str);
+    sprintf(buffer.get(), "  Up To Date: %s\n", up_to_date_str);
     result += buffer.get();
     sprintf(buffer.get(), "  Block = dirt: %d\n",  dirt_blocks);
     result += buffer.get();

@@ -17,7 +17,7 @@ static const std::string DIRT_TOP("dirt_top");
 // This just deals with the block data. The landscape is are dealt with later.
 std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
 {
-    PrintDebug("Loading chunk [%d, %d]: ", origin.debugX(), origin.debugZ());
+    PrintDebug("Loading chunk [%d, %d]\n", origin.debugX(), origin.debugZ());
 
     sqlite3 *db = world.getDatabase();
 

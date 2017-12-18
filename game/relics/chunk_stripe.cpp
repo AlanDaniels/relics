@@ -3,7 +3,7 @@
 #include "chunk_stripe.h"
 #include "common_util.h"
 
-#include "brady.h"
+#include "add_face.h"
 #include "block.h"
 #include "chunk.h"
 
@@ -240,48 +240,42 @@ void ChunkStripe::addVertsForBlock(Chunk &owner, const LocalGrid &local_coord)
     // Top face.
     SurfaceType top_surf = current.getSurface(FACE_TOP);
     if (top_surf != SURF_NOTHING) {
-        Brady brady(owner, local_coord, FACE_TOP);
         VertList_PNT &list = owner.getSurfaceListForWriting(top_surf);
-        brady.addToVertList_PNT(&list);
+        AddFace_VertList_PNT(owner, local_coord, FACE_TOP, &list);
     }
 
     // Bottom face.
     SurfaceType bottom_surf = current.getSurface(FACE_BOTTOM);
     if (bottom_surf != SURF_NOTHING) {
-        Brady brady(owner, local_coord, FACE_BOTTOM);
         VertList_PNT &list = owner.getSurfaceListForWriting(bottom_surf);
-        brady.addToVertList_PNT(&list);
+        AddFace_VertList_PNT(owner, local_coord, FACE_BOTTOM, &list);
     }
 
     // Southern face.
     SurfaceType south_surf = current.getSurface(FACE_SOUTH);
     if (south_surf != SURF_NOTHING) {
-        Brady brady(owner, local_coord, FACE_SOUTH);
         VertList_PNT &list = owner.getSurfaceListForWriting(south_surf);
-        brady.addToVertList_PNT(&list);
+        AddFace_VertList_PNT(owner, local_coord, FACE_SOUTH, &list);
     }
 
     // Northern face.
     SurfaceType north_surf = current.getSurface(FACE_NORTH);
     if (north_surf != SURF_NOTHING) {
-        Brady brady(owner, local_coord, FACE_NORTH);
         VertList_PNT &list = owner.getSurfaceListForWriting(north_surf);
-        brady.addToVertList_PNT(&list);
+        AddFace_VertList_PNT(owner, local_coord, FACE_NORTH, &list);
     }
 
     // Eastern face.
     SurfaceType east_surf = current.getSurface(FACE_EAST);
     if (east_surf != SURF_NOTHING) {
-        Brady brady(owner, local_coord, FACE_EAST);
         VertList_PNT &list = owner.getSurfaceListForWriting(east_surf);
-        brady.addToVertList_PNT(&list);
+        AddFace_VertList_PNT(owner, local_coord, FACE_EAST, &list);
     }
 
     // Western face.
     SurfaceType west_surf = current.getSurface(FACE_WEST);
     if (west_surf != SURF_NOTHING) {
-        Brady brady(owner, local_coord, FACE_WEST);
         VertList_PNT &list = owner.getSurfaceListForWriting(west_surf);
-        brady.addToVertList_PNT(&list);
+        AddFace_VertList_PNT(owner, local_coord, FACE_WEST, &list);
     }
 }

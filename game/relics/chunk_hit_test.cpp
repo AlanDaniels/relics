@@ -3,7 +3,7 @@
 #include "chunk_hit_test.h"
 #include "common_util.h"
 
-#include "brady.h"
+#include "add_face.h"
 #include "game_world.h"
 #include "utils.h"
 
@@ -369,10 +369,8 @@ void ChunkHitTestToQuad(const Chunk &chunk, const ChunkHitTestDetail &details, V
     GlobalGrid global_coord = details.getGlobalCoord();
     LocalGrid  local_coord  = GlobalGridToLocal(global_coord, chunk.getOrigin());
 
-    Brady brady(chunk, local_coord, details.getFace());
-
     pOut->reset();
-    brady.addToVertList_PT(pOut);
+    AddFace_VertList_PT(chunk, local_coord, details.getFace(), pOut);
     pOut->realize();
 }
 

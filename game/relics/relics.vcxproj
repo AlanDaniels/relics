@@ -157,7 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="block.h" />
-    <ClInclude Include="brady.h" />
+    <ClInclude Include="add_face.h" />
     <ClInclude Include="chunk.h" />
     <ClInclude Include="chunk_hit_test.h" />
     <ClInclude Include="chunk_loader.h" />
@@ -187,7 +187,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="block.cpp" />
-    <ClCompile Include="brady.cpp" />
+    <ClCompile Include="add_face.cpp" />
     <ClCompile Include="chunk_hit_test.cpp" />
     <ClCompile Include="chunk.cpp" />
     <ClCompile Include="chunk_loader.cpp" />

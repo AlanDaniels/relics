@@ -10,6 +10,9 @@
 
 struct Vertex_PT
 {
+    Vertex_PT(const MyVec4 &arg_pos, const MyVec2 arg_texuv) :
+        position(arg_pos), texuv(arg_texuv) {}
+
     MyVec4 position;
     MyVec2 texuv;
 };

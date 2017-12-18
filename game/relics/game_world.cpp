@@ -3,7 +3,6 @@
 #include "game_world.h"
 #include "common_util.h"
 
-#include "brady.h"
 #include "chunk.h"
 #include "chunk_hit_test.h"
 #include "chunk_loader.h"
@@ -25,7 +24,7 @@ GameWorld::GameWorld(sqlite3 *db) :
     m_camera_pitch(0.0f),
     m_camera_yaw(0.0f),
     m_camera_pos(getCameraStartPos()),
-    m_hit_test_vert_list(Brady::VERTS_PER_BRADY)
+    m_hit_test_vert_list(6) // Size of two triangles.
 {
     // Figure out the size of our drawing region.
     // We load one border larger than what we will actually draw.

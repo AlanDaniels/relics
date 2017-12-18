@@ -4,7 +4,6 @@
 #include "common_util.h"
 
 #include "block.h"
-#include "brady.h"
 #include "chunk_stripe.h"
 #include "draw_state_pnt.h"
 #include "game_world.h"

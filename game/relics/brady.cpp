@@ -78,80 +78,16 @@ Brady::Brady(const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face) :
     }
 
     // Calculate our sixteen points.
-    m_verts[0][0].position = point_ll;
-    m_verts[1][0].position = FourWayLerp4(point_ll, point_lr, point_ul, point_ur, ONE_THIRD,  0.0f);
-    m_verts[2][0].position = FourWayLerp4(point_ll, point_lr, point_ul, point_ur, TWO_THIRDS, 0.0f);
-    m_verts[3][0].position = point_lr;
+    m_verts[0].position = point_ll;
+    m_verts[1].position = point_ul;
+    m_verts[2].position = point_lr;
+    m_verts[3].position = point_ur;
 
-    m_verts[0][1].position = FourWayLerp4(point_ll, point_lr, point_ul, point_ur, 0.0f,       ONE_THIRD);
-    m_verts[1][1].position = FourWayLerp4(point_ll, point_lr, point_ul, point_ur, ONE_THIRD,  ONE_THIRD);
-    m_verts[2][1].position = FourWayLerp4(point_ll, point_lr, point_ul, point_ur, TWO_THIRDS, ONE_THIRD);
-    m_verts[3][1].position = FourWayLerp4(point_ll, point_lr, point_ul, point_ur, 1.0f,       ONE_THIRD);
-
-    m_verts[0][2].position = FourWayLerp4(point_ll, point_lr, point_ul, point_ur, 0.0f,       TWO_THIRDS);
-    m_verts[1][2].position = FourWayLerp4(point_ll, point_lr, point_ul, point_ur, ONE_THIRD,  TWO_THIRDS);
-    m_verts[2][2].position = FourWayLerp4(point_ll, point_lr, point_ul, point_ur, TWO_THIRDS, TWO_THIRDS);
-    m_verts[3][2].position = FourWayLerp4(point_ll, point_lr, point_ul, point_ur, 1.0f,       TWO_THIRDS);
-
-    m_verts[0][3].position = point_ul;
-    m_verts[1][3].position = FourWayLerp4(point_ll, point_lr, point_ul, point_ur, ONE_THIRD,  1.0f);
-    m_verts[2][3].position = FourWayLerp4(point_ll, point_lr, point_ul, point_ur, TWO_THIRDS, 1.0f);
-    m_verts[3][3].position = point_ur;
-
-    // Add some landscape noise to displace the positions.
-    GLfloat how_much = GetConfig().logic.getLandscapeNoiseCm();
-    if (how_much > 0.0f) {
-        for (int x = 0; x < 4; x++) {
-            for (int y = 0; y < 4; y++) {
-                // Scale out to the block size, so our noise is reasonably sized.
-                // The "1.1" and such is so there's a little variety in the three directions.
-                MyVec4 sample_x = m_verts[x][y].position.dividedBy(BLOCK_SCALE);
-                MyVec4 sample_y = m_verts[x][y].position.dividedBy(BLOCK_SCALE * 1.1f);
-                MyVec4 sample_z = m_verts[x][y].position.dividedBy(BLOCK_SCALE * 1.2f);
-
-                GLfloat noise_x = simplex_noise_3(sample_x);
-                GLfloat noise_y = simplex_noise_3(sample_y);
-                GLfloat noise_z = simplex_noise_3(sample_z);
-
-                MyVec4 new_pos(
-                    m_verts[x][y].position.x() + (how_much * (1.0f - (0.5f * noise_x))),
-                    m_verts[x][y].position.y() + (how_much * (1.0f - (0.5f * noise_y))),
-                    m_verts[x][y].position.z() + (how_much * (1.0f - (0.5f * noise_z))),
-                    1.0f);
-
-                m_verts[x][y].position = new_pos;
-            }
-        }
-    }
-
-    // TODO: Continue here. 
-    // Figure out how to nudge the edges, but only after getting everything else working flawlessly.
-
-    // Calculate our sixteen UVs.
-    MyVec2 uv_ll(0.0f, 0.0f);
-    MyVec2 uv_lr(1.0f, 0.0f);
-    MyVec2 uv_ul(0.0f, 1.0f);
-    MyVec2 uv_ur(1.0f, 1.0f);
-
-    m_verts[0][0].texuv = uv_ll;
-    m_verts[1][0].texuv = FourWayLerp2(uv_ll, uv_lr, uv_ul, uv_ur, ONE_THIRD,  0.0f);
-    m_verts[2][0].texuv = FourWayLerp2(uv_ll, uv_lr, uv_ul, uv_ur, TWO_THIRDS, 0.0f);
-    m_verts[3][0].texuv = uv_lr;
-
-    m_verts[0][1].texuv = FourWayLerp2(uv_ll, uv_lr, uv_ul, uv_ur, 0.0f,       ONE_THIRD);
-    m_verts[1][1].texuv = FourWayLerp2(uv_ll, uv_lr, uv_ul, uv_ur, ONE_THIRD,  ONE_THIRD);
-    m_verts[2][1].texuv = FourWayLerp2(uv_ll, uv_lr, uv_ul, uv_ur, TWO_THIRDS, ONE_THIRD);
-    m_verts[3][1].texuv = FourWayLerp2(uv_ll, uv_lr, uv_ul, uv_ur, 1.0f,       ONE_THIRD);
-
-    m_verts[0][2].texuv = FourWayLerp2(uv_ll, uv_lr, uv_ul, uv_ur, 0.0f,       TWO_THIRDS);
-    m_verts[1][2].texuv = FourWayLerp2(uv_ll, uv_lr, uv_ul, uv_ur, ONE_THIRD,  TWO_THIRDS);
-    m_verts[2][2].texuv = FourWayLerp2(uv_ll, uv_lr, uv_ul, uv_ur, TWO_THIRDS, TWO_THIRDS);
-    m_verts[3][2].texuv = FourWayLerp2(uv_ll, uv_lr, uv_ul, uv_ur, 1.0f,       TWO_THIRDS);
-
-    m_verts[0][3].texuv = uv_ul;
-    m_verts[1][3].texuv = FourWayLerp2(uv_ll, uv_lr, uv_ul, uv_ur, ONE_THIRD,  1.0f);
-    m_verts[2][3].texuv = FourWayLerp2(uv_ll, uv_lr, uv_ul, uv_ur, TWO_THIRDS, 1.0f);
-    m_verts[3][3].texuv = uv_ur;
+    // UVs.
+    m_verts[0].texuv = MyVec2(0.0f, 0.0f);
+    m_verts[1].texuv = MyVec2(0.0f, 1.0f); 
+    m_verts[2].texuv = MyVec2(1.0f, 0.0f);
+    m_verts[3].texuv = MyVec2(1.0f, 1.0f);
 
     // All our normals will face in the same direction.
     MyVec4 dir_normal;
@@ -170,10 +106,8 @@ Brady::Brady(const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face) :
         break;
     }
 
-    for (int x = 0; x < 4; x++) {
-        for (int y = 0; y < 4; y++) {
-            m_verts[x][y].normal = dir_normal;
-        }
+    for (int i = 0; i < 4; i++) {
+        m_verts[i].normal = dir_normal;
     }
 }
 
@@ -186,32 +120,15 @@ std::string Brady::toString() const
 
     LocalGrid local_coord = m_local_coord;
     sprintf(buffer.get(),
-        "Brady for [%d %d %d], face %s\n",
+        "Patch for [%d %d %d], face %s\n",
         local_coord.x(), local_coord.y(), local_coord.z(),
         FaceEnumToString(m_face));
     result += buffer.get();
 
     result += "Points:\n";
 
-    for (int y = 3; y >= 0; y--) {
-        sprintf(buffer.get(), 
-            "  [%s] [%s] [%s] [%s]\n",
-            m_verts[0][y].position.toString().c_str(),
-            m_verts[1][y].position.toString().c_str(),
-            m_verts[2][y].position.toString().c_str(),
-            m_verts[3][y].position.toString().c_str());
-        result += buffer.get();
-    }
-
-    result += "UVs:\n";
-
-    for (int y = 3; y >= 0; y--) {
-        sprintf(buffer.get(),
-            "  [%s] [%s] [%s] [%s]\n",
-            m_verts[0][y].texuv.toString().c_str(),
-            m_verts[1][y].texuv.toString().c_str(),
-            m_verts[2][y].texuv.toString().c_str(),
-            m_verts[3][y].texuv.toString().c_str());
+    for (int i = 0; i < 4; i++) {
+        sprintf(buffer.get(), "  %s\n", m_verts[i].position.toString().c_str());
         result += buffer.get();
     }
 
@@ -219,44 +136,15 @@ std::string Brady::toString() const
 }
 
 
-// Note that we're now using triangle strips.
+// Back to boring patches.
 void Brady::addToVertList_PNT(VertList_PNT *pOut) 
 {
-    // If you ever get lost, draw this out on paper again.
-    // Repeat twice at the beginning, and end, to seal off the strips.
-    Vertex_PNT verts[] = {
-        m_verts[0][0],
-
-        m_verts[0][0],
-        m_verts[0][1],
-        m_verts[1][0],
-        m_verts[1][1],
-        m_verts[2][0],
-        m_verts[2][1],
-        m_verts[3][0],
-        m_verts[3][1],
-
-        m_verts[3][2],
-        m_verts[2][1],
-        m_verts[2][2],
-        m_verts[1][1],
-        m_verts[1][2],
-        m_verts[0][1],
-        m_verts[0][2],
-
-        m_verts[0][3],
-        m_verts[1][2],
-        m_verts[1][3],
-        m_verts[2][2],
-        m_verts[2][3],
-        m_verts[3][2],
-        m_verts[3][3],
-
-        m_verts[3][3]
+    std::array<Vertex_PNT, 6> verts = {
+        m_verts[0], m_verts[3], m_verts[1],
+        m_verts[3], m_verts[0], m_verts[2]
     };
 
-    int vert_count = 24;
-    pOut->add(verts, vert_count);
+    pOut->add(&verts[0], 6);
 }
 
 
@@ -264,45 +152,16 @@ void Brady::addToVertList_PNT(VertList_PNT *pOut)
 void Brady::addToVertList_PT(VertList_PT *pOut)
 {
     // Copy over the contents the hard way, I suppose.
-    Vertex_PT temp[4][4];
-    for (int x = 0; x < 4; x++) {
-        for (int y = 0; y < 4; y++) {
-            temp[x][y].position = m_verts[x][y].position;
-            temp[x][y].texuv    = m_verts[x][y].texuv;
-        }
+    Vertex_PT temp[4];
+    for (int i = 0; i < 4; i++) {
+        temp[i].position = m_verts[i].position;
+        temp[i].texuv    = m_verts[i].texuv;
     }
 
-    Vertex_PT verts[] = {
-        temp[0][0],
-
-        temp[0][0],
-        temp[0][1],
-        temp[1][0],
-        temp[1][1],
-        temp[2][0],
-        temp[2][1],
-        temp[3][0],
-        temp[3][1],
-
-        temp[3][2],
-        temp[2][1],
-        temp[2][2],
-        temp[1][1],
-        temp[1][2],
-        temp[0][1],
-        temp[0][2],
-
-        temp[0][3],
-        temp[1][2],
-        temp[1][3],
-        temp[2][2],
-        temp[2][3],
-        temp[3][2],
-        temp[3][3],
-
-        temp[3][3]
+    std::array<Vertex_PT, 6> verts = {
+        temp[0], temp[3], temp[1],
+        temp[3], temp[0], temp[2]
     };
 
-    int vert_count = 24;
-    pOut->add(verts, vert_count);
+    pOut->add(&verts[0], 6);
 }

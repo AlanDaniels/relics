@@ -161,7 +161,7 @@ bool Renderer::loadShaders()
     landscape_settings.enable_blending   = true;
     landscape_settings.enable_depth_test = true;
     landscape_settings.depth_func        = GL_LEQUAL;
-    landscape_settings.draw_mode         = GL_TRIANGLE_STRIP;
+    landscape_settings.draw_mode         = GL_TRIANGLES;
     landscape_settings.vert_shader_fname = conf_render.landscape.vert_shader;
     landscape_settings.frag_shader_fname = conf_render.landscape.frag_shader;
 
@@ -187,7 +187,7 @@ bool Renderer::loadShaders()
     hit_test_settings.enable_blending   = true;
     hit_test_settings.enable_depth_test = true;
     hit_test_settings.depth_func        = GL_LEQUAL;
-    hit_test_settings.draw_mode         = GL_TRIANGLE_STRIP;
+    hit_test_settings.draw_mode         = GL_TRIANGLES;
     hit_test_settings.vert_shader_fname = conf_render.hit_test.vert_shader;
     hit_test_settings.frag_shader_fname = conf_render.hit_test.frag_shader;
 
@@ -292,9 +292,9 @@ RenderStats Renderer::renderWorld()
     getChunksToRender(&chunk_list, &stats);
 
     // Render our surfaces.
-    renderLandscapeList(SURF_GRASS,   chunk_list, *m_grass_tex,   &stats);
-    renderLandscapeList(SURF_DIRT,    chunk_list, *m_dirt_tex,    &stats);
-    renderLandscapeList(SURF_STONE,   chunk_list, *m_stone_tex,   &stats);
+    renderLandscapeList(SURF_GRASS, chunk_list, *m_grass_tex, &stats);
+    renderLandscapeList(SURF_DIRT,  chunk_list, *m_dirt_tex,  &stats);
+    renderLandscapeList(SURF_STONE, chunk_list, *m_stone_tex, &stats);
 
     // Finally, render our hit test.
     renderHitTest(&stats);

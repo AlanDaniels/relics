@@ -24,25 +24,25 @@ const VertList_PNT *Chunk::getSurfaceList_RO(SurfaceType surf) const
 // Realize any lists we've created so far.
 void Chunk::realizeSurfaceLists() 
 {
-    int brady_count = 0;
+    int tri_count = 0;
     for (int i = 0; i < SURF_MAX_COUNT; i++) {
         if (m_vert_lists[i] != nullptr) {
             m_vert_lists[i]->realize();
-            brady_count += m_vert_lists[i]->getBradyCount();
+            tri_count += m_vert_lists[i]->getTriCount();
         }
     }
 
     m_realized = true;
 
-    if (brady_count == 0) {
+    if (tri_count == 0) {
         PrintDebug(
             "Realized surface lists for [%d, %d].\n",
             m_origin.debugX(), m_origin.debugZ());
     }
     else {
         PrintDebug(
-            "Realized surface lists for [%d, %d], for %d bradies.\n",
-            m_origin.debugX(), m_origin.debugZ(), brady_count);
+            "Realized surface lists for [%d, %d], for %d triangles.\n",
+            m_origin.debugX(), m_origin.debugZ(), tri_count);
     }
 }
 
@@ -180,12 +180,13 @@ void Chunk::recalcAllExposures()
         }
     }
 
-    // Create any needed lists with a good initial value.
+    // Create any needed lists with an initial value
+    // of the surface count times three (points in a triangle).
     for (int i = 0; i < SURF_MAX_COUNT; i++) {
         SurfaceType surf = static_cast<SurfaceType>(i);
         int count = totals.get(surf);
         if (m_vert_lists[i] == nullptr) {
-            int initial = count * Brady::VERTS_PER_BRADY;
+            int initial = count * 3;
             m_vert_lists[i] = std::make_unique<VertList_PNT>(initial);
         }
     }

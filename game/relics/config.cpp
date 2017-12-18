@@ -215,14 +215,6 @@ bool Config::loadFromFile()
             logic.hit_test_distance_meters = clampFloat(val, 1.0f, 500.f);
         }
         lua_pop(L, 1);
-
-        // Clamp the landscape noise to nothing, to 50 cm.
-        lua_getfield(L, -1, "landscape_noise");
-        if (lua_isnumber(L, -1)) {
-            GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
-            logic.landscape_noise_meters = clampFloat(val, 0.0f, 0.5f);
-        }
-        lua_pop(L, 1);
     }
     lua_pop(L, 1);
 

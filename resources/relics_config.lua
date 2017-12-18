@@ -3,7 +3,7 @@
 
 -- The world itself.
 world = {
-    file_name = 'worlds/small_cube.world'
+    file_name = 'worlds/big_mess.world'
 }
 
 -- Debugging.
@@ -75,7 +75,6 @@ render = {
 -- Now, *this* will. Mess with at your own peril.
 logic = {
     eval_blocks       = 3,
-    hit_test_distance = 25.0,
-    landscape_noise   = 0.1
+    hit_test_distance = 25.0
 }
 

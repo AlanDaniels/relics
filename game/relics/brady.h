@@ -32,7 +32,7 @@ private:
     Brady(Brady &&that) = delete;
     void operator=(Brady &&that) = delete;
 
-    LocalGrid m_local_coord;
-    FaceEnum  m_face;
-    Vertex_PNT m_verts[4][4];
+    LocalGrid  m_local_coord;
+    FaceEnum   m_face;
+    Vertex_PNT m_verts[4];
 };

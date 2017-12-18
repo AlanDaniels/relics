@@ -26,7 +26,6 @@ public:
     int  getItemCount()  const { return m_verts.size(); }
     int  getByteCount()  const { return m_verts.size() * sizeof(T); }
     int  getTriCount()   const { return m_verts.size() / 3; }
-    int  getBradyCount() const { return m_verts.size() / 24; }
     GLuint getVertexBufferID() const { return m_vertex_buffer_ID; }
 
 private:
@@ -100,14 +99,11 @@ bool VertList_Base<T>::realize()
     int byte_count = m_verts.size() * sizeof(T);
     int item_count = m_verts.size();
 
-    // FUCK. Where does this come from?
-    if (item_count > 1000000) {
-        printf("%d", item_count);
-    }
-
     glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer_ID);
     glBufferData(GL_ARRAY_BUFFER, byte_count, &m_verts[0], GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // FUCK, what if I disable this?
+    // glBindBuffer(GL_ARRAY_BUFFER, 0);
     return true;
 }
 

@@ -135,18 +135,15 @@ struct ConfigLogic
 {
     ConfigLogic() :
         eval_blocks(5),
-        hit_test_distance_meters(10.0f),
-        landscape_noise_meters(0.1f) {}
+        hit_test_distance_meters(10.0f) {}
 
     int     eval_blocks;
     GLfloat hit_test_distance_meters;
-    GLfloat landscape_noise_meters;
 
     GLfloat getHitTestDistanceCm() const { return hit_test_distance_meters * 100.0f; }
-    GLfloat getLandscapeNoiseCm()  const { return landscape_noise_meters   * 100.0f; }
 
     // Note that our OpenGL drawing distance can't be more than what's loaded in the world.
-    GLfloat getDrawDistanceCm()    const { return eval_blocks * CHUNK_WIDTH * 100.0f; }
+    GLfloat getDrawDistanceCm() const { return eval_blocks * CHUNK_WIDTH * 100.0f; }
 };
 
 

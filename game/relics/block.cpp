@@ -1,8 +1,9 @@
 
 #include "stdafx.h"
 #include "block.h"
-#include "common_util.h"
 
+#include "common_util.h"
+#include "config.h"
 #include "utils.h"
 
 // Return true if a block type should generate ever landscape surfaces.
@@ -22,6 +23,8 @@ bool IsBlockTypeEmpty(BlockType block_type)
 // What surface, if any, should go between two blocks?
 SurfaceType CalcSurfaceType(BlockType block_type, FaceEnum face, BlockType other)
 {
+    bool draw_transitions = GetConfig().debug.draw_transitions;
+
     SurfaceType result = SURF_NOTHING;
 
     switch (block_type) {
@@ -35,6 +38,9 @@ SurfaceType CalcSurfaceType(BlockType block_type, FaceEnum face, BlockType other
         if (other == BT_AIR) {
             result = SURF_STONE;
         }
+        else if ((other == BT_DIRT) && draw_transitions) {
+            result = SURF_STONE;
+        }
         break;
 
     default:
@@ -42,9 +48,6 @@ SurfaceType CalcSurfaceType(BlockType block_type, FaceEnum face, BlockType other
         break;
     }
 
-    if (result != SURF_NOTHING) {
-        printf("");
-    }
     return result;
 }
 

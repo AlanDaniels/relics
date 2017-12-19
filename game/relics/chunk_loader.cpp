@@ -11,6 +11,7 @@
 
 
 static const std::string DIRT_TOP("dirt_top");
+static const std::string STONE_TOP("stone_top");
 
 
 // Load a chunk from our SQLite file.
@@ -38,6 +39,10 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
 
     std::unique_ptr<Chunk> result = std::make_unique<Chunk>(world, origin);
 
+    // TODO: CONTINUE HERE.
+    // Brute force this for now.
+    // FUCK: WE NEED TO RESPECT WRITE ORDER.
+
     int count = 0;
     int ret_code = sqlite3_step(stmt);
     while (ret_code == SQLITE_ROW) {
@@ -57,7 +62,24 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
             int local_z = local_coord.z();
             for (int y = 0; y < block_y; y++) {
                 LocalGrid lookup(local_x, y, local_z);
-                result->setBlockType(lookup, BT_DIRT);
+
+                // HACK. This will be slow.
+                if (result->getBlockType(lookup) == BT_AIR) {
+                    result->setBlockType(lookup, BT_DIRT);
+                }
+                count++;
+            }
+        }
+
+        else if (text == STONE_TOP) {
+            GlobalGrid global_coord(block_x, block_y, block_z);
+            LocalGrid  local_coord = GlobalGridToLocal(global_coord, origin);
+
+            int local_x = local_coord.x();
+            int local_z = local_coord.z();
+            for (int y = 0; y < block_y; y++) {
+                LocalGrid lookup(local_x, y, local_z);
+                result->setBlockType(lookup, BT_STONE);
                 count++;
             }
         }

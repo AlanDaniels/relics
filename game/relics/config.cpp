@@ -80,19 +80,20 @@ bool Config::loadFromFile()
     // Read the "debug" table.
     lua_getglobal(L, "debug");
     if (lua_istable(L, -1)) {
-        debug.opengl          = getBoolField(L, "opengl", false);
-        debug.check_for_leaks = getBoolField(L, "check_for_leaks", false);
+        debug.opengl           = getBoolField(L, "opengl", false);
+        debug.check_for_leaks  = getBoolField(L, "check_for_leaks", false);
+        debug.draw_transitions = getBoolField(L, "draw_transitions", false);
 
-        debug.show_camera     = getBoolField(L, "show_camera", false);
-        debug.show_framerate  = getBoolField(L, "show_framerate", false);
-        debug.show_game_clock = getBoolField(L, "show_game_clock", false);
-        debug.show_hit_test   = getBoolField(L, "show_hit_test", false);
-        debug.show_mouse_pos  = getBoolField(L, "show_mouse_pos", false);
+        debug.hud_camera     = getBoolField(L, "hud_camera", false);
+        debug.hud_framerate  = getBoolField(L, "hud_framerate", false);
+        debug.hud_game_clock = getBoolField(L, "hud_game_clock", false);
+        debug.hud_hit_test   = getBoolField(L, "hud_hit_test", false);
+        debug.hud_mouse_pos  = getBoolField(L, "hud_mouse_pos", false);
 
-        debug.show_memory_usage = getBoolField(L, "show_memory_usage", false);
-        debug.show_render_stats = getBoolField(L, "show_render_stats", false);
-        debug.show_eval_region  = getBoolField(L, "show_eval_region",  false);
-        debug.show_chunk_stats  = getBoolField(L, "show_chunk_stats", false);
+        debug.hud_memory_usage = getBoolField(L, "hud_memory_usage", false);
+        debug.hud_render_stats = getBoolField(L, "hud_render_stats", false);
+        debug.hud_eval_region  = getBoolField(L, "hud_eval_region",  false);
+        debug.hud_chunk_stats  = getBoolField(L, "hud_chunk_stats",  false);
 
         debug.print_draw_state     = getBoolField(L, "print_draw_state", false);
         debug.print_window_context = getBoolField(L, "print_window_context", false);

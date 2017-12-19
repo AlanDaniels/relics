@@ -65,7 +65,7 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     m_text.setPosition(10.0f, 0.0f);
 
     // Print the camera details.
-    if (config.debug.show_camera) {
+    if (config.debug.hud_camera) {
         MyVec4  camera_pos   = game_world.getCameraPos();
         GLfloat camera_yaw   = game_world.getCameraYaw();
         GLfloat camera_pitch = game_world.getCameraPitch();
@@ -79,7 +79,7 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     }
 
     // Print our hit-test debugging info.
-    if (config.debug.show_hit_test) {
+    if (config.debug.hud_hit_test) {
         if (game_world.getHitTestSuccess()) {
             std::string descr = game_world.getHitTestDetail().toDescription();
             sprintf(blah, "Hit Test: %s", descr.c_str());
@@ -93,7 +93,7 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     }
 
     // Print our memory usage.
-    if (config.debug.show_memory_usage) {
+    if (config.debug.hud_memory_usage) {
         int memory = GetMemoryUsage();
         std::string readable = ReadableNumber(memory);
         sprintf(blah, "Memory: %s", readable.c_str());
@@ -103,7 +103,7 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     }
 
     // Print our render stats.
-    if (config.debug.show_render_stats) {
+    if (config.debug.hud_render_stats) {
         std::string readable = ReadableNumber(stats.triangle_count);
         sprintf(blah,
             "Render: %d states, %s tris",
@@ -114,7 +114,7 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     }
 
     // Print our mouse position.
-    if (config.debug.show_mouse_pos) {
+    if (config.debug.hud_mouse_pos) {
         sf::Vector2i mouse_pos = sf::Mouse::getPosition(m_window);
         sprintf(blah, "Mouse: %03d, %03d", mouse_pos.x, mouse_pos.y);
         m_text.setString(blah);
@@ -123,7 +123,7 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     }
 
     // Print the game time.
-    if (config.debug.show_game_clock) {
+    if (config.debug.hud_game_clock) {
         int game_time = game_world.getTimeMsecs();
         game_time /= 1000;
         int secs = game_time % 60;
@@ -137,7 +137,7 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     }
 
     // Print our eval region.
-    if (config.debug.show_eval_region) {
+    if (config.debug.hud_eval_region) {
         MyVec4  pos = game_world.getCameraPos();
         int eval_blocks = config.logic.eval_blocks;
         EvalRegion region = WorldPosToEvalRegion(pos, eval_blocks);
@@ -151,7 +151,7 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     }
 
     // Print out our chunk stats.
-    if (config.debug.show_chunk_stats) {
+    if (config.debug.hud_chunk_stats) {
         int in_memory  = game_world.getChunksInMemoryCount();
         int considered = stats.chunks_considered;
         int rendered   = stats.chunks_rendered;
@@ -164,7 +164,7 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     }
 
     // Print our framerate.
-    if (config.debug.show_framerate) {
+    if (config.debug.hud_framerate) {
         sprintf(blah, "FPS: %02.1f", fps);
         m_text.setString(blah);
         m_window.draw(m_text);

@@ -79,9 +79,7 @@ bool WorldData::actualSaveToDatabase(const std::string &fname, int *pOut_blocks_
     wxNativePixelData::Iterator pixel_iter;
 
     // Create our database.
-    char *error_from_db = nullptr;
     int ret_code;
-
     bool success;
 
     sqlite3 *db = SQL_open(fname);
@@ -125,49 +123,83 @@ bool WorldData::actualSaveToDatabase(const std::string &fname, int *pOut_blocks_
     // Create our "insert blocks" statement.
     sqlite3_stmt *insert_stmt = SQL_prepare(db,
         "INSERT INTO blocks (x, y, z, block_type) "
-        "VALUES (?1, ?2, ?3, 'dirt_top')");
+        "VALUES (?1, ?2, ?3, ?4)");
     if (insert_stmt == nullptr) {
         return false;
     }
 
     int blocks_written = 0;
 
+    // SQLite string binding is a bit strange.
+    const char *dirt_top_str = "dirt_top";
+    const int   dirt_top_len = strlen(dirt_top_str);
+
+    const char *stone_top_str = "stone_top";
+    const int   stone_top_len = strlen(stone_top_str);
+
     // For each spot on our heightmap, write the value of 'dirt_top' where the dirt world
     // actually start. Writing a value of 'dirt' for each individual block would take forever.
-    int width  = m_heightmap->GetWidth();
-    int height = m_heightmap->GetHeight();
-    for (int x = 0; x < width; x++) {
-        for (int y = 0; y < height; y++) {
+    int height_map_width  = m_heightmap->GetWidth();
+    int height_map_height = m_heightmap->GetHeight();
+    for     (int x = 0; x < height_map_width;  x++) {
+        for (int y = 0; y < height_map_height; y++) {
             pixel_iter.MoveTo(*m_heightmap, x, y);
 
             unsigned char red   = pixel_iter.Red();
             unsigned char green = pixel_iter.Green();
             unsigned char blue  = pixel_iter.Blue();
 
-            // TODO: I'm trying half for now. That is, a max of 128 rather than 255.
-            int height = (red + green + blue) / 6;
-            if (height > 0) {
-                int landscape_x =  x - (width  / 2);
-                int landscape_z = -y + (height / 2);
+            int landscape_x =  x - (height_map_width  / 2);
+            int landscape_z = -y + (height_map_height / 2);
 
-                sqlite3_bind_int(insert_stmt, 1, landscape_x);
-                sqlite3_bind_int(insert_stmt, 2, height);
-                sqlite3_bind_int(insert_stmt, 3, landscape_z);
+            // For the dirt top, take half of our height map color.
+            int dirt_height = (red + green + blue) / 6;
+            if (dirt_height > 0) {
+                sqlite3_bind_int (insert_stmt, 1, landscape_x);
+                sqlite3_bind_int (insert_stmt, 2, dirt_height);
+                sqlite3_bind_int (insert_stmt, 3, landscape_z);
+                sqlite3_bind_text(insert_stmt, 4, dirt_top_str, dirt_top_len, SQLITE_STATIC);
 
                 ret_code = sqlite3_step(insert_stmt);
                 if (ret_code != SQLITE_DONE) {
                     sprintf(buffer.get(),
-                        "Step failed in \"%s\", error %s",
-                        fname.c_str(), error_from_db);
+                        "Insert failed, code = %s, error = %s",
+                        SQL_code_to_str(ret_code).c_str(), 
+                        sqlite3_errmsg(db));
                     wxLogMessage(buffer.get());
 
-                    sqlite3_free(error_from_db);
                     sqlite3_close(db);
                     return false;
                 }
 
                 sqlite3_reset(insert_stmt);
                 blocks_written++;
+
+                // Then, take half of *that*, apply some noise, and that's where our stone starts.
+                int stone_height = dirt_height / 2;
+                assert(stone_height < dirt_height);
+
+                if (stone_height > 0) {
+                    sqlite3_bind_int (insert_stmt, 1, landscape_x);
+                    sqlite3_bind_int (insert_stmt, 2, stone_height);
+                    sqlite3_bind_int (insert_stmt, 3, landscape_z);
+                    sqlite3_bind_text(insert_stmt, 4, stone_top_str, stone_top_len, SQLITE_STATIC);
+
+                    ret_code = sqlite3_step(insert_stmt);
+                    if (ret_code != SQLITE_DONE) {
+                        sprintf(buffer.get(),
+                            "Insert failed, code = %s, error = %s",
+                            SQL_code_to_str(ret_code).c_str(),
+                            sqlite3_errmsg(db));
+                        wxLogMessage(buffer.get());
+
+                        sqlite3_close(db);
+                        return false;
+                    }
+
+                    sqlite3_reset(insert_stmt);
+                    blocks_written++;
+                }
             }
         }   
     }

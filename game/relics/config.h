@@ -23,17 +23,18 @@ struct ConfigDebug
     ConfigDebug() :
         opengl(true),
         check_for_leaks(false),
+        draw_transitions(false),
 
-        show_camera(false),
-        show_framerate(false),
-        show_game_clock(false),
-        show_hit_test(false),
-        show_mouse_pos(false),
+        hud_camera(false),
+        hud_framerate(false),
+        hud_game_clock(false),
+        hud_hit_test(false),
+        hud_mouse_pos(false),
 
-        show_memory_usage(false),
-        show_render_stats(false),
-        show_eval_region(false),
-        show_chunk_stats(false),
+        hud_memory_usage(false),
+        hud_render_stats(false),
+        hud_eval_region(false),
+        hud_chunk_stats(false),
 
         print_draw_state(false),
         print_window_context(false),
@@ -41,17 +42,18 @@ struct ConfigDebug
 
     bool opengl;
     bool check_for_leaks;
+    bool draw_transitions;
 
-    bool show_camera;
-    bool show_framerate;
-    bool show_game_clock;
-    bool show_hit_test;
-    bool show_mouse_pos;
+    bool hud_camera;
+    bool hud_framerate;
+    bool hud_game_clock;
+    bool hud_hit_test;
+    bool hud_mouse_pos;
 
-    bool show_memory_usage;
-    bool show_render_stats;
-    bool show_eval_region;
-    bool show_chunk_stats;
+    bool hud_memory_usage;
+    bool hud_render_stats;
+    bool hud_eval_region;
+    bool hud_chunk_stats;
 
     bool print_draw_state;
     bool print_window_context;

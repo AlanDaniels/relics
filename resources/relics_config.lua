@@ -1,26 +1,28 @@
 -- Our main config file.
--- All through this file, we use human measurements: Meters, and Seconds.
+-- We always use human measurements here, such as meters and seconds,
+-- rather than game ticks or game units, etc.
 
 -- The world itself.
 world = {
-    file_name = 'worlds/small_cube.world'
+    file_name = 'worlds/stone_test.world'
 }
 
 -- Debugging.
 debug = {
     opengl = true,
     check_for_leaks = false,
+    draw_transitions = true,
 
-    show_camera = false,
-    show_game_clock = false,
-    show_framerate = true,
-    show_hit_test = false,
-    show_mouse_pos = false,
+    hud_camera = false,
+    hud_game_clock = false,
+    hud_framerate = true,
+    hud_hit_test = false,
+    hud_mouse_pos = false,
 
-    show_memory_usage = true,
-    show_render_stats = true,
-    show_eval_region = false,
-    show_chunk_stats = false,
+    hud_memory_usage = true,
+    hud_render_stats = true,
+    hud_eval_region = false,
+    hud_chunk_stats = false,
 
     print_draw_state = false,
     print_window_context = false,
@@ -49,8 +51,8 @@ render = {
     fade_distance  = 5.0,
 
     landscape = {
-        vert_shader   = 'shaders/landscape_PNT.vert',
-        frag_shader   = 'shaders/landscape_PNT.frag',
+        vert_shader = 'shaders/landscape_PNT.vert',
+        frag_shader = 'shaders/landscape_PNT.frag',
 
         grass_texture   = 'grass.png',
         dirt_texture    = 'dirt.png',
@@ -59,8 +61,8 @@ render = {
     },
 
     sky = {
-        vert_shader   = 'shaders/skybox_P.vert',
-        frag_shader   = 'shaders/skybox_P.frag',
+        vert_shader = 'shaders/skybox_P.vert',
+        frag_shader = 'shaders/skybox_P.frag',
 
         north_texture  = 'skyboxes/nice_skybox_N.png',
         south_texture  = 'skyboxes/nice_skybox_S.png',
@@ -71,8 +73,8 @@ render = {
     },
 
     hit_test = {
-        vert_shader   = 'shaders/hit_test_PT.vert',
-        frag_shader   = 'shaders/hit_test_PT.frag'
+        vert_shader = 'shaders/hit_test_PT.vert',
+        frag_shader = 'shaders/hit_test_PT.frag'
     }
 }
 

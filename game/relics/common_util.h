@@ -10,6 +10,8 @@
 * Ideally we'd keep one copy of this code, but that messes with
 * the builds, so for now we'll just copy and paste it since it
 * doesn't change that often.
+*
+* This version last updated on Mon, Dec 18th, 2017.
 */
 
 // Debug printing.

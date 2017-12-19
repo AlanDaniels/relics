@@ -10,11 +10,16 @@
 * Ideally we'd keep one copy of this code, but that messes with
 * the builds, so for now we'll just copy and paste it since it
 * doesn't change that often.
+*
+* This version last updated on Mon, Dec 18th, 2017.
 */
 
 // Debug printing.
-void  PrintDebug(const char *format, ...);
-void  PrintTheImpossible(const char *fname, int line_num, int value);
+std::string ReadableNumber(int val);
+int GetMemoryUsage();
+
+void PrintDebug(const char *format, ...);
+void PrintTheImpossible(const char *fname, int line_num, int value);
 
 // Including the SQLite header causes conflicts. Not worth it.
 struct sqlite3;

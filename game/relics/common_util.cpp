@@ -5,6 +5,18 @@
 #include "sqlite3.h"
 #include <psapi.h>
 
+/*
+* NOTE: The only code that should ever go in here is truly
+* common code, independent of whatever wxWidgets, OpenGL, or SFML
+* thinks code should look like.
+*
+* Ideally we'd keep one copy of this code, but that messes with
+* the builds, so for now we'll just copy and paste it since it
+* doesn't change that often.
+*
+* This version last updated on Mon, Dec 18th, 2017.
+*/
+
 
 // Turn a number into a nice readable string.
 std::string ReadableNumber(int value) {

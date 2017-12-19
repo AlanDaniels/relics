@@ -20,6 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Files\common_util.cpp" />
+    <ClCompile Include="Files\settings_dlg.cpp" />
+    <ClCompile Include="Files\simplex_noise.cpp" />
     <ClCompile Include="Files\sqlite3.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -33,6 +35,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Files\common_util.h" />
+    <ClInclude Include="Files\settings_dlg.h" />
+    <ClInclude Include="Files\simplex_noise.h" />
     <ClInclude Include="Files\sqlite3.h" />
     <ClInclude Include="Files\util.h" />
     <ClInclude Include="Files\world_data.h" />

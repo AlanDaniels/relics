@@ -7,17 +7,6 @@ class MyCanvas;
 class WorldData;
 
 
-// IDs for menus and controls.
-enum {
-    ID_MENU_NEW,
-    ID_MENU_OPEN,
-    ID_MENU_SAVE,
-    ID_MENU_SAVE_AS,
-    ID_MENU_CHANGE_IMAGE,
-    ID_CANVAS,
-};
-
-
 // The main app.
 class MyApp : public wxApp
 {
@@ -37,10 +26,13 @@ public:
     WorldData *getWorldData() { return m_world_data; }
 
 private:
-    // Forbid copying.
+    // Disallow copying and moving.
     MyMainFrame(const MyMainFrame &that) = delete;
     void operator=(const MyMainFrame &that) = delete;
+    MyMainFrame(MyMainFrame &&that) = delete;
+    void operator=(MyMainFrame &&that) = delete;
 
+    // Private methods.
     void myCreateMenuBar();
 
     void onMenuNew(wxCommandEvent &evt);
@@ -51,6 +43,7 @@ private:
     void onMenuChangeImage(wxCommandEvent &evt);
     void onMenuAbout(wxCommandEvent &evt);
 
+    // Private data.
     WorldData *m_world_data;
     MyCanvas  *m_canvas;
 };

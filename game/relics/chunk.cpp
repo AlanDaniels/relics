@@ -256,7 +256,7 @@ std::string Chunk::toDescription() const
     }
 
     // Count our exposures.
-    int grass_surfaces = getCountForSurface(SURF_GRASS);
+    int grass_surfaces = getCountForSurface(SURF_GRASS_TOP);
     int dirt_surfaces  = getCountForSurface(SURF_DIRT);
     int stone_surfaces = getCountForSurface(SURF_STONE);
 

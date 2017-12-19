@@ -3,8 +3,21 @@
 #include "world_editor.h"
 
 #include "my_canvas.h"
-#include "util.h"
+#include "settings_dlg.h"
 #include "world_data.h"
+
+#include "util.h"
+
+
+// IDs for menus and controls.
+enum {
+    ID_MENU_NEW,
+    ID_MENU_OPEN,
+    ID_MENU_SAVE,
+    ID_MENU_SAVE_AS,
+    ID_MENU_CHANGE_IMAGE,
+    ID_CANVAS,
+};
 
 
 // Init the app.
@@ -109,6 +122,9 @@ void MyMainFrame::myCreateMenuBar()
 // Close out any old game file, and load an image for a new one.
 void MyMainFrame::onMenuNew(wxCommandEvent &evt)
 {
+    SettingsDialog dlg(this);
+
+#if 0
     if (m_world_data != nullptr) {
         delete m_world_data;
         m_world_data = nullptr;
@@ -133,6 +149,7 @@ void MyMainFrame::onMenuNew(wxCommandEvent &evt)
     char msg[128];
     sprintf(msg, "File: %s", fname.c_str());
     SetStatusText(msg);
+#endif
 }
 
 

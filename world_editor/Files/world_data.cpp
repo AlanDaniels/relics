@@ -1,8 +1,39 @@
 
 #include "stdafx.h"
 #include "world_data.h"
+
 #include "common_util.h"
+#include "simplex_noise.h"
+
 #include "sqlite3.h"
+
+
+
+// Given our landscape top, calc where the stone top.
+// Scale it, lower it, then add some noise. Use "-1" to mean no value.
+int CalcStoneHeight(int x, int z, int dirt_height)
+{
+    // We'll want to play around with these numbers later.
+    const int    LOWER_BY = 5;
+    const double SCALE_BY = 0.65;
+    const int    NOISE_BUMP = 10;
+
+    int result = (dirt_height * SCALE_BY) - LOWER_BY;
+
+    double noise_val = simplex_noise_2(x, z);
+    noise_val -= 0.5;
+    result += (noise_val * NOISE_BUMP);
+
+    if (result >= dirt_height) {
+        result = dirt_height - 1;
+    }
+
+    if (result < -1) {
+        result = -1;
+    }
+
+    return result;
+}
 
 
 // The only allowed constructor.
@@ -145,16 +176,19 @@ bool WorldData::actualSaveToDatabase(const std::string &fname, int *pOut_blocks_
         for (int y = 0; y < height_map_height; y++) {
             pixel_iter.MoveTo(*m_heightmap, x, y);
 
-            unsigned char red   = pixel_iter.Red();
-            unsigned char green = pixel_iter.Green();
-            unsigned char blue  = pixel_iter.Blue();
+            int red   = pixel_iter.Red();
+            int green = pixel_iter.Green();
+            int blue  = pixel_iter.Blue();
 
             int landscape_x =  x - (height_map_width  / 2);
             int landscape_z = -y + (height_map_height / 2);
 
             // For the dirt top, take half of our height map color.
-            int dirt_height = (red + green + blue) / 6;
-            if (dirt_height > 0) {
+            // Subtract one so that we don't have a two-block falloff at the edges.
+            int dirt_height = (red + green + blue) / 3;
+            dirt_height = (dirt_height / 2) - 1;
+
+            if (dirt_height >= 0) {
                 sqlite3_bind_int (insert_stmt, 1, landscape_x);
                 sqlite3_bind_int (insert_stmt, 2, dirt_height);
                 sqlite3_bind_int (insert_stmt, 3, landscape_z);
@@ -175,11 +209,8 @@ bool WorldData::actualSaveToDatabase(const std::string &fname, int *pOut_blocks_
                 sqlite3_reset(insert_stmt);
                 blocks_written++;
 
-                // Then, take half of *that*, apply some noise, and that's where our stone starts.
-                int stone_height = dirt_height / 2;
-                assert(stone_height < dirt_height);
-
-                if (stone_height > 0) {
+                int stone_height = CalcStoneHeight(landscape_x, landscape_z, dirt_height);
+                if (stone_height >= 0) {
                     sqlite3_bind_int (insert_stmt, 1, landscape_x);
                     sqlite3_bind_int (insert_stmt, 2, stone_height);
                     sqlite3_bind_int (insert_stmt, 3, landscape_z);

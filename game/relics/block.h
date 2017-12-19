@@ -25,9 +25,9 @@ bool IsBlockTypeEmpty (BlockType block_type);
 
 enum SurfaceType : unsigned char
 {
-    SURF_GRASS  = 0,
-    SURF_DIRT   = 1,
-    SURF_STONE  = 2,
+    SURF_GRASS_TOP = 0,
+    SURF_DIRT      = 1,
+    SURF_STONE     = 2,
 
     SURF_MAX_COUNT = 3,
     SURF_NOTHING   = 255

@@ -45,6 +45,7 @@
     <ClInclude Include="Files\Resource.h" />
     <ClInclude Include="Files\stdafx.h" />
     <ClInclude Include="Files\targetver.h" />
+    <ClInclude Include="Files\build_settings.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

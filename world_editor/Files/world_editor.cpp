@@ -78,8 +78,6 @@ MyMainFrame::MyMainFrame() :
 MyMainFrame::~MyMainFrame()
 {
     FreeEditorResources();
-    delete m_world_data;
-    m_world_data = nullptr;
 }
 
 
@@ -123,13 +121,12 @@ void MyMainFrame::myCreateMenuBar()
 void MyMainFrame::onMenuNew(wxCommandEvent &evt)
 {
     SettingsDialog dlg(this);
-
-#if 0
-    if (m_world_data != nullptr) {
-        delete m_world_data;
-        m_world_data = nullptr;
+    if (dlg.ShowModal() == wxID_OK) {
+        const BuildSettings &settings = dlg.getBuildSettings();
+        m_world_data = std::make_unique<WorldData>(settings);
     }
 
+#if 0
     wxString dlg_result = wxFileSelector(
         "Choose a base heightmap to start with...",
         RESOURCE_PATH,

@@ -23,7 +23,7 @@ public:
     MyMainFrame();
     ~MyMainFrame();
 
-    WorldData *getWorldData() { return m_world_data; }
+    WorldData *getWorldData() { return m_world_data.get(); }
 
 private:
     // Disallow copying and moving.
@@ -44,6 +44,6 @@ private:
     void onMenuAbout(wxCommandEvent &evt);
 
     // Private data.
-    WorldData *m_world_data;
-    MyCanvas  *m_canvas;
+    std::unique_ptr<WorldData> m_world_data;
+    MyCanvas *m_canvas;
 };

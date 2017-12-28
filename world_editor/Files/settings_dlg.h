@@ -14,18 +14,22 @@ public:
 
 private:
     // Private methods.
-    void setMinCtrlWidth(wxControl *ctrl, int min_width);
-    void adjustTextValue(wxTextCtrl *ctrl, double diff, int precision);
+    void addGridLabel(const std::string &text, int row);
+    void addGridControl(wxControl *ctrl, int row, int preferred_width);
+    void readFromBuildSettings();
 
     void OnOkayClick(wxCommandEvent &event);
 
-    void OnStonePctSpinUp(wxSpinEvent &event) { adjustTextValue(m_stone_pct_text, 1.0, 1); }
-    void OnStonePctSpinDown(wxSpinEvent &event) { adjustTextValue(m_stone_pct_text, -1.0, 1); }
-    void OnCoalPctSpinUp(wxSpinEvent &event) { adjustTextValue(m_coal_pct_text, 0.1, 2); }
-    void OnCoalPctSpinDown(wxSpinEvent &event) { adjustTextValue(m_coal_pct_text, -0.1, 2); }
-
     // Private data.
     BuildSettings m_build_settings;
-    wxTextCtrl *m_stone_pct_text;
-    wxTextCtrl *m_coal_pct_text;
+
+    wxPanel *m_panel;
+    wxGridBagSizer *m_grid;
+
+    wxFilePickerCtrl *m_height_map_picker;
+    wxSpinCtrlDouble *m_stone_percent_spinner;
+    wxSpinCtrlDouble *m_stone_subtracted_spinner;
+    wxSpinCtrlDouble *m_stone_displacement_spinner;
+    wxSpinCtrlDouble *m_stone_noise_scale_spinner;
+    wxSpinCtrlDouble *m_coal_density_spinner;
 };

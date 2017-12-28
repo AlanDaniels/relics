@@ -6,132 +6,175 @@
 // or something. It means "the border size applies to all four sides".
 
 enum {
-    ID_HEIGHT_MAP_BUTTON,
-    ID_HEIGHT_MAP_OUTPUT,
-    ID_STONE_PCT_TEXTBOX,
-    ID_STONE_PCT_SPINNER,
-    ID_COAL_PCT_TEXTBOX,
-    ID_COAL_PCT_SPINNER
+    ID_HEIGHT_MAP_PICKER,
+    ID_STONE_PERCENT_SPINNER,
+    ID_STONE_SUBTRACTED_SPINNER,
+    ID_STONE_DISPLACEMENT_SPINNER,
+    ID_STONE_NOISE_SCALE_SPINNER,
+    ID_COAL_DENSITY_SPINNER
 };
 
 
 // Default ctor.
+// For any "magic values" in here such as borders, or spinner ranges, I'm just
+// making stuff up. Feel free to tweak this later if you don't like how it works.
 SettingsDialog::SettingsDialog(wxWindow *parent) :
     wxDialog(parent, wxID_ANY, "World Settings")
 {
     const int BORDER = 10;
-    const int PREFERRED_WIDTH = 100;
+    const int WIDE_WIDTH = 400;
+    const int THIN_WIDTH = 75;
 
-    wxPanel *panel = new wxPanel(this, -1);
-    panel->SetMinSize(wxSize(1000, 500));
-
-    // Vertical gap of two pixels, horizontal of 5.
-    wxGridBagSizer *grid = new wxGridBagSizer(2, 5);
+    // Create our panel and grid.
+    m_panel = new wxPanel(this, -1);
+    m_grid  = new wxGridBagSizer(2, 5);
 
     // First row, height map.
-    wxStaticText *height_map_label  = new wxStaticText(panel, -1, wxT("Height Map (Image):"));
-    wxButton     *height_map_button = new wxButton(panel, ID_HEIGHT_MAP_BUTTON, wxT("File..."));
-    wxStaticText *height_map_output = new wxStaticText(panel, ID_HEIGHT_MAP_OUTPUT, wxT("[nothing yet]"));
+    m_height_map_picker = new wxFilePickerCtrl(m_panel, ID_HEIGHT_MAP_PICKER);
 
-    setMinCtrlWidth(height_map_button, PREFERRED_WIDTH);
+    addGridLabel("Height Map:", 0);
+    addGridControl(m_height_map_picker, 0, WIDE_WIDTH);
 
-    grid->Add(height_map_label,  wxGBPosition(0, 0), wxDefaultSpan, wxALL | wxALIGN_CENTER_VERTICAL | wxALIGN_RIGHT);
-    grid->Add(height_map_button, wxGBPosition(0, 1), wxDefaultSpan, wxALL | wxALIGN_CENTER_VERTICAL | wxALIGN_CENTER);
-    grid->Add(height_map_output, wxGBPosition(0, 2), wxDefaultSpan, wxALL | wxALIGN_CENTER_VERTICAL | wxALIGN_LEFT);
+    // Second row, stone percent.
+    m_stone_percent_spinner = new wxSpinCtrlDouble(m_panel, ID_STONE_PERCENT_SPINNER);
+    m_stone_percent_spinner->SetRange(0, 100);
+    m_stone_percent_spinner->SetDigits(1);
 
-    // Second row, how much stone vs. dirt.
-    wxStaticText *stone_pct_label   = new wxStaticText(panel, -1, wxT("Stone vs. Dirt (pct):"));
-    m_stone_pct_text = new wxTextCtrl(panel, ID_STONE_PCT_TEXTBOX, wxT("50.0"), wxDefaultPosition, wxDefaultSize, wxTE_RIGHT);
-    wxSpinButton *stone_pct_spinner = new wxSpinButton(panel, ID_STONE_PCT_SPINNER);
+    addGridLabel("Stone Percent:", 1);
+    addGridControl(m_stone_percent_spinner, 1, THIN_WIDTH);
 
-    setMinCtrlWidth(m_stone_pct_text, PREFERRED_WIDTH);
-    
-    grid->Add(stone_pct_label,   wxGBPosition(1, 0), wxDefaultSpan, wxALL | wxALIGN_CENTER_VERTICAL | wxALIGN_RIGHT);
-    grid->Add(m_stone_pct_text,  wxGBPosition(1, 1), wxDefaultSpan, wxALL | wxALIGN_CENTER_VERTICAL | wxALIGN_CENTER);
-    grid->Add(stone_pct_spinner, wxGBPosition(1, 2), wxDefaultSpan, wxALL | wxALIGN_CENTER_VERTICAL | wxALIGN_LEFT);
+    // Third row, stone subtracted.
+    m_stone_subtracted_spinner = new wxSpinCtrlDouble(m_panel, ID_STONE_SUBTRACTED_SPINNER);
+    m_stone_subtracted_spinner->SetRange(-50, 50);
+    m_stone_subtracted_spinner->SetDigits(1);
 
-    // Third row, how much stone becomes coal?
-    wxStaticText *coal_pct_label = new wxStaticText(panel, -1, wxT("Coal Found In Stone (Pct):"));
-    m_coal_pct_text = new wxTextCtrl(panel, ID_COAL_PCT_TEXTBOX, wxT("5.00"), wxDefaultPosition, wxDefaultSize, wxTE_RIGHT);
-    wxSpinButton *coal_pct_spinner = new wxSpinButton(panel, ID_COAL_PCT_SPINNER);
+    addGridLabel("Stone Subtracted:", 2);
+    addGridControl(m_stone_subtracted_spinner, 2, THIN_WIDTH);
 
-    setMinCtrlWidth(m_coal_pct_text, PREFERRED_WIDTH);
+    // Fourth row, stone displacement due to noise.
+    m_stone_displacement_spinner = new wxSpinCtrlDouble(m_panel, ID_STONE_DISPLACEMENT_SPINNER);
+    m_stone_displacement_spinner->SetRange(-50, 50);
+    m_stone_displacement_spinner->SetDigits(1);
 
-    grid->Add(coal_pct_label,   wxGBPosition(2, 0), wxDefaultSpan, wxALL | wxALIGN_CENTER_VERTICAL | wxALIGN_RIGHT);
-    grid->Add(m_coal_pct_text,  wxGBPosition(2, 1), wxDefaultSpan, wxALL | wxALIGN_CENTER_VERTICAL | wxALIGN_CENTER);
-    grid->Add(coal_pct_spinner, wxGBPosition(2, 2), wxDefaultSpan, wxALL | wxALIGN_CENTER_VERTICAL | wxALIGN_LEFT);
+    addGridLabel("Stone Displacement:", 3);
+    addGridControl(m_stone_displacement_spinner, 3, THIN_WIDTH);
 
-    // All done. Put this in a static box.
-    grid->AddGrowableCol(2);
-    panel->SetSizer(grid);
+    // Fifth row, stone noise scale.
+    m_stone_noise_scale_spinner = new wxSpinCtrlDouble(m_panel, ID_STONE_NOISE_SCALE_SPINNER);
+    m_stone_noise_scale_spinner->SetRange(1, 1000);
+    m_stone_noise_scale_spinner->SetValue(10);
+    m_stone_noise_scale_spinner->SetDigits(0);
 
-    wxStaticBoxSizer *static_box = new wxStaticBoxSizer(wxHORIZONTAL, this, wxT("Options"));
-    static_box->Add(panel);
+    addGridLabel("Stone Noise Scale:", 4);
+    addGridControl(m_stone_noise_scale_spinner, 4, THIN_WIDTH);
 
-    wxButton *okayButton   = new wxButton(this, wxID_OK,     wxT("OK"));
+    // Sixth row, coal density.
+    m_coal_density_spinner = new wxSpinCtrlDouble(m_panel, ID_COAL_DENSITY_SPINNER);
+    m_coal_density_spinner->SetRange(0.0, 100.0);
+    m_coal_density_spinner->SetValue(1.0);
+    m_coal_density_spinner->SetDigits(1);
+
+    addGridLabel("Coal Density:", 5);
+    addGridControl(m_coal_density_spinner, 5, THIN_WIDTH);
+
+    // All done. Put the panel in a static box.
+    m_panel->SetSizer(m_grid);
+    m_grid->AddGrowableCol(1);
+
+    wxStaticBoxSizer *static_box = new wxStaticBoxSizer(wxHORIZONTAL, this, wxT(" Build Settings "));
+    static_box->Add(m_panel);
+
+    // A horizontal box for our buttons.
+    wxButton *okayButton   = new wxButton(this, wxID_OK, wxT("OK"));
     wxButton *cancelButton = new wxButton(this, wxID_CANCEL, wxT("Cancel"));
     okayButton->SetDefault();
 
-    // A horizontal box for our buttons.
-    wxBoxSizer *hbox = new wxBoxSizer(wxHORIZONTAL);
-    hbox->Add(okayButton,   0, wxALL, BORDER);
-    hbox->Add(cancelButton, 0, wxALL, BORDER);
+    wxBoxSizer *button_box = new wxBoxSizer(wxHORIZONTAL);
+    button_box->Add(okayButton,   0, wxALL, BORDER);
+    button_box->Add(cancelButton, 0, wxALL, BORDER);
 
     // A vertical box for the dialog content.
     wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
     vbox->Add(static_box, 1, wxALL, BORDER);
-    vbox->Add(hbox, 0, wxALL, BORDER);
+    vbox->Add(button_box, 0, wxALL, BORDER);
     SetSizer(vbox);
 
     // Bind our events.
     Bind(wxEVT_BUTTON, &SettingsDialog::OnOkayClick, this, wxID_OK);
 
-    Bind(wxEVT_SPIN_UP, &SettingsDialog::OnStonePctSpinUp, this, ID_STONE_PCT_SPINNER);
-    Bind(wxEVT_SPIN_DOWN, &SettingsDialog::OnStonePctSpinDown, this, ID_STONE_PCT_SPINNER);
-
-    Bind(wxEVT_SPIN_UP, &SettingsDialog::OnCoalPctSpinUp, this, ID_COAL_PCT_SPINNER);
-    Bind(wxEVT_SPIN_DOWN, &SettingsDialog::OnCoalPctSpinDown, this, ID_COAL_PCT_SPINNER);
-
-    // And away we go.
+    // And away we go. The caller needs to call "ShowModal" and "Destroy".
+    readFromBuildSettings();
+    Fit();
     Centre();
-    ShowModal();
-    Destroy();
 }
 
 
-// Set the min width of a control.
-void SettingsDialog::setMinCtrlWidth(wxControl *ctrl, int min_width)
+// Add a right-aligned label to our grid, in the first column.
+void SettingsDialog::addGridLabel(const std::string &label_text, int row) 
+{
+    wxStaticText *label = new wxStaticText(m_panel, -1, label_text.c_str());
+    m_grid->Add(label, wxGBPosition(row, 0), wxDefaultSpan, wxALL | wxALIGN_CENTER_VERTICAL | wxALIGN_RIGHT);
+}
+
+
+// Add a control to our grid, in the second column.
+void SettingsDialog::addGridControl(wxControl *ctrl, int row, int preferred_width)
 {
     int height = ctrl->GetMinHeight();
-    ctrl->SetMinSize(wxSize(min_width, height));
+    ctrl->SetMinSize(wxSize(preferred_width, height));
+
+    m_grid->Add(ctrl, wxGBPosition(row, 1), wxDefaultSpan, wxALL | wxALIGN_CENTER_VERTICAL | wxALIGN_LEFT);
 }
 
 
-// Change the value of a text control with a floating point value.
-void SettingsDialog::adjustTextValue(wxTextCtrl *ctrl, double diff, int precision)
+// Read in our dialog contents from the build settings.
+void SettingsDialog::readFromBuildSettings()
 {
-    double val = 0.0;
-    bool result = ctrl->GetValue().ToCDouble(&val);
-    if (result) {
-        val += diff;
-        if (val > 100.0) {
-            val = 100.0;
-        }
-        else if (val < 0.0) {
-            val = 0.0;
-        }
-    }
-    else {
-        val = 0.0;
-    }
+    const std::string &our_fname = m_build_settings.getHeightMapFilename();
+    wxFileName dlg_fname;
+    dlg_fname.SetFullName(our_fname.c_str());
+    m_height_map_picker->SetFileName(dlg_fname);
 
-    char buffer[32];
-    sprintf(buffer, "%.*f", precision, val);
-    ctrl->SetValue(wxString(buffer));
+    double stone_pct = m_build_settings.getStonePercent();
+    m_stone_percent_spinner->SetValue(stone_pct);
+
+    double stone_subtracted = m_build_settings.getStoneSubtracted();
+    m_stone_subtracted_spinner->SetValue(stone_subtracted);
+
+    double stone_displacement = m_build_settings.getStoneDisplacement();
+    m_stone_displacement_spinner->SetValue(stone_displacement);
+
+    double stone_noise_scale = m_build_settings.getStoneNoiseScale();
+    m_stone_noise_scale_spinner->SetValue(stone_noise_scale);
+
+    double coal_density = m_build_settings.getCoalDensity();
+    m_coal_density_spinner->SetValue(coal_density);
 }
 
 
 void SettingsDialog::OnOkayClick(wxCommandEvent& event)
 {
-    wxLogMessage("Greetings from Okay Click!");
+    wxString dlg_fname = m_height_map_picker->GetFileName().GetFullPath();
+    std::string fname = dlg_fname.ToStdString();
+
+    double stone_pct          = m_stone_percent_spinner->GetValue();
+    double stone_subtracted   = m_stone_subtracted_spinner->GetValue();
+    double stone_displacement = m_stone_displacement_spinner->GetValue();
+    double stone_noise_scale  = m_stone_noise_scale_spinner->GetValue();
+    double coal_density       = m_coal_density_spinner->GetValue();
+
+    BuildSettings new_settings;
+
+    bool valid = (
+        new_settings.setHeightMapFilename(fname) &&
+        new_settings.setStonePercent(stone_pct) &&
+        new_settings.setStoneSubtracted(stone_subtracted) &&
+        new_settings.setStoneDisplacement(stone_displacement) &&
+        new_settings.setStoneNoiseScale(stone_noise_scale) &&
+        new_settings.setCoalDensity(coal_density));
+
+    if (valid) {
+        m_build_settings = new_settings;
+        Close(false);
+    }
 }

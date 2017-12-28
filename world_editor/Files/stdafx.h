@@ -35,6 +35,7 @@
 #include "wx/wxprec.h"
 
 #include "wx/dcbuffer.h"
+#include "wx/filepicker.h"
 #include "wx/gbsizer.h"
 #include "wx/listctrl.h"
 #include "wx/rawbmp.h"

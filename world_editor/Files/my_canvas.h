@@ -56,6 +56,6 @@ private:
     int  m_old_mouse_y;
 
     int m_old_zoom_scale;
-    wxBitmap *m_old_heightmap;
+    const wxBitmap *m_old_heightmap;
     wxBitmap *m_zoomed_heightmap;
 };

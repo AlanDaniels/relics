@@ -308,6 +308,45 @@ enum NudgeEnum
 };
 
 
+// Global pillar coords. These are valid anywhere.
+// We use these for reading from the database.
+class GlobalPillar
+{
+public:
+    GlobalPillar() :
+        m_x(0), m_z(0) {}
+
+    GlobalPillar::GlobalPillar(int x, int z) :
+        m_x(x), m_z(z) {}
+
+    GlobalPillar(const GlobalPillar &that) :
+        m_x(that.m_x), m_z(that.m_z) {}
+
+    const GlobalPillar &operator=(const GlobalPillar &that) {
+        m_x = that.m_x;
+        m_z = that.m_z;
+        return *this;
+    }
+
+    bool operator==(const GlobalPillar &that) {
+        return ((m_x == that.m_x) &&
+                (m_z == that.m_z));
+    }
+
+    inline int x() const { return m_x; }
+    inline int z() const { return m_z; }
+
+private:
+    int m_x;
+    int m_z;
+};
+
+
+// We need "less than" since we use "Global Pillar" as a key in "std::map".
+bool operator<(const GlobalPillar &one, const GlobalPillar &two);
+
+
+
 // Global grid coordinates. These are valid anywhere.
 class GlobalGrid
 {
@@ -321,14 +360,14 @@ public:
     GlobalGrid(const GlobalGrid &that) :
         m_x(that.m_x), m_y(that.m_y), m_z(that.m_z) {}
 
-    const GlobalGrid &GlobalGrid::operator=(const GlobalGrid &that) {
+    const GlobalGrid &operator=(const GlobalGrid &that) {
         m_x = that.m_x;
         m_y = that.m_y;
         m_z = that.m_z;
         return *this;
     }
 
-    bool GlobalGrid::operator==(const GlobalGrid &that) {
+    bool operator==(const GlobalGrid &that) {
         return ((m_x == that.m_x) &&
                 (m_y == that.m_y) &&
                 (m_z == that.m_z));
@@ -345,7 +384,49 @@ private:
 };
 
 
-// Local grid coordinates. These are only valid within one chunk.
+// Local pillar coords. There are only valid within one chunk.
+// We use these to read values from the database.
+class LocalPillar
+{
+public:
+    LocalPillar() :
+        m_x(0), m_z(0) {}
+
+    LocalPillar(int x, int z);
+
+    LocalPillar(const LocalPillar &that) :
+        m_x(that.m_x), m_z(that.m_z) {}
+
+    LocalPillar(LocalPillar &&that) :
+        m_x(that.m_x), m_z(that.m_z) {}
+
+    LocalPillar &operator=(const LocalPillar &that) {
+        m_x = that.m_x;
+        m_z = that.m_z;
+        return *this;
+    }
+
+    LocalPillar &operator=(LocalPillar &&that) {
+        m_x = that.m_x;
+        m_z = that.m_z;
+        return *this;
+    }
+
+    bool operator==(const LocalPillar &that) {
+        return ((m_x == that.m_x) &&
+                (m_z == that.m_z));
+    }
+
+    inline int x() const { return m_x; }
+    inline int z() const { return m_z; }
+
+private:
+    int m_x;
+    int m_z;
+};
+
+
+// Local grid coords. These are only valid within one chunk.
 // Yeah, this is the same structure as "global", but I want it 
 // to be obvious when we're working in one system or another.
 class LocalGrid
@@ -359,14 +440,24 @@ public:
     LocalGrid(const LocalGrid &that) :
         m_x(that.m_x), m_y(that.m_y), m_z(that.m_z) {}
 
-    const LocalGrid &LocalGrid::operator=(const LocalGrid &that) {
+    LocalGrid(LocalGrid &&that) :
+        m_x(that.m_x), m_y(that.m_y), m_z(that.m_z) {}
+
+    LocalGrid &operator=(const LocalGrid &that) {
         m_x = that.m_x;
         m_y = that.m_y;
         m_z = that.m_z;
         return *this;
     }
 
-    bool LocalGrid::operator==(const LocalGrid &that) {
+    LocalGrid &operator=(LocalGrid &&that) {
+        m_x = that.m_x;
+        m_y = that.m_y;
+        m_z = that.m_z;
+        return *this;
+    }
+
+    bool operator==(const LocalGrid &that) {
         return ((m_x == that.m_x) &&
                 (m_y == that.m_y) &&
                 (m_z == that.m_z));
@@ -383,8 +474,9 @@ private:
 };
 
 
-GlobalGrid WorldPosToGlobalGrid(const MyVec4 &pos, NudgeEnum nudge_type);
-LocalGrid  GlobalGridToLocal(const GlobalGrid &coord, const ChunkOrigin &origin);
+GlobalGrid  WorldPosToGlobalGrid(const MyVec4 &pos, NudgeEnum nudge_type);
+LocalGrid   GlobalGridToLocal(const GlobalGrid &coord, const ChunkOrigin &origin);
+LocalPillar GlobalPillarToLocal(const GlobalPillar &pillar, const ChunkOrigin &origin);
 
 
 // An "eval region", the four values always align along chunk boundaries.

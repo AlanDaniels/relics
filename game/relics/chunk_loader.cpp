@@ -37,60 +37,76 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
         return nullptr;
     }
 
-    std::unique_ptr<Chunk> result = std::make_unique<Chunk>(world, origin);
-
-    @@@
-    // TODO: CONTINUE HERE.
-    // Brute force this for now.
-    // FUCK: WE NEED TO RESPECT WRITE ORDER.
+    // For all the data in this chunk, use maps to figure out where things start.
+    std::map<GlobalPillar, int> dirt_tops;
+    std::map<GlobalPillar, int> stone_tops;
+    std::map<GlobalPillar, std::vector<int>> coal_spots;
 
     int count = 0;
     int ret_code = sqlite3_step(stmt);
     while (ret_code == SQLITE_ROW) {
-        int block_x = sqlite3_column_int(stmt, 0);
-        int block_y = sqlite3_column_int(stmt, 1);
-        int block_z = sqlite3_column_int(stmt, 2);
+        int x = sqlite3_column_int(stmt, 0);
+        int y = sqlite3_column_int(stmt, 1);
+        int z = sqlite3_column_int(stmt, 2);
+
+        GlobalPillar pillar(x, z);
 
         const unsigned char *raw_text = sqlite3_column_text(stmt, 3);
         const char *clean = reinterpret_cast<const char*>(raw_text);
         std::string text(clean);
 
-        if (text == DIRT_TOP) {
-            GlobalGrid global_coord(block_x, block_y, block_z);
-            LocalGrid  local_coord = GlobalGridToLocal(global_coord, origin);
-
-            int local_x = local_coord.x();
-            int local_z = local_coord.z();
-            for (int y = 0; y < block_y; y++) {
-                LocalGrid lookup(local_x, y, local_z);
-
-                // HACK. This will be slow.
-                if (result->getBlockType(lookup) == BT_AIR) {
-                    result->setBlockType(lookup, BT_DIRT);
-                }
-                count++;
-            }
+        if (text == "dirt_top") {
+            dirt_tops[pillar] = y;
         }
-
-        else if (text == STONE_TOP) {
-            GlobalGrid global_coord(block_x, block_y, block_z);
-            LocalGrid  local_coord = GlobalGridToLocal(global_coord, origin);
-
-            int local_x = local_coord.x();
-            int local_z = local_coord.z();
-            for (int y = 0; y < block_y; y++) {
-                LocalGrid lookup(local_x, y, local_z);
-                result->setBlockType(lookup, BT_STONE);
-                count++;
-            }
+        else if (text == "stone_top") {
+            stone_tops[pillar] = y;
+        }
+        else if (text == "coal") {
+            coal_spots[pillar].emplace_back(y);
+        }
+        else {
+            PrintDebug("Impossible value for block: %s", text);
+            assert(false);
         }
 
         ret_code = sqlite3_step(stmt);
     }
 
-    sqlite3_finalize(stmt);
+    // Now, build the chunk.
+    std::unique_ptr<Chunk> chunk = std::make_unique<Chunk>(world, origin);
 
-    return std::move(result);
+    for (const auto &iter : dirt_tops) {
+        const GlobalPillar &global_pillar = iter.first;
+        LocalPillar &pillar = GlobalPillarToLocal(global_pillar, origin);
+        int dirt_top = iter.second;
+        for (int y = 0; y <= dirt_top; y++) {
+            LocalGrid coord(pillar.x(), y, pillar.z());
+            chunk->setBlockType(coord, BT_DIRT);
+        }
+    }
+
+    for (const auto &iter : stone_tops) {
+        const GlobalPillar &global_pillar = iter.first;
+        LocalPillar &pillar = GlobalPillarToLocal(global_pillar, origin);
+        int stone_top = iter.second;
+        for (int y = 0; y <= stone_top; y++) {
+            LocalGrid coord(pillar.x(), y, pillar.z());
+            chunk->setBlockType(coord, BT_STONE);
+        }
+    }
+
+    for (const auto &iter : coal_spots) {
+        const GlobalPillar &global_pillar = iter.first;
+        const std::vector<int> spots_vec  = iter.second;
+        LocalPillar &pillar = GlobalPillarToLocal(global_pillar, origin);
+        for (int y : spots_vec) {
+            LocalGrid coord(pillar.x(), y, pillar.z());
+            chunk->setBlockType(coord, BT_COAL);
+        }
+    }
+
+    // All done.
+    return chunk;
 }
 
 

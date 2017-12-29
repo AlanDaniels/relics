@@ -4,7 +4,7 @@
 
 -- The world itself.
 world = {
-    file_name = 'worlds/stone_test.world'
+    file_name = 'worlds/small_cube.world'
 }
 
 -- Debugging.
@@ -57,6 +57,7 @@ render = {
         grass_texture   = 'grass.png',
         dirt_texture    = 'dirt.png',
         stone_texture   = 'stone.png',
+        coal_texture    = 'cartoon_dirt.jpg', -- TODO: Find some coal.
         bedrock_texture = 'bedrock.png'
     },
 

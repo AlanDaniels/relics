@@ -38,8 +38,23 @@ SurfaceType CalcSurfaceType(BlockType block_type, FaceEnum face, BlockType other
         if (other == BT_AIR) {
             result = SURF_STONE;
         }
-        else if ((other == BT_DIRT) && draw_transitions) {
-            result = SURF_STONE;
+        else {
+            bool show = (other == BT_DIRT);
+            if (show && draw_transitions) {
+                result = SURF_STONE;
+            }
+        }
+        break;
+
+    case BT_COAL:
+        if (other == BT_AIR) {
+            result = SURF_COAL;
+        }
+        else {
+            bool show = ((other == BT_DIRT) || (other == BT_STONE));
+            if (show && draw_transitions) {
+                result = SURF_COAL;
+            }
         }
         break;
 

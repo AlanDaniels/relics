@@ -366,8 +366,32 @@ HitTestEnum WorldHitTest(const MyRay &ray, const MyPlane &plane, MyVec4 *pOut_im
 }
 
 
-// Local grid ctor.
-LocalGrid::LocalGrid(int x, int y, int z) :
+// We need "less than" since we use "Global Pillar" as a key in "std::map".
+bool operator<(const GlobalPillar &one, const GlobalPillar &two)
+{
+    if      (one.x() < two.x()) { return true; }
+    else if (one.x() > two.x()) { return false; }
+    else if (one.z() < two.z()) { return true; }
+    else if (one.z() > two.z()) { return false; }
+
+    // Must be equal.
+    else { 
+        return false; 
+    }
+}
+
+
+// Local Pillar ctor.
+LocalPillar::LocalPillar(int x, int z) : 
+    m_x(x), m_z(z) 
+{
+    assert((x >= 0) && (x < CHUNK_WIDTH));
+    assert((z >= 0) && (z < CHUNK_WIDTH));
+}
+
+
+// Local Grid ctor.
+LocalGrid::LocalGrid(int x, int y, int z) : 
     m_x(x), m_y(y), m_z(z) 
 {
     assert((x >= 0) && (x < CHUNK_WIDTH));
@@ -403,15 +427,24 @@ GlobalGrid WorldPosToGlobalGrid(const MyVec4 &pos, NudgeEnum nudge)
 }
 
 
-// Convert a global grid coor to a local one.
+// Convert a global grid coord to a local one.
 // It is up to *you* to make sure you're calling this for the right chunk origin.
-// Also, o make sure the Y value for height is clamped to valid values.
+// Also, to make sure the Y value for height is clamped to valid values.
 LocalGrid GlobalGridToLocal(const GlobalGrid &coord, const ChunkOrigin &origin)
 {
     int x = coord.x() - origin.x();
     int y = coord.y();
     int z = coord.z() - origin.z();
     return LocalGrid(x, y, z);
+}
+
+
+// Convert a global pillar to a local one.
+LocalPillar GlobalPillarToLocal(const GlobalPillar &pillar, const ChunkOrigin &origin)
+{
+    int x = pillar.x() - origin.x();
+    int z = pillar.z() - origin.z();
+    return LocalPillar(x, z);
 }
 
 

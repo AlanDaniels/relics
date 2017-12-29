@@ -67,6 +67,7 @@ private:
     std::unique_ptr<DrawTexture> m_grass_tex;
     std::unique_ptr<DrawTexture> m_dirt_tex;
     std::unique_ptr<DrawTexture> m_stone_tex;
+    std::unique_ptr<DrawTexture> m_coal_tex;
     std::unique_ptr<DrawTexture> m_bedrock_tex;
 
     std::unique_ptr<DrawTexture> m_hit_test_tex;

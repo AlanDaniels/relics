@@ -121,9 +121,18 @@ void MyMainFrame::myCreateMenuBar()
 void MyMainFrame::onMenuNew(wxCommandEvent &evt)
 {
     SettingsDialog dlg(this);
-    if (dlg.ShowModal() == wxID_OK) {
+    int result = dlg.ShowModal();
+    if (result == wxID_OK) {
         const BuildSettings &settings = dlg.getBuildSettings();
         m_world_data = std::make_unique<WorldData>(settings);
+        m_canvas->repaintCanvas();
+
+        wxBeginBusyCursor();
+        BuildStats stats = m_world_data->performDryRun();
+        wxEndBusyCursor();
+
+        std::string descr = stats.toString();
+        wxMessageBox(descr, "Build Stats", wxICON_INFORMATION);
     }
 
 #if 0

@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "build_settings.h"
 #include "build_stats.h"
+#include "common_util.h"
 
 
 // Game data, represented in a way that's "wxWidgets" friendly.
@@ -13,23 +14,13 @@ struct sqlite3;
 struct sqlite3_stmt;
 
 
-
-// TODO: Maybe we can make this common later.
-enum BlockType : unsigned char
-{
-    BT_AIR   = 0,
-    BT_DIRT  = 1,
-    BT_STONE = 2,
-    BT_COAL  = 3
-};
-
-
 class WorldData
 {
 public:
     WorldData(const BuildSettings &settings);
     ~WorldData();
 
+    BuildStats performDryRun() const;
     bool saveToDatabase(const std::string &db_fname);
 
     wxBitmap *getHeightmap() { return m_height_map; }
@@ -45,10 +36,10 @@ private:
     // Private methods.
     bool actualSaveToDatabase(const std::string &fname, BuildStats *pOut_stats);
     bool initTables(sqlite3 *db);
-    std::vector<BlockType> calcColumn(int world_x, int world_z, int dirt_height);
+    std::vector<BlockType> calcColumn(int world_x, int world_z, int dirt_height) const;
     bool writeBlocksForColumn(int world_x, int world_z, const std::vector<BlockType> &blocks,
                               sqlite3 *db, sqlite3_stmt *insert_stmt, BuildStats *pOut_stats);
-    int  calcStoneHeightForColumn(int world_x, int world_z, int dirt_height);
+    int  calcStoneHeightForColumn(int world_x, int world_z, int dirt_height) const;
 
     // Private data.
     BuildSettings m_build_settings;

@@ -39,6 +39,7 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
 
     std::unique_ptr<Chunk> result = std::make_unique<Chunk>(world, origin);
 
+    @@@
     // TODO: CONTINUE HERE.
     // Brute force this for now.
     // FUCK: WE NEED TO RESPECT WRITE ORDER.

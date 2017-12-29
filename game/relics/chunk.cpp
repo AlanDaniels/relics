@@ -6,6 +6,7 @@
 #include "block.h"
 #include "chunk_stripe.h"
 #include "draw_state_pnt.h"
+#include "format.h"
 #include "game_world.h"
 #include "utils.h"
 
@@ -234,11 +235,10 @@ const Chunk *Chunk::getNeighborWest() const
 // For debugging, print out all the details about this chunk.
 std::string Chunk::toDescription() const
 {
-    std::string result;
-
     // Count our block types.
     int dirt_blocks  = 0;
     int stone_blocks = 0;
+    int coal_blocks  = 0;
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int z = 0; z < CHUNK_WIDTH; z++) {
@@ -249,35 +249,30 @@ std::string Chunk::toDescription() const
                 switch (block_type) {
                 case BT_DIRT:  dirt_blocks++; break;
                 case BT_STONE: stone_blocks++; break;
+                case BT_COAL:  coal_blocks++; break;
                 default: break;
                 }
             }
         }
     }
 
-    // Count our exposures.
+    // Count our surfaces.
     int grass_surfaces = getCountForSurface(SURF_GRASS_TOP);
     int dirt_surfaces  = getCountForSurface(SURF_DIRT);
     int stone_surfaces = getCountForSurface(SURF_STONE);
+    int coal_surfaces  = getCountForSurface(SURF_COAL);
 
-    const char *up_to_date_str = isUpToDate()  ? "true" : "false";
+    // Print the results.
+    std::string up_to_date = isUpToDate() ? "true" : "false";
 
-    std::unique_ptr<char[]> buffer(new char[1024]);
-
-    sprintf(buffer.get(), "Chunk at [%d, %d]\n", m_origin.x(), m_origin.z());
-    result += buffer.get();
-    sprintf(buffer.get(), "  Up To Date: %s\n", up_to_date_str);
-    result += buffer.get();
-    sprintf(buffer.get(), "  Block = dirt: %d\n",  dirt_blocks);
-    result += buffer.get();
-    sprintf(buffer.get(), "  Block = stone: %d\n", stone_blocks);
-    result += buffer.get();
-    sprintf(buffer.get(), "  Surface = grass: %d\n", grass_surfaces);
-    result += buffer.get();
-    sprintf(buffer.get(), "  Surface = dirt:  %d\n", dirt_surfaces);
-    result += buffer.get();
-    sprintf(buffer.get(), "  Surface = stone: %d\n", stone_surfaces);
-    result += buffer.get();
+    std::string result =
+        fmt::format("Chunk at [{0}, {1}]\n", m_origin.x(), m_origin.z()) +
+        fmt::format("  Up To Date: {}\n", up_to_date) +
+        fmt::format("  Block = dirt: {}\n",  dirt_blocks) +
+        fmt::format("  Block = stone: {}\n", stone_blocks) +
+        fmt::format("  Surface = grass: {}\n", grass_surfaces) +
+        fmt::format("  Surface = dirt:  {}\n", dirt_surfaces) +
+        fmt::format("  Surface = stone: {}\n", stone_surfaces);
 
     return result;
 }

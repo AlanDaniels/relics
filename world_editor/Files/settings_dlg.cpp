@@ -100,9 +100,9 @@ SettingsDialog::SettingsDialog(wxWindow *parent) :
     SetSizer(vbox);
 
     // Bind our events.
-    Bind(wxEVT_BUTTON, &SettingsDialog::OnOkayClick, this, wxID_OK);
+    Bind(wxEVT_BUTTON, &SettingsDialog::onOkayClick, this, wxID_OK);
 
-    // And away we go. The caller needs to call "ShowModal" and "Destroy".
+    // And away we go. The caller needs to call "ShowModal".
     readFromBuildSettings();
     Fit();
     Centre();
@@ -152,7 +152,9 @@ void SettingsDialog::readFromBuildSettings()
 }
 
 
-void SettingsDialog::OnOkayClick(wxCommandEvent& event)
+// TODO: Ideally we'd be calling "on close" rather than dealing
+// with the button press directly. Figure this out later.
+void SettingsDialog::onOkayClick(wxCommandEvent& event)
 {
     wxString dlg_fname = m_height_map_picker->GetFileName().GetFullPath();
     std::string fname = dlg_fname.ToStdString();
@@ -175,6 +177,6 @@ void SettingsDialog::OnOkayClick(wxCommandEvent& event)
 
     if (valid) {
         m_build_settings = new_settings;
-        Close(false);
+        EndModal(wxID_OK);
     }
 }

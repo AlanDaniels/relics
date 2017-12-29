@@ -37,6 +37,52 @@ WorldData::~WorldData()
 }
 
 
+// Peform a dry run, to see what our build stats would be,
+// before performing all the I/O needed to write out the database.
+BuildStats WorldData::performDryRun() const
+{
+    BuildStats stats;
+
+    wxNativePixelData pixels(*m_height_map);
+    if (!pixels) {
+        return stats;
+    }
+
+    wxNativePixelData::Iterator pixel_iter;
+
+    // Calc each column and write it to the database.
+    int hmap_width  = m_height_map->GetWidth();
+    int hmap_height = m_height_map->GetHeight();
+    for (int x = 0; x < hmap_width; x++) {
+        for (int y = 0; y < hmap_height; y++) {
+
+            pixel_iter.MoveTo(*m_height_map, x, y);
+
+            int red   = pixel_iter.Red();
+            int green = pixel_iter.Green();
+            int blue  = pixel_iter.Blue();
+
+            int world_x =  x - (hmap_width  / 2);
+            int world_z = -y + (hmap_height / 2);
+
+            // For the dirt top, take half of our height map color.
+            // Subtract one so that we don't have a two-block falloff at the edges.
+            int dirt_height = (red + green + blue) / 3;
+            dirt_height = (dirt_height / 2) - 1;
+
+            if (dirt_height >= 0) {
+                std::vector<BlockType> blocks = calcColumn(world_x, world_z, dirt_height);
+                for (const BlockType & block : blocks) {
+                    stats.add(block);
+                }
+            }
+        }
+    }
+
+    return std::move(stats);
+}
+
+
 
 // Save our world to the database.
 bool WorldData::saveToDatabase(const std::string &fname) {
@@ -192,7 +238,7 @@ bool WorldData::initTables(sqlite3 *db)
 
 
 // Given our landscape top, calc where the stone top.
-int WorldData::calcStoneHeightForColumn(int world_x, int world_z, int dirt_height)
+int WorldData::calcStoneHeightForColumn(int world_x, int world_z, int dirt_height) const
 {
     double percent      = m_build_settings.getStonePercent();
     double subtracted   = m_build_settings.getStoneSubtracted();
@@ -220,21 +266,27 @@ int WorldData::calcStoneHeightForColumn(int world_x, int world_z, int dirt_heigh
 
 
 // Calculate the world blocks for a particular column.
-std::vector<BlockType> WorldData::calcColumn(int world_x, int world_z, int dirt_height)
+// Profile this later, since it might be a bottleneck.
+std::vector<BlockType> WorldData::calcColumn(int world_x, int world_z, int dirt_height) const
 {
     double noise_scale  = m_build_settings.getStoneNoiseScale();
     double coal_density = m_build_settings.getCoalDensity() / 100.0f;
 
+    // Given our dirt height, calc how tall the stone could be.
+    int stone_height = calcStoneHeightForColumn(world_x, world_z, dirt_height);
+
+    // In rare cases, the stone could stick up *out* of the dirt.
+    int ceiling = (dirt_height > stone_height) ? dirt_height : stone_height;
+
     // Build a vector for the Y-values, and fill it all with dirt.
     std::vector<BlockType> blocks;
-    for (int y = 0; y <= dirt_height; y++) {
-        blocks.emplace_back(BT_DIRT);
+    for (int y = 0; y <= ceiling; y++) {
+        blocks.emplace_back(BlockType::DIRT);
     }
 
-    // Calc the stone height and replace all those blocks.
-    int stone_height = calcStoneHeightForColumn(world_x, world_z, dirt_height);
+    // Then, replace all the stone blocks for that height.
     for (int y = 0; y <= stone_height; y++) {
-        blocks[y] = BT_STONE;
+        blocks[y] = BlockType::STONE;
     }
 
     // Throughout the stone, figure out where the coal would go.
@@ -246,7 +298,7 @@ std::vector<BlockType> WorldData::calcColumn(int world_x, int world_z, int dirt_
         double noise_val = simplex_noise_3(noise_x, noise_y, noise_z);
 
         if (noise_val < coal_density) {
-            blocks[y] = BT_COAL;
+            blocks[y] = BlockType::COAL;
         }
     }
 
@@ -269,10 +321,10 @@ bool WorldData::writeBlocksForColumn(
     int dirt_top  = -1;
     int stone_top = -1;
     for (unsigned int i = 0; i < blocks.size(); i++) {
-        if (blocks[i] == BT_DIRT) {
+        if (blocks[i] == BlockType::DIRT) {
             dirt_top = i;
         }
-        else if (blocks[i] == BT_STONE) {
+        else if (blocks[i] == BlockType::STONE) {
             stone_top = i;
         }
     }
@@ -317,7 +369,7 @@ bool WorldData::writeBlocksForColumn(
 
     // Then, write each individual coal block. There shouldn't be too many of these.
     for (int y = 0; y < stone_top; y++) {
-        if (blocks[y] == BT_COAL) {
+        if (blocks[y] == BlockType::COAL) {
             sqlite3_reset(insert_stmt);
 
             sqlite3_bind_int(insert_stmt, 1, world_x);
@@ -342,12 +394,7 @@ bool WorldData::writeBlocksForColumn(
 
     // All done. Update our stats.
     for (unsigned int y = 0; y < blocks.size(); y++) {
-        switch (blocks[y]) {
-        case BT_DIRT:  pOut_stats->addDirt(1); break;
-        case BT_STONE: pOut_stats->addStone(1); break;
-        case BT_COAL:  pOut_stats->addCoal(1); break;
-        default: break;
-        }
+        pOut_stats->add(blocks[y]);
     }
 
     return true;

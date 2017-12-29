@@ -18,7 +18,7 @@ private:
     void addGridControl(wxControl *ctrl, int row, int preferred_width);
     void readFromBuildSettings();
 
-    void OnOkayClick(wxCommandEvent &event);
+    void onOkayClick(wxCommandEvent &event);
 
     // Private data.
     BuildSettings m_build_settings;

@@ -14,7 +14,8 @@ enum BlockType : unsigned char
 {
     BT_AIR   = 0,
     BT_DIRT  = 1,
-    BT_STONE = 2
+    BT_STONE = 2,
+    BT_COAL  = 3
 };
 
 
@@ -28,8 +29,9 @@ enum SurfaceType : unsigned char
     SURF_GRASS_TOP = 0,
     SURF_DIRT      = 1,
     SURF_STONE     = 2,
+    SURF_COAL      = 3,
 
-    SURF_MAX_COUNT = 3,
+    SURF_MAX_COUNT = 4,
     SURF_NOTHING   = 255
 };
 

@@ -168,6 +168,7 @@ bool Config::loadFromFile()
             render.landscape.grass_texture   = getStringField(L, "grass_texture");
             render.landscape.dirt_texture    = getStringField(L, "dirt_texture");
             render.landscape.stone_texture   = getStringField(L, "stone_texture");
+            render.landscape.coal_texture    = getStringField(L, "coal_texture");
             render.landscape.bedrock_texture = getStringField(L, "bedrock_texture");
         }
         lua_pop(L, 1);
@@ -318,6 +319,7 @@ bool Config::validate() const
     if (!validateResource("render.landscape.grass_texture",   render.landscape.grass_texture)) { success = false; }
     if (!validateResource("render.landscape.dirt_texture",    render.landscape.dirt_texture))  { success = false; }
     if (!validateResource("render.landscape.stone_texture",   render.landscape.stone_texture)) { success = false; }
+    if (!validateResource("render.landscape.coal_texture",    render.landscape.coal_texture)) { success = false; }
     if (!validateResource("render.landscape.bedrock_texture", render.landscape.bedrock_texture)) { success = false; }
 
     // Sky resources.

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "stdafx.h"
+#include "common_util.h"
 
 
 // The stats for our build. Just simple data, no resources.
@@ -8,78 +9,118 @@ class BuildStats
 {
 public:
     // Default ctor.
-    BuildStats() :
-        m_dirt(0),
-        m_stone(0),
-        m_air(0),
-        m_coal(0) {}
+    BuildStats() {}
 
     // Copy ctor.
     BuildStats(const BuildStats &that) :
-        m_dirt(that.m_dirt),
-        m_stone(that.m_stone),
-        m_air(that.m_air),
-        m_coal(that.m_coal) {}
+        m_counts(that.m_counts) {}
 
     // Copy operator.
     BuildStats &operator=(const BuildStats &that) {
-        m_dirt  = that.m_dirt;
-        m_stone = that.m_stone;
-        m_air   = that.m_air;
-        m_coal  = that.m_coal;
+        m_counts = that.m_counts;
         return *this;
     }
 
     // Move ctor.
     BuildStats(BuildStats &&that) :
-        m_dirt(that.m_dirt),
-        m_stone(that.m_stone),
-        m_air(that.m_air),
-        m_coal(that.m_coal) {}
+        m_counts(that.m_counts) {}
 
     // Move operator.
     BuildStats &operator=(BuildStats &&that) {
-        m_dirt  = that.m_dirt;
-        m_stone = that.m_stone;
-        m_air   = that.m_air;
-        m_coal  = that.m_coal;
+        m_counts = that.m_counts;
         return *this;
     }
 
     // Adders and removers.
-    void addDirt(int val)  { m_dirt  += val; }
-    void addStone(int val) { m_stone += val; }
-    void addAir(int val)   { m_air   += val; }
-    void addCoal(int val)  { m_coal  += val; }
+    void add(BlockType bt)  { 
+        m_counts[bt]++;
+    }
 
     int getTotal() const {
-        return m_dirt + m_stone + m_air + m_coal;
+        int result = 0;
+        for (const auto &iter : m_counts) {
+            result += iter.second;
+        }
     }
 
     // Show this as a string.
     std::string toString() const {
         std::string result = "";
 
-        if (m_dirt  > 0) { result += fmt::format("Dirt blocks: {}\n",  m_dirt); }
-        if (m_stone > 0) { result += fmt::format("Stone blocks: {}\n", m_stone); }
-        if (m_air   > 0) { result += fmt::format("Air blocks: {}\n",   m_air); }
-        if (m_coal  > 0) { result += fmt::format("Coal blocks: {}\n",  m_coal); }
+        int dirt  = getCount(BlockType::DIRT);
+        int stone = getCount(BlockType::STONE);
+        int air   = getCount(BlockType::AIR);
+        int coal  = getCount(BlockType::COAL);
 
+        int total_blocks = dirt + stone + air + coal;
+        int db_writes = 0;
+
+        if (dirt > 0) {
+            double dirt_pct = (dirt / ((double) total_blocks)) * 100.0;
+            result += fmt::format(
+                "Dirt:  {0} blocks ({1}), {2:0.1f}%\n",
+                dirt, ReadableNumber(dirt), dirt_pct);
+
+            db_writes++;
+        }
+
+        if (stone > 0) { 
+            double stone_pct = (stone / ((double)total_blocks)) * 100.0;
+            result += fmt::format(
+                "Stone: {0} blocks ({1}), {2:0.1f}%\n",
+                stone, ReadableNumber(stone), stone_pct); 
+
+            db_writes++;
+        }
+
+        if (air > 0) { 
+            double air_pct = (air / ((double)total_blocks)) * 100.0;
+            result += fmt::format(
+                "Air:   {0} blocks ({1}, {2:0.1f}%\n", 
+                air, ReadableNumber(air), air_pct);
+
+            db_writes += air;
+        }
+
+        if (coal > 0) {
+            double coal_pct = (coal / ((double)total_blocks)) * 100.0;
+            result += fmt::format(
+                "Coal:  {0} blocks ({1}), {2:0.1f}%\n",
+                coal, ReadableNumber(coal), coal_pct);
+
+            db_writes += coal;
+        }
+
+        // How bad would this hammer the database?
+        if (db_writes > 0) {
+            result += fmt::format(
+                "\nThis would result in {0} blocks written to the database ({1}).\n",
+                db_writes, ReadableNumber(db_writes));
+        }
+
+        // All done. Get rid of that trailing newline.
         if (result.empty()) {
             result = "No data written!";
         }
         else {
-            // Get that trailing newline.
             result.erase(result.length() - 1);
         }
 
-        return result;
+        return std::move(result);
     }
 
 private:
+    // Private methods.
+    int getCount(BlockType bt) const {
+        const auto iter = m_counts.find(bt);
+        if (iter == m_counts.end()) {
+            return 0;
+        }
+        else {
+            return iter->second;
+        }
+    }
+
     // Private data.
-    int  m_dirt;
-    int  m_stone;
-    int  m_air;
-    int  m_coal;
+    std::map<BlockType, int> m_counts;
 };

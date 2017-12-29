@@ -38,6 +38,7 @@
 #include "wx/filepicker.h"
 #include "wx/gbsizer.h"
 #include "wx/listctrl.h"
+#include "wx/msgdlg.h"
 #include "wx/rawbmp.h"
 #include "wx/spinctrl.h"
 #include "wx/time.h"

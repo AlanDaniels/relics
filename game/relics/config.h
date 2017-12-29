@@ -88,6 +88,7 @@ struct ConfigLandscape
     std::string grass_texture;
     std::string dirt_texture;
     std::string stone_texture;
+    std::string coal_texture;
     std::string bedrock_texture;
 };
 

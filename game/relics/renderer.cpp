@@ -113,6 +113,7 @@ void Renderer::loadTextures()
     m_grass_tex   = std::make_unique<DrawTexture>(conf_render.landscape.grass_texture);
     m_dirt_tex    = std::make_unique<DrawTexture>(conf_render.landscape.dirt_texture);
     m_stone_tex   = std::make_unique<DrawTexture>(conf_render.landscape.stone_texture);
+    m_coal_tex    = std::make_unique<DrawTexture>(conf_render.landscape.coal_texture);
     m_bedrock_tex = std::make_unique<DrawTexture>(conf_render.landscape.bedrock_texture);
 
     m_hit_test_tex = std::make_unique<DrawTexture>("hit_test.png");
@@ -288,6 +289,7 @@ RenderStats Renderer::renderWorld()
     renderLandscapeList(SURF_GRASS_TOP, chunk_vec, *m_grass_tex, &stats);
     renderLandscapeList(SURF_DIRT,  chunk_vec, *m_dirt_tex,  &stats);
     renderLandscapeList(SURF_STONE, chunk_vec, *m_stone_tex, &stats);
+    renderLandscapeList(SURF_COAL, chunk_vec, *m_coal_tex, &stats);
 
     // Finally, render our hit test.
     renderHitTest(&stats);

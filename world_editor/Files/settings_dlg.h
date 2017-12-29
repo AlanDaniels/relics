@@ -11,6 +11,7 @@ public:
     ~SettingsDialog() {}
 
     const BuildSettings &getBuildSettings() const { return m_build_settings; }
+    bool getShowStats() const { return m_show_stats_checkbox->GetValue(); }
 
 private:
     // Private methods.
@@ -32,4 +33,5 @@ private:
     wxSpinCtrlDouble *m_stone_displacement_spinner;
     wxSpinCtrlDouble *m_stone_noise_scale_spinner;
     wxSpinCtrlDouble *m_coal_density_spinner;
+    wxCheckBox *m_show_stats_checkbox;
 };

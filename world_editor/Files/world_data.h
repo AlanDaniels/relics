@@ -37,7 +37,7 @@ private:
     bool actualSaveToDatabase(const std::string &fname, BuildStats *pOut_stats);
     bool initTables(sqlite3 *db);
     std::vector<BlockType> calcColumn(int world_x, int world_z, int dirt_height) const;
-    bool writeBlocksForColumn(int world_x, int world_z, const std::vector<BlockType> &blocks,
+    int  writeBlocksForColumn(int world_x, int world_z, const std::vector<BlockType> &blocks,
                               sqlite3 *db, sqlite3_stmt *insert_stmt, BuildStats *pOut_stats);
     int  calcStoneHeightForColumn(int world_x, int world_z, int dirt_height) const;
 

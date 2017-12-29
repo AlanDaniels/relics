@@ -19,7 +19,7 @@ WorldData::WorldData(const BuildSettings &settings) :
 
     if (!boost::filesystem::is_regular_file(fname)) {
         std::string msg = fmt::format("File '{}' does not exist.", fname);
-        wxLogMessage(msg.c_str());
+        wxMessageBox(msg, "Error", wxICON_ERROR);
         assert(false);
     }
 
@@ -101,11 +101,11 @@ bool WorldData::saveToDatabase(const std::string &fname) {
     if (success) {
         m_build_stats = stats;
         std::string stats_str = stats.toString();
-        wxLogMessage(stats_str.c_str());
+        wxMessageBox(stats_str, "Saved", wxICON_INFORMATION);
         return true;
     }
     else {
-        wxLogMessage("SQL Error! Check your logs.");
+        wxMessageBox("SQL Error! Check your logs.", "Error", wxICON_ERROR);
         return false;
     }
 }
@@ -138,12 +138,6 @@ bool WorldData::actualSaveToDatabase(const std::string &fname, BuildStats *pOut_
         return false;
     }
 
-    // Begin our transaction.
-    success = SQL_exec(db, "BEGIN TRANSACTION");
-    if (!success) {
-        return false;
-    }
-
     // Create our "insert blocks" statement.
     sqlite3_stmt *insert_stmt = SQL_prepare(db,
         "INSERT INTO blocks (x, y, z, block_type) "
@@ -152,10 +146,18 @@ bool WorldData::actualSaveToDatabase(const std::string &fname, BuildStats *pOut_
         return false;
     }
 
+    // Begin a transaction.
+    if (!SQL_exec(db, "BEGIN TRANSACTION")) {
+        return false;
+    }
+
+    int blocks_written = 0;
+
     // Got this far? Congrats, we'll actually be writing data.
     BuildStats stats;
 
-    // Calc each column and write it to the database.
+    // Calc each column and write it to the database. Note that this means
+    // looping through every pixel on the heightmap, so it's lots of work.
     int hmap_width  = m_height_map->GetWidth();
     int hmap_height = m_height_map->GetHeight();
     for     (int x = 0; x < hmap_width;  x++) {
@@ -177,12 +179,22 @@ bool WorldData::actualSaveToDatabase(const std::string &fname, BuildStats *pOut_
 
             if (dirt_height >= 0) {
                 std::vector<BlockType> blocks = calcColumn(world_x, world_z, dirt_height);
-                writeBlocksForColumn(world_x, world_z, blocks, db, insert_stmt, &stats);
+                int count = writeBlocksForColumn(world_x, world_z, blocks, db, insert_stmt, &stats);
+                blocks_written += count;
             }
-        }   
+
+            // Whenever we write, say, 1000 blocks, start a new transaction.
+            if (blocks_written >= 1000) {
+                if (!SQL_exec(db, "COMMIT TRANSACTION; BEGIN TRANSACTION;")) {
+                    return false;
+                }
+
+                blocks_written = 0;
+            }
+        }
     }
 
-    // All done.
+    // All done. Wrap up any remaining transaction.
     success = SQL_exec(db, "COMMIT TRANSACTION");
     if (!success) {
         return false;
@@ -246,7 +258,7 @@ int WorldData::calcStoneHeightForColumn(int world_x, int world_z, int dirt_heigh
     double noise_scale  = m_build_settings.getStoneNoiseScale();
 
     // First, scale the stone, then lower it.
-    int result = (dirt_height * percent) - subtracted;
+    int result = (dirt_height * (percent / 100.0)) - subtracted;
 
     // Scale our noise outward.
     double noise_x   = world_x / noise_scale;
@@ -261,6 +273,7 @@ int WorldData::calcStoneHeightForColumn(int world_x, int world_z, int dirt_heigh
         result = -1;
     }
 
+    assert(result <= 255);
     return result;
 }
 
@@ -311,13 +324,16 @@ std::vector<BlockType> WorldData::calcColumn(int world_x, int world_z, int dirt_
 // For SQLite string binding. Just hard-code the string lengthts.
 // For each spot on our heightmap, write the value of 'dirt_top' where the dirt world
 // actually start. Writing a value of 'dirt' for each individual block would take forever.
-bool WorldData::writeBlocksForColumn(
+// Return the number of rows written to the database, or -1 if something went wrong.
+int WorldData::writeBlocksForColumn(
     int world_x, int world_z, const std::vector<BlockType> &blocks,
     sqlite3 *db, sqlite3_stmt *insert_stmt, BuildStats *pOut_stats)
 {
+    int blocks_written = 0;
+
     int ret_code;
 
-    // Calc the tops of the dirt and stone.
+    // Calc the real tops of the dirt and stone.
     int dirt_top  = -1;
     int stone_top = -1;
     for (unsigned int i = 0; i < blocks.size(); i++) {
@@ -330,6 +346,7 @@ bool WorldData::writeBlocksForColumn(
     }
 
     // Write the dirt top.
+    sqlite3_reset(insert_stmt);
     sqlite3_bind_int(insert_stmt, 1, world_x);
     sqlite3_bind_int(insert_stmt, 2, dirt_top);
     sqlite3_bind_int(insert_stmt, 3, world_z);
@@ -341,14 +358,15 @@ bool WorldData::writeBlocksForColumn(
             "Insert failed, code = {0}, error = {1}",
             SQL_code_to_str(ret_code),
             sqlite3_errmsg(db));
-        wxLogMessage(msg.c_str());
-        return false;
+        wxMessageBox(msg, "Error", wxICON_ERROR);
+        return -1;
     }
+
+    blocks_written++;
 
     // Write the stone top (if there is one).
     if (stone_top >= 0) {
         sqlite3_reset(insert_stmt);
-
         sqlite3_bind_int(insert_stmt, 1, world_x);
         sqlite3_bind_int(insert_stmt, 2, stone_top);
         sqlite3_bind_int(insert_stmt, 3, world_z);
@@ -360,18 +378,17 @@ bool WorldData::writeBlocksForColumn(
                 "Insert failed, code = {0}, error = {1}",
                 SQL_code_to_str(ret_code),
                 sqlite3_errmsg(db));
-            wxLogMessage(msg.c_str());
-            return false;
+            wxMessageBox(msg, "Error", wxICON_ERROR);
+            return -1;
         }
 
-        sqlite3_reset(insert_stmt);
+        blocks_written++;
     }
 
     // Then, write each individual coal block. There shouldn't be too many of these.
     for (int y = 0; y < stone_top; y++) {
         if (blocks[y] == BlockType::COAL) {
             sqlite3_reset(insert_stmt);
-
             sqlite3_bind_int(insert_stmt, 1, world_x);
             sqlite3_bind_int(insert_stmt, 2, y);
             sqlite3_bind_int(insert_stmt, 3, world_z);
@@ -383,12 +400,11 @@ bool WorldData::writeBlocksForColumn(
                     "Insert failed, code = {0}, error = {1}",
                     SQL_code_to_str(ret_code),
                     sqlite3_errmsg(db));
-                wxLogMessage(msg.c_str());
-                return false;
+                wxMessageBox(msg, "Error", wxICON_ERROR);
+                return -1;
             }
 
-            sqlite3_reset(insert_stmt);
-
+            blocks_written++;
         }
     }
 
@@ -397,5 +413,5 @@ bool WorldData::writeBlocksForColumn(
         pOut_stats->add(blocks[y]);
     }
 
-    return true;
+    return blocks_written;
 }

@@ -21,7 +21,7 @@ enum {
 SettingsDialog::SettingsDialog(wxWindow *parent) :
     wxDialog(parent, wxID_ANY, "World Settings")
 {
-    const int BORDER = 10;
+    const int BORDER = 5;
     const int WIDE_WIDTH = 400;
     const int THIN_WIDTH = 75;
 
@@ -84,6 +84,10 @@ SettingsDialog::SettingsDialog(wxWindow *parent) :
     wxStaticBoxSizer *static_box = new wxStaticBoxSizer(wxHORIZONTAL, this, wxT(" Build Settings "));
     static_box->Add(m_panel);
 
+    // Our "show stats" check box.
+    m_show_stats_checkbox = new wxCheckBox(this, -1, "Show build stats once we're done");
+    m_show_stats_checkbox->SetValue(true);
+
     // A horizontal box for our buttons.
     wxButton *okayButton   = new wxButton(this, wxID_OK, wxT("OK"));
     wxButton *cancelButton = new wxButton(this, wxID_CANCEL, wxT("Cancel"));
@@ -96,6 +100,7 @@ SettingsDialog::SettingsDialog(wxWindow *parent) :
     // A vertical box for the dialog content.
     wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
     vbox->Add(static_box, 1, wxALL, BORDER);
+    vbox->Add(m_show_stats_checkbox, 0, wxALL, BORDER);
     vbox->Add(button_box, 0, wxALL, BORDER);
     SetSizer(vbox);
 

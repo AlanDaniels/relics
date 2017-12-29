@@ -127,12 +127,14 @@ void MyMainFrame::onMenuNew(wxCommandEvent &evt)
         m_world_data = std::make_unique<WorldData>(settings);
         m_canvas->repaintCanvas();
 
-        wxBeginBusyCursor();
-        BuildStats stats = m_world_data->performDryRun();
-        wxEndBusyCursor();
+        if (dlg.getShowStats()) {
+            wxBeginBusyCursor();
+            BuildStats stats = m_world_data->performDryRun();
+            wxEndBusyCursor();
 
-        std::string descr = stats.toString();
-        wxMessageBox(descr, "Build Stats", wxICON_INFORMATION);
+            std::string descr = stats.toString();
+            wxMessageBox(descr, "Build Stats", wxICON_INFORMATION);
+        }
     }
 
 #if 0
@@ -161,14 +163,14 @@ void MyMainFrame::onMenuNew(wxCommandEvent &evt)
 
 void MyMainFrame::onMenuOpen(wxCommandEvent &evt)
 {
-    wxLogMessage("Hello world from wxWidgets!");
+    wxMessageBox("Hello world from wxWidgets!", "Test", wxICON_INFORMATION);
 }
 
 
 void MyMainFrame::onMenuSave(wxCommandEvent &evt)
 {
     if (m_world_data == nullptr) {
-        wxLogMessage("Nothing to save!");
+        wxMessageBox("Nothing to save!", "No data", wxICON_EXCLAMATION);
         return;
     }
 
@@ -191,13 +193,13 @@ void MyMainFrame::onMenuSave(wxCommandEvent &evt)
 
 void MyMainFrame::onMenuSaveAs(wxCommandEvent &evt)
 {
-    wxLogMessage("Hello world from wxWidgets!");
+    wxMessageBox("Hello world from wxWidgets!", "Test", wxICON_INFORMATION);
 }
 
 
 void MyMainFrame::onMenuChangeImage(wxCommandEvent &evt)
 {
-    wxLogMessage("Hello world from wxWidgets!");
+    wxMessageBox("Hello world from wxWidgets!", "Test", wxICON_INFORMATION);
 }
 
 

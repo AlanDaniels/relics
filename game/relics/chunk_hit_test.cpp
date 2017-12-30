@@ -66,9 +66,9 @@ static bool CheckSouthFaces(
 
         MyVec4  impact;
         GLfloat distance;
-        HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
-        if (hit == HITTEST_SUCCESS) {
-            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_NORTH);
+        HitTestType hit = WorldHitTest(eye_ray, plane, &impact, &distance);
+        if (hit == HitTestType::SUCCESS) {
+            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NudgeType::NORTH);
             if (chunk.IsGlobalGridWithin(global_coord)) {
                 LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
                 BlockType block_type  = chunk.getBlockType(local_coord);
@@ -100,9 +100,9 @@ static bool CheckNorthFaces(
 
         MyVec4  impact;
         GLfloat distance;
-        HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
-        if (hit == HITTEST_SUCCESS) {
-            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_SOUTH);
+        HitTestType hit = WorldHitTest(eye_ray, plane, &impact, &distance);
+        if (hit == HitTestType::SUCCESS) {
+            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NudgeType::SOUTH);
             if (chunk.IsGlobalGridWithin(global_coord)) {
                 LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
                 BlockType block_type  = chunk.getBlockType(local_coord);
@@ -134,9 +134,9 @@ static bool CheckWestFaces(
 
         MyVec4  impact;
         GLfloat distance;
-        HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
-        if (hit == HITTEST_SUCCESS) {
-            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_EAST);
+        HitTestType hit = WorldHitTest(eye_ray, plane, &impact, &distance);
+        if (hit == HitTestType::SUCCESS) {
+            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NudgeType::EAST);
             if (chunk.IsGlobalGridWithin(global_coord)) {
                 LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
                 BlockType block_type  = chunk.getBlockType(local_coord);
@@ -168,9 +168,9 @@ static bool CheckEastFaces(
 
         MyVec4  impact;
         GLfloat distance;
-        HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
-        if (hit == HITTEST_SUCCESS) {
-            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_WEST);
+        HitTestType hit = WorldHitTest(eye_ray, plane, &impact, &distance);
+        if (hit == HitTestType::SUCCESS) {
+            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NudgeType::WEST);
             if (chunk.IsGlobalGridWithin(global_coord)) {
                 LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
                 BlockType block_type  = chunk.getBlockType(local_coord);
@@ -202,9 +202,9 @@ static bool CheckTopFaces(
 
         MyVec4  impact;
         GLfloat distance;
-        HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
-        if (hit == HITTEST_SUCCESS) {
-            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_DOWN);
+        HitTestType hit = WorldHitTest(eye_ray, plane, &impact, &distance);
+        if (hit == HitTestType::SUCCESS) {
+            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NudgeType::DOWN);
             if (chunk.IsGlobalGridWithin(global_coord)) {
                 LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
                 BlockType block_type  = chunk.getBlockType(local_coord);
@@ -236,9 +236,9 @@ static bool CheckBottomFaces(
 
         MyVec4  impact;
         GLfloat distance;
-        HitTestEnum hit = WorldHitTest(eye_ray, plane, &impact, &distance);
-        if (hit == HITTEST_SUCCESS) {
-            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NUDGE_UP);
+        HitTestType hit = WorldHitTest(eye_ray, plane, &impact, &distance);
+        if (hit == HitTestType::SUCCESS) {
+            GlobalGrid global_coord = WorldPosToGlobalGrid(impact, NudgeType::UP);
             if (chunk.IsGlobalGridWithin(global_coord)) {
                 LocalGrid local_coord = GlobalGridToLocal(global_coord, chunk.getOrigin());
                 BlockType block_type  = chunk.getBlockType(local_coord);

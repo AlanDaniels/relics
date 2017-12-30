@@ -217,7 +217,7 @@ public:
     MyMatrix4by4 times(const MyMatrix4by4 &that);
 
     static MyMatrix4by4 Identity();
-    static MyMatrix4by4 Translate(GLfloat tx, GLfloat ty, GLfloat tz);
+    static MyMatrix4by4 Translate(const MyVec4 &tvec);
     static MyMatrix4by4 RotateX(GLfloat degrees);
     static MyMatrix4by4 RotateY(GLfloat degrees);
     static MyMatrix4by4 RotateZ(GLfloat degrees);
@@ -281,30 +281,30 @@ private:
 
 
 // Results from a hit-test.
-enum HitTestEnum
+enum class HitTestType
 {
-    HITTEST_NONE,
-    HITTEST_PARALLEL,
-    HITTEST_OTHER_WAY,
-    HITTEST_BEHIND,
-    HITTEST_SUCCESS
+    NONE      = 0,
+    PARALLEL  = 1,
+    OTHER_WAY = 2,
+    BEHIND    = 3,
+    SUCCESS   = 4
 };
 
 
 // Hit-test logic, using world coordinates.
-HitTestEnum WorldHitTest(const MyRay &ray, const MyPlane &plane, MyVec4 *pOut_impact, GLfloat *pOut_dist);
+HitTestType WorldHitTest(const MyRay &ray, const MyPlane &plane, MyVec4 *pOut_impact, GLfloat *pOut_dist);
 
 
 // Grid coords.
-enum NudgeEnum
+enum class NudgeType
 {
-    NUDGE_NONE,
-    NUDGE_EAST,
-    NUDGE_WEST,
-    NUDGE_UP,
-    NUDGE_DOWN,
-    NUDGE_NORTH,
-    NUDGE_SOUTH
+    NONE  = 0,
+    EAST  = 1,
+    WEST  = 2,
+    UP    = 3,
+    DOWN  = 4,
+    NORTH = 5,
+    SOUTH = 6
 };
 
 
@@ -474,7 +474,7 @@ private:
 };
 
 
-GlobalGrid  WorldPosToGlobalGrid(const MyVec4 &pos, NudgeEnum nudge_type);
+GlobalGrid  WorldPosToGlobalGrid(const MyVec4 &pos, NudgeType nudge_type);
 LocalGrid   GlobalGridToLocal(const GlobalGrid &coord, const ChunkOrigin &origin);
 LocalPillar GlobalPillarToLocal(const GlobalPillar &pillar, const ChunkOrigin &origin);
 

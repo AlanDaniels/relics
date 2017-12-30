@@ -221,12 +221,12 @@ MyMatrix4by4 MyMatrix4by4::Identity()
 
 
 // Build a translation matrix.
-MyMatrix4by4 MyMatrix4by4::Translate(GLfloat tx, GLfloat ty, GLfloat tz)
+MyMatrix4by4 MyMatrix4by4::Translate(const MyVec4 &tvec)
 {
     return MyMatrix4by4(
-        1.0f, 0.0f, 0.0f, tx,
-        0.0f, 1.0f, 0.0f, ty,
-        0.0f, 0.0f, 1.0f, tz,
+        1.0f, 0.0f, 0.0f, tvec.x(),
+        0.0f, 1.0f, 0.0f, tvec.y(),
+        0.0f, 0.0f, 1.0f, tvec.z(),
         0.0f, 0.0f, 0.0f, 1.0f);
 }
 
@@ -331,14 +331,14 @@ GLfloat MyPlane::distanceToPoint(const MyVec4 &point) const
 
 // Hit-test logic, using world coordinates.
 // If we're successful, then fill in the ouput params.
-HitTestEnum WorldHitTest(const MyRay &ray, const MyPlane &plane, MyVec4 *pOut_impact, GLfloat *pOut_distance)
+HitTestType WorldHitTest(const MyRay &ray, const MyPlane &plane, MyVec4 *pOut_impact, GLfloat *pOut_distance)
 {
     const MyVec4 &normal = plane.getNormal();
 
     // Calc the distance from our start point to the plane.
     GLfloat denominator = MyVec4::Dot(normal, ray.getDir());
     if (abs(denominator) < EPSILON) {
-        return HITTEST_PARALLEL;
+        return HitTestType::PARALLEL;
     }
 
     GLfloat numerator = MyVec4::Dot(ray.getStart(), normal) - plane.getDist();
@@ -346,7 +346,7 @@ HitTestEnum WorldHitTest(const MyRay &ray, const MyPlane &plane, MyVec4 *pOut_im
 
     // The plane is "behind" the ray, so the ray will never hit it.
     if (distance < 0.0f) {
-        return HITTEST_OTHER_WAY;
+        return HitTestType::OTHER_WAY;
     }
 
     // Get a point on the plane.
@@ -356,12 +356,12 @@ HitTestEnum WorldHitTest(const MyRay &ray, const MyPlane &plane, MyVec4 *pOut_im
     MyVec4 reverse = ray.getStart().minus(normal);
     double dot = MyVec4::Dot(reverse, normal) - plane.getDist();
     if (dot < 0) {
-        return HITTEST_BEHIND;
+        return HitTestType::BEHIND;
     }
     else {
         *pOut_impact   = impact;
         *pOut_distance = distance;
-        return HITTEST_SUCCESS;
+        return HitTestType::SUCCESS;
     }
 }
 
@@ -403,21 +403,22 @@ LocalGrid::LocalGrid(int x, int y, int z) :
 // Convert a world coord into a grid coord.
 // The nudge factor is so we can "burrow" into a block a bit, when we do a
 // hit-test against a block face, so that we don't hit strange edge cases in the math.
-GlobalGrid WorldPosToGlobalGrid(const MyVec4 &pos, NudgeEnum nudge)
+GlobalGrid WorldPosToGlobalGrid(const MyVec4 &pos, NudgeType nudge)
 {
     float fixed_x = pos.x();
     float fixed_y = pos.y();
     float fixed_z = pos.z();
 
     switch (nudge) {
-    case NUDGE_NONE: break;
-    case NUDGE_EAST:  fixed_x += NUDGE_AMOUNT; break;
-    case NUDGE_WEST:  fixed_x -= NUDGE_AMOUNT; break;
-    case NUDGE_UP:    fixed_y += NUDGE_AMOUNT; break;
-    case NUDGE_DOWN:  fixed_y -= NUDGE_AMOUNT; break;
-    case NUDGE_NORTH: fixed_z += NUDGE_AMOUNT; break;
-    case NUDGE_SOUTH: fixed_z -= NUDGE_AMOUNT; break;
-    default: PrintTheImpossible(__FILE__, __LINE__, nudge);
+    case NudgeType::NONE: break;
+    case NudgeType::EAST:  fixed_x += NUDGE_AMOUNT; break;
+    case NudgeType::WEST:  fixed_x -= NUDGE_AMOUNT; break;
+    case NudgeType::UP:    fixed_y += NUDGE_AMOUNT; break;
+    case NudgeType::DOWN:  fixed_y -= NUDGE_AMOUNT; break;
+    case NudgeType::NORTH: fixed_z += NUDGE_AMOUNT; break;
+    case NudgeType::SOUTH: fixed_z -= NUDGE_AMOUNT; break;
+    default: 
+        PrintTheImpossible(__FILE__, __LINE__, static_cast<int>(nudge));
     }
 
     int x = static_cast<int>(floor(fixed_x / BLOCK_SCALE));

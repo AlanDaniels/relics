@@ -91,7 +91,7 @@ void GameWorld::resetCamera()
     m_camera_pitch = 0.0f;
     m_camera_yaw   = 0.0f;
     m_camera_pos   = getCameraStartPos();
-    m_current_grid_coord   = WorldPosToGlobalGrid(m_camera_pos, NUDGE_NONE);
+    m_current_grid_coord   = WorldPosToGlobalGrid(m_camera_pos, NudgeType::NONE);
     m_current_chunk_origin = WorldToChunkOrigin(m_camera_pos);
 }
 
@@ -157,7 +157,7 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
         MyVec4 rotated = rotator.times(VEC4_NORTHWARD);
         MyVec4 move    = rotated.times(centimeters * boost);
 
-        MyMatrix4by4 tr = MyMatrix4by4::Translate(move.x(), move.y(), move.z());
+        MyMatrix4by4 tr = MyMatrix4by4::Translate(move);
         m_camera_pos = tr.times(m_camera_pos);
     }
 
@@ -165,7 +165,7 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
         MyVec4 rotated = rotator.times(VEC4_NORTHWARD);
         MyVec4 move    = rotated.times(-centimeters * boost);
 
-        MyMatrix4by4 tr = MyMatrix4by4::Translate(move.x(), move.y(), move.z());
+        MyMatrix4by4 tr = MyMatrix4by4::Translate(move);
         m_camera_pos = tr.times(m_camera_pos);
     }
 
@@ -173,7 +173,7 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
         MyVec4 rotated = rotator.times(VEC4_EASTWARD);
         MyVec4 move    = rotated.times(-centimeters * boost);
 
-        MyMatrix4by4 tr = MyMatrix4by4::Translate(move.x(), move.y(), move.z());
+        MyMatrix4by4 tr = MyMatrix4by4::Translate(move);
         m_camera_pos = tr.times(m_camera_pos);
     }
 
@@ -181,26 +181,26 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
         MyVec4 rotated = rotator.times(VEC4_EASTWARD);
         MyVec4 move    = rotated.times(centimeters * boost);
 
-        MyMatrix4by4 tr = MyMatrix4by4::Translate(move.x(), move.y(), move.z());
+        MyMatrix4by4 tr = MyMatrix4by4::Translate(move);
         m_camera_pos = tr.times(m_camera_pos);
     }
 
     if (msg.getMoveUp()) {
         MyVec4 move = VEC4_UPWARD.times(centimeters * boost);
 
-        MyMatrix4by4 tr = MyMatrix4by4::Translate(move.x(), move.y(), move.z());
+        MyMatrix4by4 tr = MyMatrix4by4::Translate(move);
         m_camera_pos = tr.times(m_camera_pos);
     }
 
     else if (msg.getMoveDown()) {
         MyVec4 move = VEC4_UPWARD.times(-centimeters * boost);
 
-        MyMatrix4by4 tr = MyMatrix4by4::Translate(move.x(), move.y(), move.z());
+        MyMatrix4by4 tr = MyMatrix4by4::Translate(move);
         m_camera_pos = tr.times(m_camera_pos);
     }
 
     // Since our camera moved, see if we need to recalc any of the world.
-    GlobalGrid  new_location = WorldPosToGlobalGrid(m_camera_pos, NUDGE_NONE);
+    GlobalGrid  new_location = WorldPosToGlobalGrid(m_camera_pos, NudgeType::NONE);
 
     int eval_blocks = GetConfig().logic.eval_blocks;
     ChunkOrigin new_chunk_origin = WorldToChunkOrigin(m_camera_pos);

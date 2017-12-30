@@ -12,7 +12,7 @@
 
 
 std::array<Vertex_PNT, 6> GetLandscapePatch_PNT(
-    const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face)
+    const Chunk &chunk, const LocalGrid &local_coord, FaceType face)
 {
     int x = local_coord.x();
     int y = local_coord.y();
@@ -24,42 +24,42 @@ std::array<Vertex_PNT, 6> GetLandscapePatch_PNT(
     MyVec4 point_ur;
 
     switch (face) {
-    case FACE_TOP:
+    case FaceType::TOP:
         point_ll = chunk.localGridToWorldPos(x,     y + 1, z);
         point_lr = chunk.localGridToWorldPos(x + 1, y + 1, z);
         point_ul = chunk.localGridToWorldPos(x,     y + 1, z + 1);
         point_ur = chunk.localGridToWorldPos(x + 1, y + 1, z + 1);
         break;
 
-    case FACE_BOTTOM:
+    case FaceType::BOTTOM:
         point_ll = chunk.localGridToWorldPos(x,     y, z + 1);
         point_lr = chunk.localGridToWorldPos(x + 1, y, z + 1);
         point_ul = chunk.localGridToWorldPos(x,     y, z);
         point_ur = chunk.localGridToWorldPos(x + 1, y, z);
         break;
 
-    case FACE_NORTH:
+    case FaceType::NORTH:
         point_ll = chunk.localGridToWorldPos(x + 1, y,     z + 1);
         point_lr = chunk.localGridToWorldPos(x,     y,     z + 1);
         point_ul = chunk.localGridToWorldPos(x + 1, y + 1, z + 1);
         point_ur = chunk.localGridToWorldPos(x,     y + 1, z + 1);
         break;
 
-    case FACE_SOUTH:
+    case FaceType::SOUTH:
         point_ll = chunk.localGridToWorldPos(x,     y, z);
         point_lr = chunk.localGridToWorldPos(x + 1, y, z);
         point_ul = chunk.localGridToWorldPos(x,     y + 1, z);
         point_ur = chunk.localGridToWorldPos(x + 1, y + 1, z);
         break;
 
-    case FACE_EAST:
+    case FaceType::EAST:
         point_ll = chunk.localGridToWorldPos(x + 1, y,     z);
         point_lr = chunk.localGridToWorldPos(x + 1, y,     z + 1);
         point_ul = chunk.localGridToWorldPos(x + 1, y + 1, z);
         point_ur = chunk.localGridToWorldPos(x + 1, y + 1, z + 1);
         break;
 
-    case FACE_WEST:
+    case FaceType::WEST:
         point_ll = chunk.localGridToWorldPos(x, y,     z + 1);
         point_lr = chunk.localGridToWorldPos(x, y,     z);
         point_ul = chunk.localGridToWorldPos(x, y + 1, z + 1);
@@ -67,23 +67,21 @@ std::array<Vertex_PNT, 6> GetLandscapePatch_PNT(
         break;
 
     default:
-        PrintTheImpossible(__FILE__, __LINE__, face);
+        PrintTheImpossible(__FILE__, __LINE__, static_cast<int>(face));
         break;
     }
 
     // All our normals will face in the same direction.
     MyVec4 dir_normal;
     switch (face) {
-    case FACE_TOP:    dir_normal = VEC4_UPWARD;    break;
-    case FACE_BOTTOM: dir_normal = VEC4_DOWNWARD;  break;
-    case FACE_NORTH:  dir_normal = VEC4_NORTHWARD; break;
-    case FACE_SOUTH:  dir_normal = VEC4_SOUTHWARD; break;
-    case FACE_EAST:   dir_normal = VEC4_EASTWARD;  break;
-    case FACE_WEST:   dir_normal = VEC4_WESTWARD;  break;
-        break;
-
+    case FaceType::TOP:    dir_normal = VEC4_UPWARD;    break;
+    case FaceType::BOTTOM: dir_normal = VEC4_DOWNWARD;  break;
+    case FaceType::NORTH:  dir_normal = VEC4_NORTHWARD; break;
+    case FaceType::SOUTH:  dir_normal = VEC4_SOUTHWARD; break;
+    case FaceType::EAST:   dir_normal = VEC4_EASTWARD;  break;
+    case FaceType::WEST:   dir_normal = VEC4_WESTWARD;  break;
     default:
-        PrintTheImpossible(__FILE__, __LINE__, face);
+        PrintTheImpossible(__FILE__, __LINE__, static_cast<int>(face));
         dir_normal = VEC4_UPWARD;
         break;
     }
@@ -104,7 +102,7 @@ std::array<Vertex_PNT, 6> GetLandscapePatch_PNT(
 
 
 std::array<Vertex_PT, 6> GetLandscapePatch_PT(
-    const Chunk &chunk, const LocalGrid &local_coord, FaceEnum face)
+    const Chunk &chunk, const LocalGrid &local_coord, FaceType face)
 {
     int x = local_coord.x();
     int y = local_coord.y();
@@ -116,66 +114,65 @@ std::array<Vertex_PT, 6> GetLandscapePatch_PT(
     MyVec4 point_ur;
 
     switch (face) {
-    case FACE_TOP:
-        point_ll = chunk.localGridToWorldPos(x, y + 1, z);
+    case FaceType::TOP:
+        point_ll = chunk.localGridToWorldPos(x,     y + 1, z);
         point_lr = chunk.localGridToWorldPos(x + 1, y + 1, z);
-        point_ul = chunk.localGridToWorldPos(x, y + 1, z + 1);
+        point_ul = chunk.localGridToWorldPos(x,     y + 1, z + 1);
         point_ur = chunk.localGridToWorldPos(x + 1, y + 1, z + 1);
         break;
 
-    case FACE_BOTTOM:
-        point_ll = chunk.localGridToWorldPos(x, y, z + 1);
+    case FaceType::BOTTOM:
+        point_ll = chunk.localGridToWorldPos(x,     y, z + 1);
         point_lr = chunk.localGridToWorldPos(x + 1, y, z + 1);
-        point_ul = chunk.localGridToWorldPos(x, y, z);
+        point_ul = chunk.localGridToWorldPos(x,     y, z);
         point_ur = chunk.localGridToWorldPos(x + 1, y, z);
         break;
 
-    case FACE_NORTH:
-        point_ll = chunk.localGridToWorldPos(x + 1, y, z + 1);
-        point_lr = chunk.localGridToWorldPos(x, y, z + 1);
+    case FaceType::NORTH:
+        point_ll = chunk.localGridToWorldPos(x + 1, y,     z + 1);
+        point_lr = chunk.localGridToWorldPos(x,     y,     z + 1);
         point_ul = chunk.localGridToWorldPos(x + 1, y + 1, z + 1);
-        point_ur = chunk.localGridToWorldPos(x, y + 1, z + 1);
+        point_ur = chunk.localGridToWorldPos(x,     y + 1, z + 1);
         break;
 
-    case FACE_SOUTH:
-        point_ll = chunk.localGridToWorldPos(x, y, z);
-        point_lr = chunk.localGridToWorldPos(x + 1, y, z);
-        point_ul = chunk.localGridToWorldPos(x, y + 1, z);
+    case FaceType::SOUTH:
+        point_ll = chunk.localGridToWorldPos(x,     y,     z);
+        point_lr = chunk.localGridToWorldPos(x + 1, y,     z);
+        point_ul = chunk.localGridToWorldPos(x,     y + 1, z);
         point_ur = chunk.localGridToWorldPos(x + 1, y + 1, z);
         break;
 
-    case FACE_EAST:
-        point_ll = chunk.localGridToWorldPos(x + 1, y, z);
-        point_lr = chunk.localGridToWorldPos(x + 1, y, z + 1);
+    case FaceType::EAST:
+        point_ll = chunk.localGridToWorldPos(x + 1, y,     z);
+        point_lr = chunk.localGridToWorldPos(x + 1, y,     z + 1);
         point_ul = chunk.localGridToWorldPos(x + 1, y + 1, z);
         point_ur = chunk.localGridToWorldPos(x + 1, y + 1, z + 1);
         break;
 
-    case FACE_WEST:
-        point_ll = chunk.localGridToWorldPos(x, y, z + 1);
-        point_lr = chunk.localGridToWorldPos(x, y, z);
+    case FaceType::WEST:
+        point_ll = chunk.localGridToWorldPos(x, y,     z + 1);
+        point_lr = chunk.localGridToWorldPos(x, y,     z);
         point_ul = chunk.localGridToWorldPos(x, y + 1, z + 1);
         point_ur = chunk.localGridToWorldPos(x, y + 1, z);
         break;
 
     default:
-        PrintTheImpossible(__FILE__, __LINE__, face);
+        PrintTheImpossible(__FILE__, __LINE__, static_cast<int>(face));
         break;
     }
 
     // All our normals will face in the same direction.
     MyVec4 dir_normal;
     switch (face) {
-    case FACE_TOP:    dir_normal = VEC4_UPWARD;    break;
-    case FACE_BOTTOM: dir_normal = VEC4_DOWNWARD;  break;
-    case FACE_NORTH:  dir_normal = VEC4_NORTHWARD; break;
-    case FACE_SOUTH:  dir_normal = VEC4_SOUTHWARD; break;
-    case FACE_EAST:   dir_normal = VEC4_EASTWARD;  break;
-    case FACE_WEST:   dir_normal = VEC4_WESTWARD;  break;
-        break;
+    case FaceType::TOP:    dir_normal = VEC4_UPWARD;    break;
+    case FaceType::BOTTOM: dir_normal = VEC4_DOWNWARD;  break;
+    case FaceType::NORTH:  dir_normal = VEC4_NORTHWARD; break;
+    case FaceType::SOUTH:  dir_normal = VEC4_SOUTHWARD; break;
+    case FaceType::EAST:   dir_normal = VEC4_EASTWARD;  break;
+    case FaceType::WEST:   dir_normal = VEC4_WESTWARD;  break;
 
     default:
-        PrintTheImpossible(__FILE__, __LINE__, face);
+        PrintTheImpossible(__FILE__, __LINE__, static_cast<int>(face));
         dir_normal = VEC4_UPWARD;
         break;
     }

@@ -11,13 +11,13 @@ public:
     // The default ctor, which we should only call in one place.
     // Note that we set the distance to the worst possible value.
     ChunkHitTestDetail() :
-        m_face(FACE_NONE),
+        m_face(FaceType::NONE),
         m_dist(FLT_MAX) {}
         
     ChunkHitTestDetail(
         const ChunkOrigin &origin, 
         const GlobalGrid &coord,
-        FaceEnum face, 
+        FaceType face, 
         const MyVec4 &impact, 
         GLfloat dist) :
         m_chunk_origin(origin),
@@ -37,7 +37,7 @@ public:
 
     const ChunkOrigin &getChunkOrigin() const { return m_chunk_origin; }
     const GlobalGrid &getGlobalCoord() const { return m_global_coord; }
-    FaceEnum getFace() const { return m_face; }
+    FaceType getFace() const { return m_face; }
     const MyVec4 &getImpact() const { return m_impact; }
     GLfloat getDist() const { return m_dist; }
 
@@ -46,7 +46,7 @@ public:
 private:
     ChunkOrigin m_chunk_origin;
     GlobalGrid  m_global_coord;
-    FaceEnum    m_face;
+    FaceType    m_face;
     MyVec4      m_impact;
     GLfloat     m_dist;
 };

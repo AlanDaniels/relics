@@ -25,16 +25,16 @@ std::string ChunkHitTestDetail::toDescription() const
 {
     const char *face_to_str;
     switch (m_face) {
-    case FACE_NONE:   face_to_str = "None";   break;
-    case FACE_SOUTH:  face_to_str = "South";  break;
-    case FACE_NORTH:  face_to_str = "North";  break;
-    case FACE_WEST:   face_to_str = "West";   break;
-    case FACE_EAST:   face_to_str = "East";   break;
-    case FACE_TOP:    face_to_str = "Top";    break;
-    case FACE_BOTTOM: face_to_str = "Bottom"; break;
+    case FaceType::NONE:   face_to_str = "None";   break;
+    case FaceType::SOUTH:  face_to_str = "South";  break;
+    case FaceType::NORTH:  face_to_str = "North";  break;
+    case FaceType::WEST:   face_to_str = "West";   break;
+    case FaceType::EAST:   face_to_str = "East";   break;
+    case FaceType::TOP:    face_to_str = "Top";    break;
+    case FaceType::BOTTOM: face_to_str = "Bottom"; break;
     default:
-        PrintTheImpossible(__FILE__, __LINE__, m_face);
-        return std::string("");
+        PrintTheImpossible(__FILE__, __LINE__, static_cast<int>(m_face));
+        return "";
     }
 
     char msg[128];
@@ -261,7 +261,7 @@ static bool CheckBottomFaces(
 bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail *pOut)
 {
     // Test each of the six faces. The winner is whichever is closest.
-    FaceEnum winner  = FACE_NONE;
+    FaceType winner  = FaceType::NONE;
     GLfloat  closest = FLT_MAX;
 
     // South faces.
@@ -270,7 +270,7 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
     GLfloat south_dist = 0.0f;
     bool south_hit = CheckSouthFaces(chunk, eye_ray, &south_coord, &south_impact, &south_dist);
     if (south_hit && (south_dist < closest)) {
-        winner  = FACE_SOUTH;
+        winner  = FaceType::SOUTH;
         closest = south_dist;
     }
 
@@ -280,7 +280,7 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
     GLfloat north_dist = 0.0f;
     bool north_hit = CheckNorthFaces(chunk, eye_ray, &north_coord, &north_impact, &north_dist);
     if (north_hit && (north_dist < closest)) {
-        winner  = FACE_NORTH;
+        winner  = FaceType::NORTH;
         closest = north_dist;
     }
 
@@ -290,7 +290,7 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
     GLfloat west_dist = 0.0;
     bool west_hit = CheckWestFaces(chunk, eye_ray, &west_coord, &west_impact, &west_dist);
     if (west_hit && (west_dist < closest)) {
-        winner  = FACE_WEST;
+        winner  = FaceType::WEST;
         closest = west_dist;
     }
 
@@ -300,7 +300,7 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
     GLfloat east_dist = 0.0;
     bool east_hit = CheckEastFaces(chunk, eye_ray, &east_coord, &east_impact, &east_dist);
     if (east_hit && (east_dist < closest)) {
-        winner  = FACE_EAST;
+        winner  = FaceType::EAST;
         closest = east_dist;
     }
 
@@ -310,7 +310,7 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
     GLfloat top_dist   = 0.0;
     bool top_hit = CheckTopFaces(chunk, eye_ray, &top_coord, &top_impact, &top_dist);
     if (top_hit && (top_dist < closest)) {
-        winner  = FACE_TOP;
+        winner  = FaceType::TOP;
         closest = top_dist;
     }
 
@@ -320,7 +320,7 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
     GLfloat bottom_dist = 0.0;
     bool bottom_hit = CheckBottomFaces(chunk, eye_ray, &bottom_coord, &bottom_impact, &bottom_dist);
     if (bottom_hit && (bottom_dist < closest)) {
-        winner  = FACE_BOTTOM;
+        winner  = FaceType::BOTTOM;
         closest = bottom_dist;
     }
 
@@ -328,36 +328,36 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
     const ChunkOrigin &origin = chunk.getOrigin();
 
     switch (winner) {
-    case FACE_NONE:
+    case FaceType::NONE:
         // If we got to here, we didn't hit anything.
         return false;
 
-    case FACE_SOUTH:
-        *pOut = ChunkHitTestDetail(origin, south_coord, FACE_SOUTH, south_impact, south_dist);
+    case FaceType::SOUTH:
+        *pOut = ChunkHitTestDetail(origin, south_coord, FaceType::SOUTH, south_impact, south_dist);
         return true;
 
-    case FACE_NORTH:
-        *pOut = ChunkHitTestDetail(origin, north_coord, FACE_NORTH, north_impact, north_dist);
+    case FaceType::NORTH:
+        *pOut = ChunkHitTestDetail(origin, north_coord, FaceType::NORTH, north_impact, north_dist);
         return true;
 
-    case FACE_WEST:
-        *pOut = ChunkHitTestDetail(origin, west_coord, FACE_WEST, west_impact, west_dist);
+    case FaceType::WEST:
+        *pOut = ChunkHitTestDetail(origin, west_coord, FaceType::WEST, west_impact, west_dist);
         return true;
 
-    case FACE_EAST:
-        *pOut = ChunkHitTestDetail(origin, east_coord, FACE_EAST, east_impact, east_dist);
+    case FaceType::EAST:
+        *pOut = ChunkHitTestDetail(origin, east_coord, FaceType::EAST, east_impact, east_dist);
         return true;
 
-    case FACE_TOP:
-        *pOut = ChunkHitTestDetail(origin, top_coord, FACE_TOP, top_impact, top_dist);
+    case FaceType::TOP:
+        *pOut = ChunkHitTestDetail(origin, top_coord, FaceType::TOP, top_impact, top_dist);
         return true;
 
-    case FACE_BOTTOM:
-        *pOut = ChunkHitTestDetail(origin, bottom_coord, FACE_BOTTOM, bottom_impact, bottom_dist);
+    case FaceType::BOTTOM:
+        *pOut = ChunkHitTestDetail(origin, bottom_coord, FaceType::BOTTOM, bottom_impact, bottom_dist);
         return true;
 
     default:
-        PrintTheImpossible(__FILE__, __LINE__, winner);
+        PrintTheImpossible(__FILE__, __LINE__, static_cast<int>(winner));
         return false;
     }
 }

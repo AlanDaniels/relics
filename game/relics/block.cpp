@@ -21,7 +21,7 @@ bool IsBlockTypeEmpty(BlockType block_type)
 
 
 // What surface, if any, should go between two blocks?
-SurfaceType CalcSurfaceType(BlockType block_type, FaceEnum face, BlockType other)
+SurfaceType CalcSurfaceType(BlockType block_type, FaceType face, BlockType other)
 {
     bool draw_transitions = GetConfig().debug.draw_transitions;
 
@@ -94,34 +94,34 @@ void Block::clearSurfaces()
 
 
 // See if a block face is exposed.
-SurfaceType Block::getSurface(FaceEnum face) const
+SurfaceType Block::getSurface(FaceType face) const
 {
     switch (face) {
-    case FACE_WEST:   return m_west_surf;
-    case FACE_EAST:   return m_east_surf;
-    case FACE_SOUTH:  return m_south_surf;
-    case FACE_NORTH:  return m_north_surf;
-    case FACE_TOP:    return m_top_surf;
-    case FACE_BOTTOM: return m_bottom_surf;
+    case FaceType::WEST:   return m_west_surf;
+    case FaceType::EAST:   return m_east_surf;
+    case FaceType::SOUTH:  return m_south_surf;
+    case FaceType::NORTH:  return m_north_surf;
+    case FaceType::TOP:    return m_top_surf;
+    case FaceType::BOTTOM: return m_bottom_surf;
     default:
-        PrintTheImpossible(__FILE__, __LINE__, face);
+        PrintTheImpossible(__FILE__, __LINE__, static_cast<int>(face));
         return SURF_NOTHING;
     }
 }
 
 
 // Set if a face is exposed.
-void Block::setSurface(FaceEnum face, SurfaceType val)
+void Block::setSurface(FaceType face, SurfaceType val)
 {
     switch (face) {
-    case FACE_WEST:   m_west_surf   = val; break;
-    case FACE_EAST:   m_east_surf   = val; break;
-    case FACE_SOUTH:  m_south_surf  = val; break;
-    case FACE_NORTH:  m_north_surf  = val; break;
-    case FACE_TOP:    m_top_surf    = val; break;
-    case FACE_BOTTOM: m_bottom_surf = val; break;
+    case FaceType::WEST:   m_west_surf   = val; break;
+    case FaceType::EAST:   m_east_surf   = val; break;
+    case FaceType::SOUTH:  m_south_surf  = val; break;
+    case FaceType::NORTH:  m_north_surf  = val; break;
+    case FaceType::TOP:    m_top_surf    = val; break;
+    case FaceType::BOTTOM: m_bottom_surf = val; break;
     default:
-        PrintTheImpossible(__FILE__, __LINE__, face);
+        PrintTheImpossible(__FILE__, __LINE__, static_cast<int>(face));
         return;
     }
 }

@@ -29,43 +29,41 @@ bool IsFutureReady(std::future<R> const& f) {
 
 
 // Useful general-purpose enums and functions.
-enum FaceEnum
+enum class FaceType
 {
-    FACE_NONE,
-    FACE_SOUTH,
-    FACE_NORTH,
-    FACE_WEST,
-    FACE_EAST,
-    FACE_TOP,
-    FACE_BOTTOM,
+    NONE   = 0,
+    SOUTH  = 1,
+    NORTH  = 2,
+    WEST   = 3,
+    EAST   = 4,
+    TOP    = 5,
+    BOTTOM = 6
 };
 
 
-enum EdgeEnum
+enum class EdgeType
 {
-    EDGE_NONE,
-    EDGE_UPPER,
-    EDGE_LOWER,
-    EDGE_LEFT,
-    EDGE_RIGHT
+    NONE  = 0,
+    UPPER = 1,
+    LOWER = 2,
+    LEFT  = 3,
+    RIGHT = 4
 };
 
 
-enum CornerEnum
+enum class CornerType
 {
-    CORNER_NONE,
-    CORNER_LOWER_LEFT,
-    CORNER_LOWER_RIGHT,
-    CORNER_UPPER_LEFT,
-    CORNER_UPPER_RIGHT
+    NONE        = 0,
+    LOWER_LEFT  = 1,
+    LOWER_RIGHT = 2,
+    UPPER_LEFT  = 3,
+    UPPER_RIGHT = 4
 };
 
 
-bool NOT(bool val);
-
-const char *FaceEnumToString(FaceEnum face);
-const char *EdgeEnumToString(EdgeEnum edge);
-const char *CornerEnumToString(CornerEnum corner);
+std::string FaceTypeToString(FaceType face_type);
+std::string EdgeTypeToString(EdgeType edge_type);
+std::string CornerTypeToString(CornerType corner_type);
 
 GLfloat GridToWorld(int grid);
 

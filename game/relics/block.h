@@ -36,7 +36,7 @@ enum SurfaceType : unsigned char
 };
 
 
-SurfaceType CalcSurfaceType(BlockType block_type, FaceEnum face, BlockType other);
+SurfaceType CalcSurfaceType(BlockType block_type, FaceType face, BlockType other);
 
 
 // The block data itself.
@@ -50,8 +50,8 @@ public:
 
     void clearSurfaces();
 
-    SurfaceType getSurface(FaceEnum face) const;
-    void setSurface(FaceEnum face, SurfaceType val);
+    SurfaceType getSurface(FaceType face) const;
+    void setSurface(FaceType face, SurfaceType val);
 
 private:
     BlockType m_block_type;

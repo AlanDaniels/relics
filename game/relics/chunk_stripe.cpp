@@ -189,21 +189,21 @@ bool ChunkStripe::recalcExposureForBlock(
     }
 
     // Check each of the faces.
-    SurfaceType west_surf   = CalcSurfaceType(block_type, FACE_WEST, west_block_type);
-    SurfaceType east_surf   = CalcSurfaceType(block_type, FACE_EAST, east_block_type);
+    SurfaceType west_surf   = CalcSurfaceType(block_type, FaceType::WEST, west_block_type);
+    SurfaceType east_surf   = CalcSurfaceType(block_type, FaceType::EAST, east_block_type);
 
-    SurfaceType south_surf  = CalcSurfaceType(block_type, FACE_SOUTH, south_block_type);
-    SurfaceType north_surf  = CalcSurfaceType(block_type, FACE_NORTH, north_block_type);
+    SurfaceType south_surf  = CalcSurfaceType(block_type, FaceType::SOUTH, south_block_type);
+    SurfaceType north_surf  = CalcSurfaceType(block_type, FaceType::NORTH, north_block_type);
 
-    SurfaceType top_surf    = CalcSurfaceType(block_type, FACE_TOP,    top_block_type);
-    SurfaceType bottom_surf = CalcSurfaceType(block_type, FACE_BOTTOM, bottom_block_type);
+    SurfaceType top_surf    = CalcSurfaceType(block_type, FaceType::TOP,    top_block_type);
+    SurfaceType bottom_surf = CalcSurfaceType(block_type, FaceType::BOTTOM, bottom_block_type);
 
-    current.setSurface(FACE_SOUTH,  south_surf);
-    current.setSurface(FACE_NORTH,  north_surf);
-    current.setSurface(FACE_WEST,   west_surf);
-    current.setSurface(FACE_EAST,   east_surf);
-    current.setSurface(FACE_TOP,    top_surf);
-    current.setSurface(FACE_BOTTOM, bottom_surf);
+    current.setSurface(FaceType::SOUTH,  south_surf);
+    current.setSurface(FaceType::NORTH,  north_surf);
+    current.setSurface(FaceType::WEST,   west_surf);
+    current.setSurface(FaceType::EAST,   east_surf);
+    current.setSurface(FaceType::TOP,    top_surf);
+    current.setSurface(FaceType::BOTTOM, bottom_surf);
 
     pOut->increment(south_surf);
     pOut->increment(north_surf);
@@ -238,50 +238,50 @@ void ChunkStripe::addVertsForBlock(Chunk &owner, const LocalGrid &local_coord)
     int z = local_coord.z();
 
     // Top face.
-    SurfaceType top_surf = current.getSurface(FACE_TOP);
+    SurfaceType top_surf = current.getSurface(FaceType::TOP);
     if (top_surf != SURF_NOTHING) {
         VertList_PNT &list = owner.getSurfaceListForWriting(top_surf);
-        auto tris = GetLandscapePatch_PNT(owner, local_coord, FACE_TOP);
+        auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::TOP);
         list.add(tris.data(), tris.size());
     }
 
     // Bottom face.
-    SurfaceType bottom_surf = current.getSurface(FACE_BOTTOM);
+    SurfaceType bottom_surf = current.getSurface(FaceType::BOTTOM);
     if (bottom_surf != SURF_NOTHING) {
         VertList_PNT &list = owner.getSurfaceListForWriting(bottom_surf);
-        auto tris = GetLandscapePatch_PNT(owner, local_coord, FACE_BOTTOM);
+        auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::BOTTOM);
         list.add(tris.data(), tris.size());
     }
 
     // Southern face.
-    SurfaceType south_surf = current.getSurface(FACE_SOUTH);
+    SurfaceType south_surf = current.getSurface(FaceType::SOUTH);
     if (south_surf != SURF_NOTHING) {
         VertList_PNT &list = owner.getSurfaceListForWriting(south_surf);
-        auto tris = GetLandscapePatch_PNT(owner, local_coord, FACE_SOUTH);
+        auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::SOUTH);
         list.add(tris.data(), tris.size());
     }
 
     // Northern face.
-    SurfaceType north_surf = current.getSurface(FACE_NORTH);
+    SurfaceType north_surf = current.getSurface(FaceType::NORTH);
     if (north_surf != SURF_NOTHING) {
         VertList_PNT &list = owner.getSurfaceListForWriting(north_surf);
-        auto tris = GetLandscapePatch_PNT(owner, local_coord, FACE_NORTH);
+        auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::NORTH);
         list.add(tris.data(), tris.size());
     }
 
     // Eastern face.
-    SurfaceType east_surf = current.getSurface(FACE_EAST);
+    SurfaceType east_surf = current.getSurface(FaceType::EAST);
     if (east_surf != SURF_NOTHING) {
         VertList_PNT &list = owner.getSurfaceListForWriting(east_surf);
-        auto tris = GetLandscapePatch_PNT(owner, local_coord, FACE_EAST);
+        auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::EAST);
         list.add(tris.data(), tris.size());
     }
 
     // Western face.
-    SurfaceType west_surf = current.getSurface(FACE_WEST);
+    SurfaceType west_surf = current.getSurface(FaceType::WEST);
     if (west_surf != SURF_NOTHING) {
         VertList_PNT &list = owner.getSurfaceListForWriting(west_surf);
-        auto tris = GetLandscapePatch_PNT(owner, local_coord, FACE_WEST);
+        auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::WEST);
         list.add(tris.data(), tris.size());
     }
 }

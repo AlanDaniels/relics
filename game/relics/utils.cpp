@@ -14,51 +14,45 @@ bool MAGIC_BREAKPOINT;
 const char *RESOURCE_PATH = "D:\\relics\\resources\\";
 
 
-// I've always hated that exclamation-point notation. Too hard to read.
-bool NOT(bool val) {
-    return !val;
-}
-
-
 // Convert a face enum to a string.
-const char *FaceEnumToString(FaceEnum face)
+std::string FaceTypeToString(FaceType face_type)
 {
-    switch (face) {
-    case FACE_NONE:   return "none";
-    case FACE_SOUTH:  return "south";
-    case FACE_NORTH:  return "north";
-    case FACE_WEST:   return "west";
-    case FACE_EAST:   return "east";
-    case FACE_TOP:    return "top";
-    case FACE_BOTTOM: return "bottom";
+    switch (face_type) {
+    case FaceType::NONE:   return "none";
+    case FaceType::SOUTH:  return "south";
+    case FaceType::NORTH:  return "north";
+    case FaceType::WEST:   return "west";
+    case FaceType::EAST:   return "east";
+    case FaceType::TOP:    return "top";
+    case FaceType::BOTTOM: return "bottom";
     default: return "unknown";
     }
 }
 
 
 // Convert an edge enum to a string.
-const char *EdgeEnumToString(EdgeEnum edge)
+std::string EdgeTypeToString(EdgeType edge_type)
 {
-    switch (edge) {
-    case EDGE_NONE:  return "none";
-    case EDGE_UPPER: return "upper";
-    case EDGE_LOWER: return "lower";
-    case EDGE_LEFT:  return "left";
-    case EDGE_RIGHT: return "right";
+    switch (edge_type) {
+    case EdgeType::NONE:  return "none";
+    case EdgeType::UPPER: return "upper";
+    case EdgeType::LOWER: return "lower";
+    case EdgeType::LEFT:  return "left";
+    case EdgeType::RIGHT: return "right";
     default: return "unknown";
     }
 }
 
 
 // Convert a corner enum to a string.
-const char *CornerEnumToString(CornerEnum corner)
+std::string CornerTypeToString(CornerType corner_type)
 {
-    switch (corner) {
-    case CORNER_NONE:        return "none";
-    case CORNER_LOWER_LEFT:  return "lower-left";
-    case CORNER_LOWER_RIGHT: return "lower-right";
-    case CORNER_UPPER_LEFT:  return "upper-left";
-    case CORNER_UPPER_RIGHT: return "upper-right";
+    switch (corner_type) {
+    case CornerType::NONE:        return "none";
+    case CornerType::LOWER_LEFT:  return "lower-left";
+    case CornerType::LOWER_RIGHT: return "lower-right";
+    case CornerType::UPPER_LEFT:  return "upper-left";
+    case CornerType::UPPER_RIGHT: return "upper-right";
     default: return "unknown";
     }
 }

@@ -124,7 +124,7 @@ bool ChunkStripe::recalcExposureForBlock(
     bool top_edge    = (y == (CHUNK_HEIGHT - 1));
 
     // Get our six neigbors, straddling across chunk boundaries if necessary.
-    BlockType west_block_type = BT_AIR;
+    BlockType west_block_type = BlockType::AIR;
     if (west_edge) {
         const Chunk *neighbor = owner.getNeighborWest();
         if (neighbor != nullptr) {
@@ -137,7 +137,7 @@ bool ChunkStripe::recalcExposureForBlock(
         west_block_type = owner.getBlockType(coord);
     }
 
-    BlockType east_block_type = BT_AIR;
+    BlockType east_block_type = BlockType::AIR;
     if (east_edge) {
         const Chunk *neighbor = owner.getNeighborEast();
         if (neighbor != nullptr) {
@@ -150,7 +150,7 @@ bool ChunkStripe::recalcExposureForBlock(
         east_block_type = owner.getBlockType(coord);
     }
 
-    BlockType south_block_type = BT_AIR;
+    BlockType south_block_type = BlockType::AIR;
     if (south_edge) {
         const Chunk *neighbor = owner.getNeighborSouth();
         if (neighbor != nullptr) {
@@ -163,7 +163,7 @@ bool ChunkStripe::recalcExposureForBlock(
         south_block_type = owner.getBlockType(coord);
     }
 
-    BlockType north_block_type = BT_AIR;
+    BlockType north_block_type = BlockType::AIR;
     if (north_edge) {
         const Chunk *neighbor = owner.getNeighborNorth();
         if (neighbor != nullptr) {
@@ -176,13 +176,13 @@ bool ChunkStripe::recalcExposureForBlock(
         north_block_type = owner.getBlockType(coord);
     }
 
-    BlockType top_block_type = BT_AIR;
+    BlockType top_block_type = BlockType::AIR;
     if (!top_edge) {
         LocalGrid coord(x, y + 1, z);
         top_block_type = owner.getBlockType(coord);
     }
 
-    BlockType bottom_block_type = BT_AIR;
+    BlockType bottom_block_type = BlockType::AIR;
     if (!bottom_edge) {
         LocalGrid coord(x, y - 1, z);
         bottom_block_type = owner.getBlockType(coord);

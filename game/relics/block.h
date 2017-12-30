@@ -10,12 +10,12 @@
 class Chunk;
 
 
-enum BlockType : unsigned char
+enum class BlockType : unsigned char
 {
-    BT_AIR   = 0,
-    BT_DIRT  = 1,
-    BT_STONE = 2,
-    BT_COAL  = 3
+    AIR   = 0,
+    DIRT  = 1,
+    STONE = 2,
+    COAL  = 3
 };
 
 

@@ -389,7 +389,7 @@ void GameWorld::deleteBlockInFrontOfUs()
         assert(chunk != nullptr);
         assert(chunk->IsGlobalGridWithin(global_coord));
 
-        chunk->setBlockType(local_coord, BT_AIR);
+        chunk->setBlockType(local_coord, BlockType::AIR);
         chunk->recalcAllExposures();
     }
 }

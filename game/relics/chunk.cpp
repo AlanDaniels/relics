@@ -247,9 +247,9 @@ std::string Chunk::toDescription() const
                 BlockType block_type = getBlockType(coord);
 
                 switch (block_type) {
-                case BT_DIRT:  dirt_blocks++; break;
-                case BT_STONE: stone_blocks++; break;
-                case BT_COAL:  coal_blocks++; break;
+                case BlockType::DIRT:  dirt_blocks++; break;
+                case BlockType::STONE: stone_blocks++; break;
+                case BlockType::COAL:  coal_blocks++; break;
                 default: break;
                 }
             }

@@ -81,7 +81,7 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
         int dirt_top = iter.second;
         for (int y = 0; y <= dirt_top; y++) {
             LocalGrid coord(pillar.x(), y, pillar.z());
-            chunk->setBlockType(coord, BT_DIRT);
+            chunk->setBlockType(coord, BlockType::DIRT);
         }
     }
 
@@ -91,7 +91,7 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
         int stone_top = iter.second;
         for (int y = 0; y <= stone_top; y++) {
             LocalGrid coord(pillar.x(), y, pillar.z());
-            chunk->setBlockType(coord, BT_STONE);
+            chunk->setBlockType(coord, BlockType::STONE);
         }
     }
 
@@ -101,7 +101,7 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
         LocalPillar &pillar = GlobalPillarToLocal(global_pillar, origin);
         for (int y : spots_vec) {
             LocalGrid coord(pillar.x(), y, pillar.z());
-            chunk->setBlockType(coord, BT_COAL);
+            chunk->setBlockType(coord, BlockType::COAL);
         }
     }
 

@@ -9,14 +9,14 @@
 // Return true if a block type should generate ever landscape surfaces.
 bool IsBlockTypeFilled(BlockType block_type)
 {
-    return (block_type != BT_AIR);
+    return (block_type != BlockType::AIR);
 }
 
 
 // And the opposite.
 bool IsBlockTypeEmpty(BlockType block_type)
 {
-    return (block_type == BT_AIR);
+    return (block_type == BlockType::AIR);
 }
 
 
@@ -28,30 +28,31 @@ SurfaceType CalcSurfaceType(BlockType block_type, FaceEnum face, BlockType other
     SurfaceType result = SURF_NOTHING;
 
     switch (block_type) {
-    case BT_DIRT:  
-        if (other == BT_AIR) { 
+    case BlockType::DIRT:
+        if (other == BlockType::AIR) {
             result = SURF_DIRT;
         }
         break;
 
-    case BT_STONE:
-        if (other == BT_AIR) {
+    case BlockType::STONE:
+        if (other == BlockType::AIR) {
             result = SURF_STONE;
         }
         else {
-            bool show = (other == BT_DIRT);
+            bool show = (other == BlockType::DIRT);
             if (show && draw_transitions) {
                 result = SURF_STONE;
             }
         }
         break;
 
-    case BT_COAL:
-        if (other == BT_AIR) {
+    case BlockType::COAL:
+        if (other == BlockType::AIR) {
             result = SURF_COAL;
         }
         else {
-            bool show = ((other == BT_DIRT) || (other == BT_STONE));
+            bool show = ((other == BlockType::DIRT) || 
+                         (other == BlockType::STONE));
             if (show && draw_transitions) {
                 result = SURF_COAL;
             }
@@ -59,7 +60,7 @@ SurfaceType CalcSurfaceType(BlockType block_type, FaceEnum face, BlockType other
         break;
 
     default:
-        PrintTheImpossible(__FILE__, __LINE__, block_type);
+        PrintTheImpossible(__FILE__, __LINE__, static_cast<int>(block_type));
         break;
     }
 
@@ -69,7 +70,7 @@ SurfaceType CalcSurfaceType(BlockType block_type, FaceEnum face, BlockType other
 
 // Default ctor. This is a plain struct, so it's all we need.
 Block::Block() :
-    m_block_type(BT_AIR),
+    m_block_type(BlockType::AIR),
     m_west_surf(SURF_NOTHING),
     m_east_surf(SURF_NOTHING),
     m_south_surf(SURF_NOTHING),

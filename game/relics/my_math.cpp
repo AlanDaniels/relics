@@ -5,6 +5,7 @@
 
 #include "chunk.h"
 #include "config.h"
+#include "format.h"
 #include "utils.h"
 
 
@@ -59,9 +60,7 @@ MyVec2 MyVec2::lerp(const MyVec2 &that, float amount) const
 // Convert to a string.
 std::string MyVec2::toString() const
 {
-    char msg[64];
-    sprintf(msg, "%0.2f %0.2f", m_x, m_y);
-    return std::string(msg);
+    return fmt::format("{0:0.2f} {1:0.2f}", m_x, m_y);
 }
 
 
@@ -122,9 +121,7 @@ MyVec4 MyVec4::lerp(const MyVec4 &that, float amount) const
 // Convert to a string.
 std::string MyVec4::toString() const
 {
-    char msg[64];
-    sprintf(msg, "%.0f %.0f %.0f", m_x, m_y, m_z);
-    return std::string(msg);
+    return fmt::format("{0:.0f} {1:.0f} {2:.0f}", m_x, m_y, m_z);
 }
 
 
@@ -140,7 +137,7 @@ MyVec4 FourWayLerp4(
 }
 
 
-// Matrix 4x4 copy ctor.
+// Matrix 4x4 copy operator.
 const MyMatrix4by4 &MyMatrix4by4::operator=(const MyMatrix4by4 &that)
 {
     m_v00 = that.m_v00;
@@ -165,6 +162,34 @@ const MyMatrix4by4 &MyMatrix4by4::operator=(const MyMatrix4by4 &that)
 
     return *this;
 }
+
+
+// Matrix 4x4 move operator.
+const MyMatrix4by4 &MyMatrix4by4::operator=(MyMatrix4by4 &&that)
+{
+    m_v00 = that.m_v00;
+    m_v01 = that.m_v01;
+    m_v02 = that.m_v02;
+    m_v03 = that.m_v03;
+
+    m_v10 = that.m_v10;
+    m_v11 = that.m_v11;
+    m_v12 = that.m_v12;
+    m_v13 = that.m_v13;
+
+    m_v20 = that.m_v20;
+    m_v21 = that.m_v21;
+    m_v22 = that.m_v22;
+    m_v23 = that.m_v23;
+
+    m_v30 = that.m_v30;
+    m_v31 = that.m_v31;
+    m_v32 = that.m_v32;
+    m_v33 = that.m_v33;
+
+    return *this;
+}
+
 
 
 // Matrix mulitplication for a vector.
@@ -290,11 +315,20 @@ MyMatrix4by4 MyMatrix4by4::Frustum(
 }
 
 
-// Ray assignment operator.
+// Ray copy operator.
 const MyRay &MyRay::operator=(const MyRay &that)
 {
     m_start = that.m_start;
     m_dir   = that.m_dir;
+    return *this;
+}
+
+
+// Ray move operator.
+const MyRay &MyRay::operator=(MyRay &&that)
+{
+    m_start = std::move(that.m_start);
+    m_dir   = std::move(that.m_dir);
     return *this;
 }
 
@@ -311,11 +345,20 @@ MyPlane MyRay::toPlane() const
 }
 
 
-// Plane assignment operator.
+// Plane copy operator.
 MyPlane &MyPlane::operator=(const MyPlane &that)
 {
-    m_normal   = that.m_normal;
-    m_distance = that.m_distance;
+    m_normal = that.m_normal;
+    m_dist   = that.m_dist;
+    return *this;
+}
+
+
+// Plane move operator.
+MyPlane &MyPlane::operator=(MyPlane &&that)
+{
+    m_normal = std::move(that.m_normal);
+    m_dist   = that.m_dist;
     return *this;
 }
 
@@ -325,7 +368,7 @@ GLfloat MyPlane::distanceToPoint(const MyVec4 &point) const
 {
     return (point.x() * m_normal.x()) +
            (point.y() * m_normal.y()) +
-           (point.z() * m_normal.z()) - m_distance;
+           (point.z() * m_normal.z()) - m_dist;
 }
 
 
@@ -493,6 +536,36 @@ bool EvalRegion::operator!=(const EvalRegion &that) const
 }
 
 
+// Eval Region copy operator.
+EvalRegion &EvalRegion::operator=(const EvalRegion &that)
+{
+    m_west  = that.m_west;
+    m_east  = that.m_east;
+    m_south = that.m_south;
+    m_north = that.m_north;
+    m_debug_west  = that.m_debug_west;
+    m_debug_east  = that.m_debug_east;
+    m_debug_south = that.m_debug_south;
+    m_debug_north = that.m_debug_north;
+    return *this;
+}
+
+
+// Eval Region move operator.
+EvalRegion &EvalRegion::operator=(EvalRegion &&that)
+{
+    m_west  = that.m_west;
+    m_east  = that.m_east;
+    m_south = that.m_south;
+    m_north = that.m_north;
+    m_debug_west  = that.m_debug_west;
+    m_debug_east  = that.m_debug_east;
+    m_debug_south = that.m_debug_south;
+    m_debug_north = that.m_debug_north;
+    return *this;
+}
+
+
 // Return true if an eval region contains a chunk origin.
 bool EvalRegion::contains(const ChunkOrigin &origin) const
 {
@@ -518,10 +591,9 @@ EvalRegion EvalRegion::expand() const
 // Return a debug version of an eval region.
 std::string EvalRegion::toDebugStr() const
 {
-    char msg[64];
-    sprintf(msg, "w=%d, e=%d, s=%d, n=%d",
+    return fmt::format(
+        "w={0}, e={1}, s={2}, n={3}",
         m_debug_west, m_debug_east, m_debug_south, m_debug_north);
-    return std::string(msg);
 }
 
 

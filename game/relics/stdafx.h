@@ -46,3 +46,15 @@
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
+
+// Some macros to bullet-proof our classes.
+#define DISALLOW_DEFAULT(ClassName) \
+    ClassName() = delete;
+
+#define DISALLOW_COPYING(ClassName) \
+    ClassName(const ClassName &) = delete; \
+    void operator=(const ClassName &) = delete;
+
+#define DISALLOW_MOVING(ClassName) \
+    ClassName(ClassName &&) = delete; \
+    void operator=(ClassName &&) = delete;

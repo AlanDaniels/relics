@@ -24,16 +24,17 @@ bool IsBlockTypeEmpty (BlockType block_type);
 
 
 
-enum SurfaceType : unsigned char
+enum class SurfaceType : unsigned char
 {
-    SURF_GRASS_TOP = 0,
-    SURF_DIRT      = 1,
-    SURF_STONE     = 2,
-    SURF_COAL      = 3,
+    GRASS_TOP = 0,
+    DIRT      = 1,
+    STONE     = 2,
+    COAL      = 3,
 
-    SURF_MAX_COUNT = 4,
-    SURF_NOTHING   = 255
+    NOTHING   = 255
 };
+
+const int SURFACE_TYPE_COUNT = 4;
 
 
 SurfaceType CalcSurfaceType(BlockType block_type, FaceType face, BlockType other);

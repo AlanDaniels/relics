@@ -50,13 +50,10 @@ public:
 
     void deleteBlockInFrontOfUs();
 
-private: 
-    // Disallow the default ctor, moving and copying.
-    GameWorld() = delete;
-    GameWorld(GameWorld &&that) = delete;
-    void operator=(GameWorld &&that) = delete;
-    GameWorld(const GameWorld &that) = delete;
-    void operator=(const GameWorld &that) = delete;
+private:
+    DISALLOW_DEFAULT(GameWorld)
+    DISALLOW_COPYING(GameWorld)
+    DISALLOW_MOVING(GameWorld)
 
     // Every couple of seconds, cash in a worker thread.
     static const int WORKER_PACE_MSECS = 2000;

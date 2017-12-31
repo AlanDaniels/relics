@@ -70,13 +70,11 @@ protected:
     DrawStateSettings m_settings;
 
 private:
-    // Disallow default ctor, copying, and moving.
-    DrawState_Base() = delete;
-    DrawState_Base(const DrawState_Base &that) = delete;
-    void operator=(const DrawState_Base &that) = delete;
-    DrawState_Base(DrawState_Base &&that) = delete;
-    void operator=(DrawState_Base &&that) = delete;
+    DISALLOW_DEFAULT(DrawState_Base)
+    DISALLOW_COPYING(DrawState_Base)
+    DISALLOW_MOVING(DrawState_Base)
 
+    // Private data.
     bool m_initialized;
 
     GLuint m_program_ID;

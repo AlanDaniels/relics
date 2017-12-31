@@ -30,10 +30,7 @@ public:
     bool render(const VertList_P &vert_list);
 
 private:
-    // Disallow default ctor, copying, and moving.
-    DrawState_P() = delete;
-    DrawState_P(const DrawState_P &that) = delete;
-    void operator=(const DrawState_P &that) = delete;
-    DrawState_P(DrawState_P &&that) = delete;
-    void operator=(DrawState_P &&that) = delete;
+    DISALLOW_DEFAULT(DrawState_P)
+    DISALLOW_COPYING(DrawState_P)
+    DISALLOW_MOVING(DrawState_P)
 };

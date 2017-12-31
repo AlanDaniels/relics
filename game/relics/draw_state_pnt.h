@@ -37,10 +37,7 @@ public:
     bool render(const VertList_PNT &vert_list);
 
 private:
-    // Disallow default ctor, moving and copying.
-    DrawState_PNT() = delete;
-    DrawState_PNT(const DrawState_PNT &that) = delete;
-    void operator=(const DrawState_PNT &that) = delete;
-    DrawState_PNT(DrawState_PNT &&that) = delete;
-    void operator=(DrawState_PNT &&that) = delete;
+    DISALLOW_DEFAULT(DrawState_PNT)
+    DISALLOW_COPYING(DrawState_PNT)
+    DISALLOW_MOVING(DrawState_PNT)
 };

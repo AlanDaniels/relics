@@ -25,36 +25,36 @@ SurfaceType CalcSurfaceType(BlockType block_type, FaceType face, BlockType other
 {
     bool draw_transitions = GetConfig().debug.draw_transitions;
 
-    SurfaceType result = SURF_NOTHING;
+    SurfaceType result = SurfaceType::NOTHING;
 
     switch (block_type) {
     case BlockType::DIRT:
         if (other == BlockType::AIR) {
-            result = SURF_DIRT;
+            result = SurfaceType::DIRT;
         }
         break;
 
     case BlockType::STONE:
         if (other == BlockType::AIR) {
-            result = SURF_STONE;
+            result = SurfaceType::STONE;
         }
         else {
             bool show = (other == BlockType::DIRT);
             if (show && draw_transitions) {
-                result = SURF_STONE;
+                result = SurfaceType::STONE;
             }
         }
         break;
 
     case BlockType::COAL:
         if (other == BlockType::AIR) {
-            result = SURF_COAL;
+            result = SurfaceType::COAL;
         }
         else {
             bool show = ((other == BlockType::DIRT) || 
                          (other == BlockType::STONE));
             if (show && draw_transitions) {
-                result = SURF_COAL;
+                result = SurfaceType::COAL;
             }
         }
         break;
@@ -71,12 +71,12 @@ SurfaceType CalcSurfaceType(BlockType block_type, FaceType face, BlockType other
 // Default ctor. This is a plain struct, so it's all we need.
 Block::Block() :
     m_block_type(BlockType::AIR),
-    m_west_surf(SURF_NOTHING),
-    m_east_surf(SURF_NOTHING),
-    m_south_surf(SURF_NOTHING),
-    m_north_surf(SURF_NOTHING),
-    m_top_surf(SURF_NOTHING),
-    m_bottom_surf(SURF_NOTHING)
+    m_west_surf(SurfaceType::NOTHING),
+    m_east_surf(SurfaceType::NOTHING),
+    m_south_surf(SurfaceType::NOTHING),
+    m_north_surf(SurfaceType::NOTHING),
+    m_top_surf(SurfaceType::NOTHING),
+    m_bottom_surf(SurfaceType::NOTHING)
 {
 }
 
@@ -84,12 +84,12 @@ Block::Block() :
 // Clear the exposure flags.
 void Block::clearSurfaces()
 {
-    m_west_surf   = SURF_NOTHING;
-    m_east_surf   = SURF_NOTHING;
-    m_south_surf  = SURF_NOTHING;
-    m_north_surf  = SURF_NOTHING;
-    m_top_surf    = SURF_NOTHING;
-    m_bottom_surf = SURF_NOTHING;
+    m_west_surf   = SurfaceType::NOTHING;
+    m_east_surf   = SurfaceType::NOTHING;
+    m_south_surf  = SurfaceType::NOTHING;
+    m_north_surf  = SurfaceType::NOTHING;
+    m_top_surf    = SurfaceType::NOTHING;
+    m_bottom_surf = SurfaceType::NOTHING;
 }
 
 
@@ -105,7 +105,7 @@ SurfaceType Block::getSurface(FaceType face) const
     case FaceType::BOTTOM: return m_bottom_surf;
     default:
         PrintTheImpossible(__FILE__, __LINE__, static_cast<int>(face));
-        return SURF_NOTHING;
+        return SurfaceType::NOTHING;
     }
 }
 

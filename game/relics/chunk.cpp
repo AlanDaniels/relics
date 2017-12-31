@@ -18,7 +18,7 @@ Chunk::Chunk(const GameWorld &world, const ChunkOrigin &origin) :
     m_up_to_date(false)
 {
     // We only use pointers to our vert lists due to not having a default ctor.
-    for (int i = 0; i < SURF_MAX_COUNT; i++) {
+    for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
         m_vert_lists[i] = std::make_unique<VertList_PNT>();
     }
 }
@@ -33,14 +33,16 @@ Chunk::~Chunk()
 // Return a surface vert list, read-only.
 const VertList_PNT &Chunk::getSurfaceList_RO(SurfaceType surf) const 
 {
-    return *m_vert_lists[surf];
+    int index = static_cast<int>(surf);
+    return *m_vert_lists[index];
 }
 
 
 // Return a surface vert list, for writing.
 VertList_PNT &Chunk::getSurfaceListForWriting(SurfaceType surf)
 {
-    return *m_vert_lists[surf];
+    int index = static_cast<int>(surf);
+    return *m_vert_lists[index];
 }
 
 
@@ -92,7 +94,8 @@ void Chunk::setBlockType(const LocalGrid &coord, BlockType block_type)
 // Return the count for a particular surface type.
 int Chunk::getCountForSurface(SurfaceType surf) const
 {
-    int result = m_vert_lists[surf]->getByteCount();
+    int index  = static_cast<int>(surf);
+    int result = m_vert_lists[index]->getByteCount();
     return result;
 }
 
@@ -110,7 +113,7 @@ void Chunk::recalcAllExposures()
     }
 
     // Clear out the surface lists.
-    for (int i = 0; i < SURF_MAX_COUNT; i++) {
+    for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
         m_vert_lists[i]->reset();
     }
 
@@ -122,7 +125,7 @@ void Chunk::recalcAllExposures()
     }
 
     // Update the surface lists.
-    for (int i = 0; i < SURF_MAX_COUNT; i++) {
+    for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
         m_vert_lists[i]->update();
     }
 
@@ -257,10 +260,10 @@ std::string Chunk::toDescription() const
     }
 
     // Count our surfaces.
-    int grass_surfaces = getCountForSurface(SURF_GRASS_TOP);
-    int dirt_surfaces  = getCountForSurface(SURF_DIRT);
-    int stone_surfaces = getCountForSurface(SURF_STONE);
-    int coal_surfaces  = getCountForSurface(SURF_COAL);
+    int grass_surfaces = getCountForSurface(SurfaceType::GRASS_TOP);
+    int dirt_surfaces  = getCountForSurface(SurfaceType::DIRT);
+    int stone_surfaces = getCountForSurface(SurfaceType::STONE);
+    int coal_surfaces  = getCountForSurface(SurfaceType::COAL);
 
     // Print the results.
     std::string up_to_date = isUpToDate() ? "true" : "false";

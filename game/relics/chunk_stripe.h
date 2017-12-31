@@ -19,7 +19,7 @@ public:
     int  getGrandTotal() const;
 
 private:
-    std::array<int, SURF_MAX_COUNT> m_counts;
+    std::array<int, SURFACE_TYPE_COUNT> m_counts;
 };
 
 
@@ -37,11 +37,8 @@ public:
     void addToSurfaceLists(Chunk &owner, int local_x, int local_y);
 
 private:
-    // Disallow moving and copying.
-    ChunkStripe(const ChunkStripe &that) = delete;
-    void operator=(const ChunkStripe &that) = delete;
-    ChunkStripe(ChunkStripe &&that) = delete;
-    void operator=(ChunkStripe &&that) = delete;
+    DISALLOW_COPYING(ChunkStripe)
+    DISALLOW_MOVING(ChunkStripe)
 
     // Private methods.
     bool recalcExposureForBlock(const Chunk &chunk, const LocalGrid local_coord, SurfaceTotals *pOut);

@@ -286,10 +286,10 @@ RenderStats Renderer::renderWorld()
     std::vector<const Chunk *> chunk_vec = getChunksToRender(&stats);
 
     // Render our surfaces.
-    renderLandscapeList(SURF_GRASS_TOP, chunk_vec, *m_grass_tex, &stats);
-    renderLandscapeList(SURF_DIRT,  chunk_vec, *m_dirt_tex,  &stats);
-    renderLandscapeList(SURF_STONE, chunk_vec, *m_stone_tex, &stats);
-    renderLandscapeList(SURF_COAL, chunk_vec, *m_coal_tex, &stats);
+    renderLandscapeList(SurfaceType::GRASS_TOP, chunk_vec, *m_grass_tex, &stats);
+    renderLandscapeList(SurfaceType::DIRT,      chunk_vec, *m_dirt_tex,  &stats);
+    renderLandscapeList(SurfaceType::STONE,     chunk_vec, *m_stone_tex, &stats);
+    renderLandscapeList(SurfaceType::COAL,      chunk_vec, *m_coal_tex,  &stats);
 
     // Finally, render our hit test.
     renderHitTest(&stats);

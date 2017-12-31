@@ -10,7 +10,7 @@
 // Surface totals ctor.
 SurfaceTotals::SurfaceTotals()
 {
-    for (int i = 0; i < SURF_MAX_COUNT; i++) {
+    for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
         m_counts[i] = 0;
     }
 }
@@ -19,9 +19,10 @@ SurfaceTotals::SurfaceTotals()
 // Increment our surface type.
 void SurfaceTotals::increment(SurfaceType surf)
 {
-    if (surf != SURF_NOTHING) {
-        assert(surf < SURF_MAX_COUNT);
-        m_counts[surf]++;
+    if (surf != SurfaceType::NOTHING) {
+        int index = static_cast<int>(surf);
+        assert(index < SURFACE_TYPE_COUNT);
+        m_counts[index]++;
     }
 }
 
@@ -29,8 +30,9 @@ void SurfaceTotals::increment(SurfaceType surf)
 // Get the count for one surface.
 int SurfaceTotals::get(SurfaceType surf) const
 {
-    assert(surf < SURF_MAX_COUNT);
-    return m_counts[surf];
+    int index = static_cast<int>(surf);
+    assert(index < SURFACE_TYPE_COUNT);
+    return m_counts[index];
 }
 
 
@@ -38,7 +40,7 @@ int SurfaceTotals::get(SurfaceType surf) const
 int SurfaceTotals::getGrandTotal() const
 {
     int result = 0;
-    for (int i = 0; i < SURF_MAX_COUNT; i++) {
+    for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
         result += m_counts[i];
     }
 
@@ -214,12 +216,12 @@ bool ChunkStripe::recalcExposureForBlock(
 
     // Return true if anything we calculated has exposures.
     return (
-        (south_surf  != SURF_NOTHING) ||
-        (north_surf  != SURF_NOTHING) ||
-        (west_surf   != SURF_NOTHING) ||
-        (east_surf   != SURF_NOTHING) ||
-        (top_surf    != SURF_NOTHING) ||
-        (bottom_surf != SURF_NOTHING));
+        (south_surf  != SurfaceType::NOTHING) ||
+        (north_surf  != SurfaceType::NOTHING) ||
+        (west_surf   != SurfaceType::NOTHING) ||
+        (east_surf   != SurfaceType::NOTHING) ||
+        (top_surf    != SurfaceType::NOTHING) ||
+        (bottom_surf != SurfaceType::NOTHING));
 }
 
 
@@ -239,7 +241,7 @@ void ChunkStripe::addVertsForBlock(Chunk &owner, const LocalGrid &local_coord)
 
     // Top face.
     SurfaceType top_surf = current.getSurface(FaceType::TOP);
-    if (top_surf != SURF_NOTHING) {
+    if (top_surf != SurfaceType::NOTHING) {
         VertList_PNT &list = owner.getSurfaceListForWriting(top_surf);
         auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::TOP);
         list.add(tris.data(), tris.size());
@@ -247,7 +249,7 @@ void ChunkStripe::addVertsForBlock(Chunk &owner, const LocalGrid &local_coord)
 
     // Bottom face.
     SurfaceType bottom_surf = current.getSurface(FaceType::BOTTOM);
-    if (bottom_surf != SURF_NOTHING) {
+    if (bottom_surf != SurfaceType::NOTHING) {
         VertList_PNT &list = owner.getSurfaceListForWriting(bottom_surf);
         auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::BOTTOM);
         list.add(tris.data(), tris.size());
@@ -255,7 +257,7 @@ void ChunkStripe::addVertsForBlock(Chunk &owner, const LocalGrid &local_coord)
 
     // Southern face.
     SurfaceType south_surf = current.getSurface(FaceType::SOUTH);
-    if (south_surf != SURF_NOTHING) {
+    if (south_surf != SurfaceType::NOTHING) {
         VertList_PNT &list = owner.getSurfaceListForWriting(south_surf);
         auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::SOUTH);
         list.add(tris.data(), tris.size());
@@ -263,7 +265,7 @@ void ChunkStripe::addVertsForBlock(Chunk &owner, const LocalGrid &local_coord)
 
     // Northern face.
     SurfaceType north_surf = current.getSurface(FaceType::NORTH);
-    if (north_surf != SURF_NOTHING) {
+    if (north_surf != SurfaceType::NOTHING) {
         VertList_PNT &list = owner.getSurfaceListForWriting(north_surf);
         auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::NORTH);
         list.add(tris.data(), tris.size());
@@ -271,7 +273,7 @@ void ChunkStripe::addVertsForBlock(Chunk &owner, const LocalGrid &local_coord)
 
     // Eastern face.
     SurfaceType east_surf = current.getSurface(FaceType::EAST);
-    if (east_surf != SURF_NOTHING) {
+    if (east_surf != SurfaceType::NOTHING) {
         VertList_PNT &list = owner.getSurfaceListForWriting(east_surf);
         auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::EAST);
         list.add(tris.data(), tris.size());
@@ -279,7 +281,7 @@ void ChunkStripe::addVertsForBlock(Chunk &owner, const LocalGrid &local_coord)
 
     // Western face.
     SurfaceType west_surf = current.getSurface(FaceType::WEST);
-    if (west_surf != SURF_NOTHING) {
+    if (west_surf != SurfaceType::NOTHING) {
         VertList_PNT &list = owner.getSurfaceListForWriting(west_surf);
         auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::WEST);
         list.add(tris.data(), tris.size());

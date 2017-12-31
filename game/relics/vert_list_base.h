@@ -26,11 +26,8 @@ public:
     GLuint getVertexBufferID() const { return m_vertex_buffer_ID; }
 
 private:
-    // Disallow moving and copying.
-    VertList_Base(const VertList_Base &that)  = delete;
-    void operator=(const VertList_Base &that) = delete;
-    VertList_Base(VertList_Base &&that)  = delete;
-    void operator=(VertList_Base &&that) = delete;
+    DISALLOW_COPYING(VertList_Base)
+    DISALLOW_MOVING(VertList_Base)
 
     // Private data.
     GLuint m_vertex_buffer_ID;

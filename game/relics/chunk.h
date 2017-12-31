@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "block.h"
 #include "chunk_stripe.h"
+#include "format.h"
 #include "draw_state_pnt.h"
 
 
@@ -67,9 +68,7 @@ public:
 
     // Convert this as a string.
     std::string toString() const {
-        char buffer[32];
-        sprintf(buffer, "Origin [%d, %d]", m_debug_x, m_debug_z);
-        return std::string(buffer);
+        return fmt::format("Origin [{0}, {1}]", m_debug_x, m_debug_z);
     }
 
     inline int debugX() const { return m_debug_x; }
@@ -104,7 +103,7 @@ public:
 
     MyVec4 localGridToWorldPos(int local_x, int local_y, int local_z) const;
 
-    int  getCountForSurface(SurfaceType surf) const;
+    int getCountForSurface(SurfaceType surf) const;
     const VertList_PNT &getSurfaceList_RO(SurfaceType surf) const;
     VertList_PNT &getSurfaceListForWriting(SurfaceType surf);
 
@@ -123,15 +122,14 @@ public:
     std::string toDescription() const;
 
 private:
-    // Disallow default ctor, moving, and copying.
-    Chunk() = delete;
-    Chunk(const Chunk &that) = delete;
-    void operator=(const Chunk &that) = delete;
-    Chunk(Chunk &&that) = delete;
-    void operator=(Chunk &&that) = delete;
+    DISALLOW_DEFAULT(Chunk)
+    DISALLOW_COPYING(Chunk)
+    DISALLOW_MOVING(Chunk)
 
     // Private methods.
-    int offset(int x, int y) const { return x + (CHUNK_WIDTH * y); }
+    int offset(int x, int y) const { 
+        return x + (CHUNK_WIDTH * y); 
+    }
 
     // Private data.
     const GameWorld &m_world;
@@ -139,6 +137,6 @@ private:
 
     bool m_up_to_date;
 
-    std::array<std::unique_ptr<VertList_PNT>, SURF_MAX_COUNT> m_vert_lists;
+    std::array<std::unique_ptr<VertList_PNT>, SURFACE_TYPE_COUNT> m_vert_lists;
     std::array<ChunkStripe, CHUNK_WIDTH * CHUNK_HEIGHT> m_stripes;
 };

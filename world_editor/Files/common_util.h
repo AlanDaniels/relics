@@ -29,8 +29,8 @@ enum class BlockType : unsigned char {
 std::string ReadableNumber(int val);
 int GetMemoryUsage();
 
-void PrintDebug(const char *format, ...);
-void PrintTheImpossible(const char *fname, int line_num, int value);
+void PrintDebug(const std::string &msg);
+void PrintTheImpossible(const std::string &fname, int line_num, int value);
 
 // Including the SQLite header causes conflicts. Not worth it.
 struct sqlite3;

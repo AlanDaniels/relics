@@ -59,16 +59,21 @@ class MyVec2
 public:
     MyVec2() :
         m_x(0.0f), m_y(0.0f) {}
+
     MyVec2(GLfloat x, GLfloat y) :
         m_x(x), m_y(y) {}
+
     MyVec2(const MyVec2 &that) :
+        m_x(that.m_x), m_y(that.m_y) {}
+
+    MyVec2(MyVec2 &&that) :
         m_x(that.m_x), m_y(that.m_y) {}
 
     const MyVec2 &MyVec2::operator=(const MyVec2 &that) {
         m_x = that.m_x; m_y = that.m_y; return *this;
     }
 
-    const MyVec2 &MyVec2::operator=(const MyVec2 &&that) {
+    const MyVec2 &MyVec2::operator=(MyVec2 &&that) {
         m_x = that.m_x; m_y = that.m_y; return *this;
     }
 
@@ -113,11 +118,14 @@ public:
     MyVec4(const MyVec4 &that) : 
         m_x(that.m_x), m_y(that.m_y), m_z(that.m_z), m_w(that.m_w) {}
 
+    MyVec4(MyVec4 &&that) :
+        m_x(that.m_x), m_y(that.m_y), m_z(that.m_z), m_w(that.m_w) {}
+
     const MyVec4 &operator=(const MyVec4 &that) {
         m_x = that.m_x; m_y = that.m_y; m_z = that.m_z; m_w = that.m_w; return *this;
     }
 
-    const MyVec4 &operator=(const MyVec4 &&that) {
+    const MyVec4 &operator=(MyVec4 &&that) {
         m_x = that.m_x; m_y = that.m_y; m_z = that.m_z; m_w = that.m_w; return *this;
     }
 
@@ -209,9 +217,16 @@ public:
         m_v20(that.m_v20), m_v21(that.m_v21), m_v22(that.m_v22), m_v23(that.m_v23),
         m_v30(that.m_v30), m_v31(that.m_v31), m_v32(that.m_v32), m_v33(that.m_v33) {}
 
+    MyMatrix4by4(MyMatrix4by4 &&that) :
+        m_v00(that.m_v00), m_v01(that.m_v01), m_v02(that.m_v02), m_v03(that.m_v03),
+        m_v10(that.m_v10), m_v11(that.m_v11), m_v12(that.m_v12), m_v13(that.m_v13),
+        m_v20(that.m_v20), m_v21(that.m_v21), m_v22(that.m_v22), m_v23(that.m_v23),
+        m_v30(that.m_v30), m_v31(that.m_v31), m_v32(that.m_v32), m_v33(that.m_v33) {}
+
     const GLfloat *ptr() const { return &m_v00; }
 
     const MyMatrix4by4 &operator=(const MyMatrix4by4 &that);
+    const MyMatrix4by4 &operator=(MyMatrix4by4 &&that);
 
     MyVec4 times(const MyVec4 &vec);
     MyMatrix4by4 times(const MyMatrix4by4 &that);
@@ -244,7 +259,11 @@ public:
     MyRay(const MyRay &that) : 
         m_start(that.m_start), m_dir(that.m_dir) {}
 
+    MyRay(MyRay &&that) :
+        m_start(that.m_start), m_dir(that.m_dir) {}
+
     const MyRay &operator=(const MyRay &that);
+    const MyRay &operator=(MyRay &&that);
 
     const MyVec4 &getStart() const { return m_start; }
     const MyVec4 &getDir()   const { return m_dir; }
@@ -261,22 +280,28 @@ class MyPlane
 {
 public:
     MyPlane() :
-       m_distance(0.0f) {}
+       m_dist(0.0f) {}
+
     MyPlane(const MyVec4 &normal, GLfloat dist) :
-        m_normal(normal), m_distance(dist) {}
+        m_normal(normal), m_dist(dist) {}
+    
     MyPlane(const MyPlane &that) :
-        m_normal(that.m_normal), m_distance(that.m_distance) {}
+        m_normal(that.m_normal), m_dist(that.m_dist) {}
+
+    MyPlane(MyPlane &&that) :
+        m_normal(that.m_normal), m_dist(that.m_dist) {}
 
     MyPlane &operator=(const MyPlane &that);
+    MyPlane &operator=(MyPlane &&that);
 
     const MyVec4 &getNormal() const { return m_normal; }
-    GLfloat getDist() const { return m_distance; }
+    GLfloat getDist() const { return m_dist; }
 
     GLfloat distanceToPoint(const MyVec4 &point) const;
 
 private:
     MyVec4  m_normal;
-    GLfloat m_distance;
+    GLfloat m_dist;
 };
 
 
@@ -322,7 +347,16 @@ public:
     GlobalPillar(const GlobalPillar &that) :
         m_x(that.m_x), m_z(that.m_z) {}
 
+    GlobalPillar(GlobalPillar &&that) :
+        m_x(that.m_x), m_z(that.m_z) {}
+
     const GlobalPillar &operator=(const GlobalPillar &that) {
+        m_x = that.m_x;
+        m_z = that.m_z;
+        return *this;
+    }
+
+    const GlobalPillar &operator=(GlobalPillar &&that) {
         m_x = that.m_x;
         m_z = that.m_z;
         return *this;
@@ -360,7 +394,17 @@ public:
     GlobalGrid(const GlobalGrid &that) :
         m_x(that.m_x), m_y(that.m_y), m_z(that.m_z) {}
 
+    GlobalGrid(GlobalGrid &&that) :
+        m_x(that.m_x), m_y(that.m_y), m_z(that.m_z) {}
+
     const GlobalGrid &operator=(const GlobalGrid &that) {
+        m_x = that.m_x;
+        m_y = that.m_y;
+        m_z = that.m_z;
+        return *this;
+    }
+
+    const GlobalGrid &operator=(GlobalGrid &&that) {
         m_x = that.m_x;
         m_y = that.m_y;
         m_z = that.m_z;
@@ -490,7 +534,13 @@ public:
         m_debug_west(0),  m_debug_east(0),
         m_debug_south(0), m_debug_north(0) {}
 
-    EvalRegion(const EvalRegion & that) :
+    EvalRegion(const EvalRegion &that) :
+        m_west(that.m_west),   m_east(that.m_east),
+        m_south(that.m_south), m_north(that.m_north),
+        m_debug_west(that.m_debug_west),   m_debug_east(that.m_debug_east),
+        m_debug_south(that.m_debug_south), m_debug_north(that.m_debug_north) {}
+
+    EvalRegion(EvalRegion &&that) :
         m_west(that.m_west),   m_east(that.m_east),
         m_south(that.m_south), m_north(that.m_north),
         m_debug_west(that.m_debug_west),   m_debug_east(that.m_debug_east),
@@ -500,6 +550,9 @@ public:
 
     bool operator==(const EvalRegion &that) const;
     bool operator!=(const EvalRegion &that) const;
+
+    EvalRegion &operator=(const EvalRegion &that);
+    EvalRegion &operator=(EvalRegion &&that);
 
     inline int west()  const { return m_west; }
     inline int east()  const { return m_east; }

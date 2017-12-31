@@ -133,6 +133,7 @@ struct ConfigHitTest
 struct ConfigRender
 {
     ConfigRender() :
+        hud_font(""),
         cull_backfaces(true),
         field_of_view(90.0f),
         near_plane_meters(0.1f),
@@ -141,8 +142,9 @@ struct ConfigRender
 
     ~ConfigRender() {}
 
-    bool cull_backfaces;
+    std::string hud_font;
 
+    bool    cull_backfaces;
     GLfloat field_of_view;
     GLfloat near_plane_meters;
     GLfloat far_plane_meters;

@@ -176,7 +176,7 @@
     <ClInclude Include="game_world.h" />
     <ClInclude Include="draw_state_base.h" />
     <ClInclude Include="draw_state_pt.h" />
-    <ClInclude Include="overlay_gui.h" />
+    <ClInclude Include="heads_up_display.h" />
     <ClInclude Include="my_math.h" />
     <ClInclude Include="relics.h" />
     <ClInclude Include="renderer.h" />
@@ -207,7 +207,7 @@
     <ClCompile Include="game_world.cpp" />
     <ClCompile Include="draw_state_base.cpp" />
     <ClCompile Include="draw_state_pt.cpp" />
-    <ClCompile Include="overlay_gui.cpp" />
+    <ClCompile Include="heads_up_display.cpp" />
     <ClCompile Include="my_math.cpp" />
     <ClCompile Include="relics.cpp" />
     <ClCompile Include="draw_state_pct.cpp" />

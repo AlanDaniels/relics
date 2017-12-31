@@ -124,6 +124,8 @@ bool Config::loadFromFile()
     // Read the "render" table.
     lua_getglobal(L, "render");
     if (lua_istable(L, -1)) {
+        render.hud_font = getStringField(L, "hud_font");
+
         render.cull_backfaces = getBoolField(L, "cull_backfaces", true);
 
         // Clamp the field of view from 30 degrees to 180 degrees.
@@ -311,8 +313,11 @@ bool Config::validate() const
 {
     bool success = true;
 
-    // Landscape resources. 
-    if (!validateResource("world.file_name", world.file_name)) { success = false;  }
+    // Big picture stuff. 
+    if (!validateResource("world.file_name", world.file_name)) { success = false; }
+
+    // Fonts, textures and shaders.
+    if (!validateResource("render.hud_font", render.hud_font)) { success = false; }
 
     if (!validateResource("render.landscape.vert_shader", render.landscape.vert_shader)) { success = false; }
     if (!validateResource("render.landscape.frag_shader", render.landscape.frag_shader)) { success = false; }
@@ -334,7 +339,6 @@ bool Config::validate() const
     if (!validateResource("render.sky.top_texture",    render.sky.top_texture))    { success = false; }
     if (!validateResource("render.sky.bottom_texture", render.sky.bottom_texture)) { success = false; }
 
-    // Hit-test resources.
     if (!validateResource("render.hit_test.vert_shader", render.hit_test.vert_shader)) { success = false; }
     if (!validateResource("render.hit_test.frag_shader", render.hit_test.frag_shader)) { success = false; }
 

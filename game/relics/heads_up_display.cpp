@@ -1,6 +1,6 @@
 
 #include "stdafx.h"
-#include "overlay_gui.h"
+#include "heads_up_display.h"
 
 #include "config.h"
 #include "game_world.h"
@@ -11,12 +11,13 @@
 
 
 // Initialize our stuff.
-bool OverlayGUI::init()
+bool HeadsUpDisplay::init()
 {
     const GLfloat CH_THIN = 1.0f;
     const GLfloat CH_LONG = 50.0f;
 
-    if (!ReadFontResource(&m_font, "joystix-monospace.ttf")) {
+    std::string font_name = GetConfig().render.hud_font;
+    if (!ReadFontResource(&m_font, font_name)) {
         return false;
     }
 
@@ -32,12 +33,12 @@ bool OverlayGUI::init()
 
     m_crosshair_horz.setSize(sf::Vector2f(CH_LONG, CH_THIN));
     m_crosshair_horz.setPosition(sf::Vector2f(
-        (screen_width / 2.0f) - (CH_LONG / 2.0f),
+        (screen_width  / 2.0f) - (CH_LONG / 2.0f),
         (screen_height / 2.0f) - (CH_THIN / 2.0f)));
     m_crosshair_horz.setFillColor(sf::Color::White);
 
     m_text.setFont(m_font);
-    m_text.setCharacterSize(16);
+    m_text.setCharacterSize(14);
     m_text.setStyle(sf::Text::Regular);
     m_text.setFillColor(sf::Color::Yellow);
     m_text.setOutlineColor(sf::Color::Black);
@@ -48,7 +49,7 @@ bool OverlayGUI::init()
 
 // Render all the debugging stuff we might be interested in.
 // Note that we tend to print them from the longest strings to the shortest.
-void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, float fps)
+void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stats, GLfloat fps)
 {
     // Set things back to where we can draw again.
     glDisable(GL_DEPTH_TEST);

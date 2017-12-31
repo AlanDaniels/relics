@@ -8,19 +8,21 @@ class  GameWorld;
 struct RenderStats;
 
 
-class OverlayGUI
+class HeadsUpDisplay
 {
 public:
-    OverlayGUI::OverlayGUI(sf::RenderWindow &window) :
+    HeadsUpDisplay::HeadsUpDisplay(sf::RenderWindow &window) :
         m_window(window) {}
 
+    ~HeadsUpDisplay() {}
+
     bool init();
-    void render(const GameWorld &game_world, const RenderStats &stats, float fps);
+    void render(const GameWorld &game_world, const RenderStats &stats, GLfloat fps);
 
 private:
-    // Forbid copying.
-    OverlayGUI(const OverlayGUI &that) = delete;
-    void operator=(const OverlayGUI &that) = delete;
+    DISALLOW_DEFAULT(HeadsUpDisplay)
+    DISALLOW_COPYING(HeadsUpDisplay)
+    DISALLOW_MOVING(HeadsUpDisplay)
 
     sf::RenderWindow &m_window;
 

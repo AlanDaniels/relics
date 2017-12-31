@@ -43,8 +43,9 @@ window = {
 -- Rendering.
 -- NOTE: This should not affect the game logic in any way.
 render = {
-    cull_backfaces = true,
+    hud_font = 'fonts/joystix-monospace.ttf',
 
+    cull_backfaces = true,
     field_of_view  = 90.0,
     near_plane     = 0.1,
     far_plane      = 1000.0,
@@ -54,11 +55,11 @@ render = {
         vert_shader = 'shaders/landscape_PNT.vert',
         frag_shader = 'shaders/landscape_PNT.frag',
 
-        grass_texture   = 'grass.png',
-        dirt_texture    = 'dirt.png',
-        stone_texture   = 'stone.png',
-        coal_texture    = 'cartoon_dirt.jpg', -- TODO: Find some coal.
-        bedrock_texture = 'bedrock.png'
+        grass_texture   = 'textures/grass.png',
+        dirt_texture    = 'textures/dirt.png',
+        stone_texture   = 'textures/stone.png',
+        coal_texture    = 'textures/cartoon_dirt.jpg', -- TODO: Find some coal.
+        bedrock_texture = 'textures/bedrock.png'
     },
 
     sky = {

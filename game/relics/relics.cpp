@@ -7,10 +7,10 @@
 #include "chunk.h"
 #include "chunk_hit_test.h"
 #include "chunk_loader.h"
+#include "draw_state_pct.h"
 #include "event_handler.h"
 #include "game_world.h"
-#include "draw_state_pct.h"
-#include "overlay_gui.h"
+#include "heads_up_display.h"
 #include "renderer.h"
 #include "utils.h"
 
@@ -240,9 +240,9 @@ int WINAPI wWinMain(
     EventHandler event_handler(window, *game_world, renderer);
 
     // The GUI.
-    OverlayGUI overlay_gui(window);
-    if (!overlay_gui.init()) {
-        PrintDebug("Could not initialize the GUI.\n");
+    HeadsUpDisplay heads_up_display(window);
+    if (!heads_up_display.init()) {
+        PrintDebug("Could not initialize the HUD.\n");
         return 1;
     }
 
@@ -298,7 +298,7 @@ int WINAPI wWinMain(
         RenderStats stats = renderer.renderWorld();
 
         // Render the GUI overlay.
-        overlay_gui.render(*game_world, stats, fps_snapshot);
+        heads_up_display.render(*game_world, stats, fps_snapshot);
 
         // All done. Flip to the new results.
         window.display();

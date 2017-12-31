@@ -23,7 +23,7 @@ const ChunkHitTestDetail &ChunkHitTestDetail::operator=(const ChunkHitTestDetail
 // Hit-test details to a description. Handy for debugging.
 std::string ChunkHitTestDetail::toDescription() const
 {
-    const char *face_to_str;
+    std::string face_to_str;
     switch (m_face) {
     case FaceType::NONE:   face_to_str = "None";   break;
     case FaceType::SOUTH:  face_to_str = "South";  break;
@@ -37,13 +37,13 @@ std::string ChunkHitTestDetail::toDescription() const
         return "";
     }
 
-    char msg[128];
-    sprintf(msg,
-        "Face = %s, block = [%d, %d, %d], impact = [%.0f, %.0f, %.0f], dist = %.0f",
-        face_to_str, m_global_coord.x(), m_global_coord.y(), m_global_coord.z(),
-        m_impact.x(), m_impact.y(), m_impact.z(), m_dist);
+    std::string result =
+        fmt::format("Face = {}, ", face_to_str) +
+        fmt::format("block = [{0}, {1}, {2}], ", m_global_coord.x(), m_global_coord.y(), m_global_coord.z()) +
+        fmt::format("impact = [{0:.0f}, {1:.0f}, {2:.0f}], ", m_impact.x(), m_impact.y(), m_impact.z()) +
+        fmt::format("dist = {.0f}", m_dist);
 
-    return std::string(msg);
+    return result;
 }
 
 

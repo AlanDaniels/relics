@@ -14,6 +14,8 @@ struct ConfigWorld
     ConfigWorld() :
         file_name("") {}
 
+    ~ConfigWorld() {}
+
     std::string file_name;
 };
 
@@ -39,6 +41,8 @@ struct ConfigDebug
         print_draw_state(false),
         print_window_context(false),
         noclip_flight_speed(1.0f) {}
+
+    ~ConfigDebug() {}
 
     bool opengl;
     bool check_for_leaks;
@@ -70,6 +74,8 @@ struct ConfigWindow
         vertical_sync(true),
         mouse_degrees_per_pixel(0.1f) {}
 
+    ~ConfigWindow() {}
+
     int  width;
     int  height;
     bool fullscreen;
@@ -81,6 +87,8 @@ struct ConfigWindow
 struct ConfigLandscape
 {
     ConfigLandscape() {}
+
+    ~ConfigLandscape() {}
 
     std::string vert_shader;
     std::string frag_shader;
@@ -96,6 +104,8 @@ struct ConfigLandscape
 struct ConfigSky
 {
     ConfigSky() {}
+
+    ~ConfigSky() {}
 
     std::string vert_shader;
     std::string frag_shader;
@@ -113,6 +123,8 @@ struct ConfigHitTest
 {
     ConfigHitTest() {}
 
+    ~ConfigHitTest() {}
+
     std::string vert_shader;
     std::string frag_shader;
 };
@@ -126,6 +138,8 @@ struct ConfigRender
         near_plane_meters(0.1f),
         far_plane_meters(1000.0f),
         fade_distance_meters(80.0f) {}
+
+    ~ConfigRender() {}
 
     bool cull_backfaces;
 
@@ -150,6 +164,8 @@ struct ConfigLogic
         eval_blocks(5),
         hit_test_distance_meters(10.0f) {}
 
+    ~ConfigLogic() {}
+
     int     eval_blocks;
     GLfloat hit_test_distance_meters;
 
@@ -164,6 +180,8 @@ class Config
 {
 public:
     Config() {}
+
+    ~Config() {}
 
     bool loadFromFile();
 
@@ -181,8 +199,8 @@ private:
     int clampInt(int val, int min_val, int max_val);
     GLfloat clampFloat(GLfloat val, GLfloat min_val, GLfloat max_val);
 
-    bool getBoolField(lua_State *L, const char *field_name, bool default_val);
-    std::string getStringField(lua_State *L, const char *field_name);
+    bool getBoolField(lua_State *L, const std::string &field_name, bool default_val);
+    std::string getStringField(lua_State *L, const std::string &field_name);
 
     bool validateResource(const std::string &field, const std::string &val) const;
     bool validate() const;

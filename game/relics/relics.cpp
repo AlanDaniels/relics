@@ -32,7 +32,7 @@ void APIENTRY MyOGLErrorCallback(
     }
     
     // Otherwise, print the useful message.
-    const char *source_str;
+    std::string source_str;
 	switch (source_val) {
 	case GL_DEBUG_SOURCE_API: source_str = "API"; break;
 	case GL_DEBUG_SOURCE_WINDOW_SYSTEM: source_str = "Window System"; break;
@@ -43,7 +43,7 @@ void APIENTRY MyOGLErrorCallback(
 	default: source_str = "No idea!"; break;
 	}
 
-	const char *type_str;
+	std::string type_str;
 	switch (type_val) {
 	case GL_DEBUG_TYPE_ERROR: type_str = "Error"; break;
 	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: type_str = "Deprecated Behavior"; break;
@@ -57,18 +57,18 @@ void APIENTRY MyOGLErrorCallback(
 	default: type_str = "No idea!"; break;
 	}
 
-	const char *sev_str;
+	std::string sev_str;
 	switch (severity_val) {
-	case GL_DEBUG_SEVERITY_HIGH:         sev_str = "High";   break;
-	case GL_DEBUG_SEVERITY_MEDIUM:       sev_str = "Medium"; break;
-	case GL_DEBUG_SEVERITY_LOW:          sev_str = "Low";    break;
+	case GL_DEBUG_SEVERITY_HIGH: sev_str = "High"; break;
+	case GL_DEBUG_SEVERITY_MEDIUM: sev_str = "Medium"; break;
+	case GL_DEBUG_SEVERITY_LOW: sev_str = "Low"; break;
 	case GL_DEBUG_SEVERITY_NOTIFICATION: sev_str = "Notification"; break;
 	default: sev_str = "No idea!"; break;
 	}
 
-	PrintDebug(
-		"OpenGL: source='%s', type='%s', id=%u, sev='%s'\n    %*s\n",
-		source_str, type_str, id, sev_str, msg_len, msg_str);
+	PrintDebug(fmt::format(
+		"OpenGL: source='{0}', type='{1}', id={2}, sev='{3}'\n    {4}\n",
+		source_str, type_str, id, sev_str, msg_str));
 
     // If this is high severity, just grind to a halt right here.
     assert(severity_val != GL_DEBUG_SEVERITY_HIGH);
@@ -83,7 +83,7 @@ sqlite3 *OpenDatabase()
     full_name.append(fname);
 
     if (!boost::filesystem::is_regular_file(full_name)) {
-        PrintDebug("Database file %s does not exist.", full_name.c_str());
+        PrintDebug(fmt::format("Database file {} does not exist.", full_name));
         return nullptr;
     }
 
@@ -173,10 +173,10 @@ int WINAPI wWinMain(
     if (config.debug.print_window_context) {
         sf::ContextSettings settings_out = window.getSettings();
         PrintDebug("Window Context Settings:\n");
-        PrintDebug("    Depth bits: %d\n", settings_out.depthBits);
-        PrintDebug("    Stencil bits: %d\n", settings_out.stencilBits);
-        PrintDebug("    AA level: %d\n", settings_out.antialiasingLevel);
-        PrintDebug("    Version: %d.%d\n", settings_out.majorVersion, settings_out.minorVersion);
+        PrintDebug(fmt::format("    Depth bits: {}\n",   settings_out.depthBits));
+        PrintDebug(fmt::format("    Stencil bits: {}\n", settings_out.stencilBits));
+        PrintDebug(fmt::format("    AA level: {}\n",     settings_out.antialiasingLevel));
+        PrintDebug(fmt::format("    Version: {0}.{1}\n", settings_out.majorVersion, settings_out.minorVersion));
     }
 
     // Set some window stuff.
@@ -192,7 +192,7 @@ int WINAPI wWinMain(
     // Fire up GLEW. We need to do this *after* we open the main window.
 	GLenum glew_result = glewInit();
 	if (glew_result != GLEW_OK) {
-		PrintDebug("Call to initiate GLEW failed: %s\n", glewGetErrorString(glew_result));
+		PrintDebug(fmt::format("Call to initiate GLEW failed: {}\n", glewGetErrorString(glew_result)));
 		return 1;
 	}
 
@@ -205,7 +205,7 @@ int WINAPI wWinMain(
 
     // Set up initial GL stuff, which we'll never change.
     const char* version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    PrintDebug("Your OpenGL version is \"%s\".\n", version);
+    PrintDebug(fmt::format("Your OpenGL version is \"{}\".\n", version));
 
     // TODO: Review all these settings, and put them in the Renderer class.
     glFrontFace(GL_CCW);

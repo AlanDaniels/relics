@@ -20,6 +20,8 @@ struct DrawStateSettings
         vert_shader_fname(""),
         frag_shader_fname("") {}
 
+    ~DrawStateSettings() {}
+
     std::string title;
     bool        enable_blending;
     bool        enable_depth_test;
@@ -36,14 +38,13 @@ class DrawState_Base
     static const int MAX_TEXTURES = 4;
 
 public:
-    DrawState_Base(int uniform_texture_count) :
+    DrawState_Base(int uni_tex_count) :
         m_initialized(false),
-        m_uniform_texture_count(uniform_texture_count),
+        m_uni_tex_count(uni_tex_count),
         m_program_ID(0),
         m_vertex_shader_ID(0),
-        m_fragment_shader_ID(0)
-    {
-        assert(m_uniform_texture_count <= MAX_TEXTURES);
+        m_fragment_shader_ID(0) {
+        assert(m_uni_tex_count <= MAX_TEXTURES);
     }
 
     // ...but when we delete, free everything up.
@@ -61,8 +62,8 @@ public:
     bool updateUniformCubemapTexture(int index, const DrawCubemapTexture &cubemap_texture);
 
 protected:
-    bool renderSetup();
-    bool renderTeardown();
+    bool  renderSetup();
+    bool  renderTeardown();
     GLint getAttribute(const std::string &name) const;
 
     bool create(const std::vector<std::string> &attrib_names, const DrawStateSettings &settings);
@@ -86,6 +87,6 @@ private:
     std::map<std::string, GLint> m_uniform_vec4_map;
     std::map<std::string, GLint> m_uniform_matrix4by4_map;
 
-    int m_uniform_texture_count;
+    int m_uni_tex_count;
     std::vector<GLuint> m_uniform_textures;
 };

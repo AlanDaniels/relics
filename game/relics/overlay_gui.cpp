@@ -56,7 +56,6 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
 
     const Config &config = GetConfig();
 
-    char blah[256];
     const GLfloat text_down = 18.0f;
 
     // Before drawing the text.
@@ -69,11 +68,13 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
         MyVec4  camera_pos   = game_world.getCameraPos();
         GLfloat camera_yaw   = game_world.getCameraYaw();
         GLfloat camera_pitch = game_world.getCameraPitch();
-        sprintf(
-            blah, "Pos = %.0f, %.0f, %.0f, Yaw = %03.1f, Pitch = %02.1f", 
+
+        std::string msg = fmt::format(
+            "Pos = {0:.0f}, {1:.0f}, {2:.0f}, Yaw = {3:03.1f}, Pitch = {4:02.1f}",
             camera_pos.x(), camera_pos.y(), camera_pos.z(),
             camera_yaw, camera_pitch);
-        m_text.setString(blah);
+        m_text.setString(msg);
+
         m_window.draw(m_text);
         m_text.move(0.0f, text_down);
     }
@@ -82,12 +83,13 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     if (config.debug.hud_hit_test) {
         if (game_world.getHitTestSuccess()) {
             std::string descr = game_world.getHitTestDetail().toDescription();
-            sprintf(blah, "Hit Test: %s", descr.c_str());
+            std::string msg   = fmt::format("Hit Test: {}", descr);
+            m_text.setString(msg);
         }
         else {
-            sprintf(blah, "Hit Test: None");
+            m_text.setString("Hit Test: None");
         }
-        m_text.setString(blah);
+
         m_window.draw(m_text);
         m_text.move(0.0f, text_down);
     }
@@ -96,8 +98,9 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     if (config.debug.hud_memory_usage) {
         int memory = GetMemoryUsage();
         std::string readable = ReadableNumber(memory);
-        sprintf(blah, "Memory: %s", readable.c_str());
-        m_text.setString(blah);
+        std::string msg = fmt::format("Memory: {}", readable);
+        m_text.setString(msg);
+
         m_window.draw(m_text);
         m_text.move(0.0f, text_down);
     }
@@ -105,10 +108,11 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     // Print our render stats.
     if (config.debug.hud_render_stats) {
         std::string readable = ReadableNumber(stats.triangle_count);
-        sprintf(blah,
-            "Render: %d states, %s tris",
-            stats.state_changes, readable.c_str());
-        m_text.setString(blah);
+        std::string msg = fmt::format(
+            "Render: {0} states, {1} tris",
+            stats.state_changes, readable);
+        m_text.setString(msg);
+
         m_window.draw(m_text);
         m_text.move(0.0f, text_down);
     }
@@ -116,8 +120,9 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
     // Print our mouse position.
     if (config.debug.hud_mouse_pos) {
         sf::Vector2i mouse_pos = sf::Mouse::getPosition(m_window);
-        sprintf(blah, "Mouse: %03d, %03d", mouse_pos.x, mouse_pos.y);
-        m_text.setString(blah);
+        std::string msg = fmt::format("Mouse: {0:03d}, {1:03d}", mouse_pos.x, mouse_pos.y);
+        m_text.setString(msg);
+
         m_window.draw(m_text);
         m_text.move(0.0f, text_down);
     }
@@ -130,8 +135,9 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
         game_time /= 60;
         int minutes = game_time % 60;
 
-        sprintf(blah, "Time: %02d:%02d", minutes, secs);
-        m_text.setString(blah);
+        std::string msg = fmt::format("Time: {0:02d}:{1:02d}", minutes, secs);
+        m_text.setString(msg);
+
         m_window.draw(m_text);
         m_text.move(0.0f, text_down);
     }
@@ -142,10 +148,12 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
         int eval_blocks = config.logic.eval_blocks;
         EvalRegion region = WorldPosToEvalRegion(pos, eval_blocks);
 
-        sprintf(blah,
-            "Eval distance: %d meters, W=%d, E=%d, S=%d, N=%d", 
-            eval_blocks * CHUNK_WIDTH, region.west(), region.east(), region.south(), region.north());
-        m_text.setString(blah);
+        std::string msg = fmt::format(
+            "Eval distance: {0} meters, W={1}, E={2}, S={3}, N={4}", 
+            eval_blocks * CHUNK_WIDTH, 
+            region.west(), region.east(), region.south(), region.north());
+        m_text.setString(msg);
+
         m_window.draw(m_text);
         m_text.move(0.0f, text_down);
     }
@@ -155,18 +163,21 @@ void OverlayGUI::render(const GameWorld &game_world, const RenderStats &stats, f
         int in_memory  = game_world.getChunksInMemoryCount();
         int considered = stats.chunks_considered;
         int rendered   = stats.chunks_rendered;
-        sprintf(blah,
-            "Chunks: In memory = %d, considered = %d, rendered = %d",
+        
+        std::string msg = fmt::format(
+            "Chunks: In memory = {0}, considered = {1}, rendered = {2}",
             in_memory, considered, rendered);
-        m_text.setString(blah);
+        m_text.setString(msg);
+
         m_window.draw(m_text);
         m_text.move(0.0f, text_down);
     }
 
     // Print our framerate.
     if (config.debug.hud_framerate) {
-        sprintf(blah, "FPS: %02.1f", fps);
-        m_text.setString(blah);
+        std::string msg = fmt::format("FPS: {:02.1f}", fps);
+        m_text.setString(msg);
+
         m_window.draw(m_text);
         m_text.move(0.0f, text_down);
     }

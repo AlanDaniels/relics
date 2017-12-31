@@ -6,6 +6,7 @@
 #include "draw_cubemap_texture.h"
 #include "draw_texture.h"
 #include "config.h"
+#include "format.h"
 #include "my_math.h"
 #include "utils.h"
 
@@ -40,7 +41,7 @@ static GLuint CompileShader(GLenum shader_type, const std::string &fname)
     GLint shader_ok;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &shader_ok);
     if (!shader_ok) {
-        PrintDebug("Failed to compile %s...\n", fname);
+        PrintDebug(fmt::format("Failed to compile {}...\n", fname));
         ShowInfoLog(shader, glGetShaderiv, glGetShaderInfoLog);
         glDeleteShader(shader);
         return 0;
@@ -86,13 +87,13 @@ DrawState_Base::~DrawState_Base()
 bool DrawState_Base::addUniformFloat(const std::string &name)
 {
     if (m_initialized) {
-        PrintDebug("Already initialized! Can't add uniform float %s.\n", name.c_str());
+        PrintDebug(fmt::format("Already initialized! Can't add uniform float {}.\n", name));
         return false;
     }
 
     const auto &iter = m_uniform_float_map.find(name);
     if (iter != m_uniform_float_map.end()) {
-        PrintDebug("Tried to add uniform float %s twice.\n", name.c_str());
+        PrintDebug(fmt::format("Tried to add uniform float {} twice.\n", name));
         return false;
     }
 
@@ -105,13 +106,13 @@ bool DrawState_Base::addUniformFloat(const std::string &name)
 bool DrawState_Base::addUniformVec4(const std::string &name)
 {
     if (m_initialized) {
-        PrintDebug("Already initialized! Can't add uniform vec4 %s.\n", name.c_str());
+        PrintDebug(fmt::format("Already initialized! Can't add uniform vec4 {}.\n", name));
         return false;
     }
 
     const auto &iter = m_uniform_vec4_map.find(name);
     if (iter != m_uniform_vec4_map.end()) {
-        PrintDebug("Tried to add uniform vec4 %s twice.\n", name.c_str());
+        PrintDebug(fmt::format("Tried to add uniform vec4 {} twice.\n", name));
         return false;
     }
 
@@ -124,13 +125,13 @@ bool DrawState_Base::addUniformVec4(const std::string &name)
 bool DrawState_Base::addUniformMatrix4by4(const std::string &name)
 {
     if (m_initialized) {
-        PrintDebug("Already initialized! Can't add uniform matrix4by4 %s.\n", name.c_str());
+        PrintDebug(fmt::format("Already initialized! Can't add uniform matrix4by4 {}.\n", name));
         return false;
     }
 
     const auto &iter = m_uniform_matrix4by4_map.find(name);
     if (iter != m_uniform_matrix4by4_map.end()) {
-        PrintDebug("Tried to add uniform matrix4by4 %s twice.\n", name.c_str());
+        PrintDebug(fmt::format("Tried to add uniform matrix4by4 {} twice.\n", name));
         return false;
     }
 
@@ -200,10 +201,9 @@ bool DrawState_Base::create(
 
     // Look up our uniform texture locations.
     // If "glGetUniformLocation" returns -1, the name was invalid.
-    for (int i = 0; i < m_uniform_texture_count; i++) {
-        char tex_name[64];
-        sprintf(tex_name, "textures[%d]", i);
-        GLint location = glGetUniformLocation(m_program_ID, tex_name);
+    for (int i = 0; i < m_uni_tex_count; i++) {
+        std::string tex_name = fmt::format("textures[{}]", i);
+        GLint location = glGetUniformLocation(m_program_ID, tex_name.c_str());
         assert(location != -1);
         m_uniform_textures.emplace_back(location);
     }
@@ -219,29 +219,29 @@ bool DrawState_Base::create(
 
     // Everything worked. Print our details.
     if (GetConfig().debug.print_draw_state) {
-        PrintDebug("Draw state IDs for \"%s\"...\n", m_settings.title.c_str());
-        PrintDebug("    Vertex Shader: %u\n", m_vertex_shader_ID);
-        PrintDebug("    Fragment Shader: %u\n", m_fragment_shader_ID);
-        PrintDebug("    Program: %u\n", m_program_ID);
+        PrintDebug(fmt::format("Draw state IDs for '{}'...\n", m_settings.title));
+        PrintDebug(fmt::format("    Vertex Shader: {}\n", m_vertex_shader_ID));
+        PrintDebug(fmt::format("    Fragment Shader: {}\n", m_fragment_shader_ID));
+        PrintDebug(fmt::format("    Program: {}\n", m_program_ID));
 
         for (const auto &iter : m_attrib_map) {
-            PrintDebug("    Attribute - %s: %u\n", iter.first.c_str(), iter.second);
+            PrintDebug(fmt::format("    Attribute - {0}: {1}\n", iter.first, iter.second));
         }
 
         for (const auto &iter : m_uniform_float_map) {
-            PrintDebug("    Uniform Float - '%s': %u\n", iter.first.c_str(), iter.second);
+            PrintDebug(fmt::format("    Uniform Float - '{0}': {1}\n", iter.first, iter.second));
         }
 
         for (const auto &iter : m_uniform_vec4_map) {
-            PrintDebug("    Uniform Vec4 - '%s': %u\n", iter.first.c_str(), iter.second);
+            PrintDebug(fmt::format("    Uniform Vec4 - '{0}': {1}\n", iter.first, iter.second));
         }
 
         for (const auto &iter : m_uniform_matrix4by4_map) {
-            PrintDebug("    Uniform Matrix4by4 - '%s': %u\n", iter.first.c_str(), iter.second);
+            PrintDebug(fmt::format("    Uniform Matrix4by4 - '{0}': {1}\n", iter.first, iter.second));
         }
 
-        for (int i = 0; i < m_uniform_texture_count; i++) {
-            PrintDebug("    Uniform Texture - #%d: %u\n", i, m_uniform_textures[i]);
+        for (int i = 0; i < m_uni_tex_count; i++) {
+            PrintDebug(fmt::format("    Uniform Texture - #{0}: {1}\n", i, m_uniform_textures[i]));
         }
     }
 
@@ -259,7 +259,7 @@ bool DrawState_Base::updateUniformFloat(const std::string &name, GLfloat value)
 
     const auto &iter = m_uniform_float_map.find(name);
     if (iter == m_uniform_float_map.end()) {
-        PrintDebug("Could not find uniform float %s\n", name.c_str());
+        PrintDebug(fmt::format("Could not find uniform float {}\n", name));
         return false;
     }
 
@@ -276,7 +276,7 @@ bool DrawState_Base::updateUniformVec4(const std::string &name, const MyVec4 &va
 
     const auto &iter = m_uniform_vec4_map.find(name);
     if (iter == m_uniform_vec4_map.end()) {
-        PrintDebug("Could not find uniform vec4 %s\n", name.c_str());
+        PrintDebug(fmt::format("Could not find uniform vec4 {}\n", name));
         return false;
     }
 
@@ -293,7 +293,7 @@ bool DrawState_Base::updateUniformMatrix4by4(const std::string &name, const MyMa
 
     const auto &iter = m_uniform_matrix4by4_map.find(name);
     if (iter == m_uniform_matrix4by4_map.end()) {
-        PrintDebug("Could not find uniform matrix-4by4 %s\n", name.c_str());
+        PrintDebug(fmt::format("Could not find uniform matrix-4by4 {}\n", name));
         return false;
     }
 

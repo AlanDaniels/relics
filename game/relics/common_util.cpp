@@ -2,44 +2,44 @@
 #include "stdafx.h"
 #include "common_util.h"
 
+#include "format.h"
 #include "sqlite3.h"
 #include <psapi.h>
 
-/*
-* NOTE: The only code that should ever go in here is truly
-* common code, independent of whatever wxWidgets, OpenGL, or SFML
+
+/**
+* Common data structures and utility methods.
+*
+* The ONLY code that should ever go in here is truly common
+* code, independent of whatever wxWidgets, OpenGL, or SFML
 * thinks code should look like.
 *
 * Ideally we'd keep one copy of this code, but that messes with
 * the builds, so for now we'll just copy and paste it since it
 * doesn't change that often.
 *
-* This version last updated on Mon, Dec 18th, 2017.
+* This version last updated on Thu, Dec 28th, 2017.
 */
 
 
 // Turn a number into a nice readable string.
 std::string ReadableNumber(int value) {
-    char buffer[32];
-
     const int GB = 1024 * 1024 * 1024;
     const int MB = 1024 * 1024;
     const int KB = 1024;
 
     if (value >= GB) {
-        sprintf(buffer, "%.1fG", value / float(GB));
+        return fmt::format("{0:.1f}G", value / float(GB));
     }
     else if (value >= MB) {
-        sprintf(buffer, "%.1fM", value / float(MB));
+        return fmt::format("{0:.1f}M", value / float(MB));
     }
     else if (value >= KB) {
-        sprintf(buffer, "%.1fK", value / float(KB));
+        return fmt::format("{0:.1f}K", value / float(KB));
     }
     else {
-        sprintf(buffer, "%d", value);
+        return fmt::format("{0}", value);
     }
-
-    return std::string(buffer);
 }
 
 
@@ -63,31 +63,19 @@ int GetMemoryUsage()
 // Print a debug message, both to the Visual Studio debugger, and stdout.
 // TODO: I'm not sure why, but using a "std::unique_ptr" to a new char array
 // causes a crash here.
-void PrintDebug(const char *format, ...)
+void PrintDebug(const std::string &msg)
 {
-    char buffer[256];
-    memset(buffer, '\0', sizeof(buffer));
-
-    va_list arg_list;
-
-    va_start(arg_list, format);
-    vsprintf(buffer, format, arg_list);
-    if (buffer[255] != '\0') {
-        assert(buffer[255] == '\0');
-    }
-    va_end(arg_list);
-
-    OutputDebugStringA(buffer);
-    printf(buffer);
+    OutputDebugStringA(msg.c_str());
+    printf(msg.c_str());
 }
 
 
 // Print when we hit an "impossible" case in a switch statement, and kill the app.
-void PrintTheImpossible(const char *fname, int line_num, int value)
+void PrintTheImpossible(const std::string &fname, int line_num, int value)
 {
-    PrintDebug(
-        "IMPOSSIBLE VALUE! %s (line %d), value of %d\n.",
-        fname, line_num, value);
+    PrintDebug(fmt::format(
+        "IMPOSSIBLE VALUE! {0} (line {1}), value of {2}\n.",
+        fname, line_num, value));
     assert(false);
 }
 
@@ -102,11 +90,11 @@ sqlite3 *SQL_open(const std::string &fname)
         return db;
     }
     else {
-        PrintDebug(
+        PrintDebug(fmt::format(
             "Could not open database:\n"
-            "Error = %s\n"
-            "File  = %s",
-            sqlite3_errmsg(db), fname.c_str());
+            "Error = {0}\n"
+            "File  = {1}",
+            sqlite3_errmsg(db), fname));
 
         sqlite3_close(db);
         return nullptr;
@@ -123,12 +111,12 @@ bool SQL_exec(sqlite3 *db, const std::string &sql)
         return true;
     }
     else {
-        PrintDebug(
+        PrintDebug(fmt::format(
             "Error running SQL:\n"
-            "Code  = %s"
-            "Error = %s\n"
-            "SQL   = %s",
-            SQL_code_to_str(ret_code).c_str(), error_from_db, sql.c_str());
+            "Code  = {0}"
+            "Error = {1}\n"
+            "SQL   = {2}",
+            SQL_code_to_str(ret_code), error_from_db, sql));
 
         sqlite3_free(error_from_db);
         sqlite3_close(db);
@@ -147,11 +135,11 @@ sqlite3_stmt *SQL_prepare(sqlite3 *db, const std::string &sql)
         return stmt;
     }
     else {
-        PrintDebug(
+        PrintDebug(fmt::format(
             "Error creating prepared statement:\n"
-            "Code  = %s\n"
-            "SQL   = %s",
-            SQL_code_to_str(ret_code).c_str(), sql.c_str());
+            "Code  = {0}\n"
+            "SQL   = {1}",
+            SQL_code_to_str(ret_code), sql));
 
         sqlite3_close(db);
         return nullptr;
@@ -202,9 +190,7 @@ std::string SQL_code_to_str(int code)
 
         // Anything not covered so far is an extended error. Very unlikely.
     default: {
-            char msg[64];
-            sprintf(msg, "Extended error code %d", code);
-            return std::string(msg);
+            return fmt::format("Extended error code {}", code);
         }
     }
 }

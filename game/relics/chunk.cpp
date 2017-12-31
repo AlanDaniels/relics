@@ -133,14 +133,14 @@ void Chunk::recalcAllExposures()
 
     int grand_total = totals.getGrandTotal();
     if (grand_total == 0) {
-        PrintDebug(
-            "Recalculated all exposures for [%d, %d].\n",
-            m_origin.debugX(), m_origin.debugZ());
+        PrintDebug(fmt::format(
+            "Recalculated all exposures for [{0}, {1}].\n",
+            m_origin.debugX(), m_origin.debugZ()));
     }
     else {
-        PrintDebug(
-            "Recalculated all exposures for [%d, %d]. Found %d surfaces total.\n",
-            m_origin.debugX(), m_origin.debugZ(), grand_total);
+        PrintDebug(fmt::format(
+            "Recalculated all exposures for [{0}, {1}]. Found {2} surfaces total.\n",
+            m_origin.debugX(), m_origin.debugZ(), grand_total));
     }
 }
 

@@ -3,6 +3,7 @@
 #include "config.h"
 #include "common_util.h"
 
+#include "format.h"
 #include "utils.h"
 #include "lua.hpp"
 
@@ -30,15 +31,15 @@ bool Config::loadFromFile()
 {
     bool path_exists = DoesResourcePathExist();
     if (!path_exists) {
-        PrintDebug(
-            "The resource path \"%s\" doesn't exist. Running the game is hopeless.",
-            RESOURCE_PATH);
+        PrintDebug(fmt::format(
+            "The resource path \"{}\" doesn't exist. Running the game is hopeless.",
+            RESOURCE_PATH));
         return false;
     }
 
     std::string data = ReadTextResource(config_fname);
     if (data.empty()) {
-        PrintDebug("The config file \"%s\" is empty.", config_fname.c_str());
+        PrintDebug(fmt::format("The config file \"{}\" is empty.", config_fname));
         return false;
     }
 
@@ -54,18 +55,18 @@ bool Config::loadFromFile()
     
     val = luaL_loadbuffer(L, data.c_str(), data.length(), "config");
     if (val != LUA_OK) {
-        PrintDebug(
-            "Lua error when loading %s: %s, %s\n", 
-            config_fname.c_str(), LuaErrorToString(val), lua_tostring(L, -1));
+        PrintDebug(fmt::format(
+            "Lua error when loading {0}: {1}, {2}\n", 
+            config_fname, LuaErrorToString(val), lua_tostring(L, -1)));
         lua_close(L);
         return false;
     }
 
     val = lua_pcall(L, 0, 0, 0);
     if (val != LUA_OK) {
-        PrintDebug(
-            "Lua error when running %s: %s, %s\n",
-            config_fname.c_str(), LuaErrorToString(val), lua_tostring(L, -1));
+        PrintDebug(fmt::format(
+            "Lua error when running {0}: {1}, {2}\n",
+            config_fname, LuaErrorToString(val), lua_tostring(L, -1)));
         lua_close(L);
         return false;
     }
@@ -231,10 +232,10 @@ bool Config::loadFromFile()
 
 
 // Wrap some of the Lua stuff.
-bool Config::getBoolField(lua_State *L, const char *field_name, bool default_val)
+bool Config::getBoolField(lua_State *L, const std::string &field_name, bool default_val)
 {
     bool result = default_val;
-    lua_getfield(L, -1, field_name);
+    lua_getfield(L, -1, field_name.c_str());
     if (lua_isboolean(L, -1)) {
         result = (lua_toboolean(L, -1) != 0);
     }
@@ -244,10 +245,10 @@ bool Config::getBoolField(lua_State *L, const char *field_name, bool default_val
 
 
 // Wrap some of the Lua stuff.
-std::string Config::getStringField(lua_State *L, const char *field_name)
+std::string Config::getStringField(lua_State *L, const std::string &field_name)
 {
     std::string result = "";
-    lua_getfield(L, -1, field_name);
+    lua_getfield(L, -1, field_name.c_str());
     if (lua_isstring(L, -1)) {
         result = lua_tostring(L, -1);
     }
@@ -290,14 +291,14 @@ GLfloat Config::clampFloat(GLfloat val, GLfloat min_val, GLfloat max_val)
 bool Config::validateResource(const std::string &field_name, const std::string &val) const 
 {
     if (val.empty()) {
-        PrintDebug("Config field '%s' is not set.\n", field_name.c_str());
+        PrintDebug(fmt::format("Config field '{}' is not set.\n", field_name));
         return false;
     }
 
     if (!IsResource(val)) {
-        PrintDebug(
-            "Config field '%s' is set to '%s', which is not a valid resource.\n", 
-            field_name.c_str(), val.c_str());
+        PrintDebug(fmt::format(
+            "Config field '{0}' is set to '{2}', which is not a valid resource.\n", 
+            field_name, val));
         return false;
     }
 
@@ -338,7 +339,7 @@ bool Config::validate() const
     if (!validateResource("render.hit_test.frag_shader", render.hit_test.frag_shader)) { success = false; }
 
     if (!success) {
-        PrintDebug("File '%s' has errors. Fix these and try again.\n", config_fname.c_str());
+        PrintDebug(fmt::format("File '{}' has errors. Fix these and try again.\n", config_fname));
     }
 
     return success;

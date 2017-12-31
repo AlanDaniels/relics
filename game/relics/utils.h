@@ -74,11 +74,12 @@ MyPlane GetEastGridPlane(int grid_x);
 MyPlane GetTopGridPlane(int grid_y);
 MyPlane GetBottomGridPlane(int grid_y);
 
-void  PrintOpenglEnabledState(const char *title, bool details);
+void PrintOpenglEnabledState(const std::string &title, bool details);
 
-const char *LuaErrorToString(int error);
+std::string LuaErrorToString(int error);
 
-extern const char *RESOURCE_PATH;
+extern const std::string RESOURCE_PATH;
+
 bool DoesResourcePathExist();
 bool IsResource(const std::string &fname);
 std::string ReadTextResource(const std::string &fname);

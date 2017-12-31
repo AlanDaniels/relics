@@ -93,8 +93,8 @@ ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos);
 class Chunk
 {
 public:
-    Chunk::Chunk(const GameWorld &world, const ChunkOrigin &origin);
-    Chunk::~Chunk();
+    Chunk(const GameWorld &world, const ChunkOrigin &origin);
+    ~Chunk();
 
     bool IsGlobalGridWithin(const GlobalGrid &coord) const;
 

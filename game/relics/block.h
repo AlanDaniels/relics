@@ -10,6 +10,7 @@
 class Chunk;
 
 
+#if 0
 enum class BlockType : unsigned char
 {
     AIR   = 0,
@@ -17,6 +18,7 @@ enum class BlockType : unsigned char
     STONE = 2,
     COAL  = 3
 };
+#endif
 
 
 bool IsBlockTypeFilled(BlockType block_type);
@@ -45,6 +47,7 @@ class Block
 {
 public:
     Block();
+    ~Block() {}
 
     BlockType getBlockType() const { return m_block_type; }
     void setBlockType(BlockType val) { m_block_type = val; }
@@ -55,6 +58,9 @@ public:
     void setSurface(FaceType face, SurfaceType val);
 
 private:
+    DISALLOW_COPYING(Block)
+    DISALLOW_MOVING(Block)
+
     BlockType m_block_type;
 
     SurfaceType m_west_surf;

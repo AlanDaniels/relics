@@ -1,8 +1,9 @@
 
 #include "stdafx.h"
 #include "draw_cubemap_texture.h"
-#include "common_util.h"
 
+#include "common_util.h"
+#include "format.h"
 #include "utils.h"
 
 
@@ -70,37 +71,37 @@ DrawCubemapTexture::DrawCubemapTexture(
     sf::Vector2u size_bottom = image_bottom.getSize();
 
     if (size_north != size_south) {
-        PrintDebug(
-            "South face %s has differing size: [%d, %d] vs. [%d, %d]\n",
-            m_fname_south.c_str(), size_south.x, size_south.y, size_north.x, size_north.y);
+        PrintDebug(fmt::format(
+            "South face {0} has differing size: [{1}, {2}] vs. [{3}, {4}]\n",
+            m_fname_south, size_south.x, size_south.y, size_north.x, size_north.y));
         return;
     }
 
     if (size_north != size_east) {
-        PrintDebug(
-            "East face %s has differing size: [%d, %d] vs. [%d, %d]\n",
-            m_fname_east.c_str(), size_east.x, size_east.y, size_north.x, size_north.y);
+        PrintDebug(fmt::format(
+            "East face {0} has differing size: [{1}, {2}] vs. [{3}, {4}]\n",
+            m_fname_east, size_east.x, size_east.y, size_north.x, size_north.y));
         return;
     }
 
     if (size_north != size_west) {
-        PrintDebug(
-            "West face %s has differing size: [%d, %d] vs. [%d, %d]\n",
-            m_fname_west.c_str(), size_west.x, size_west.y, size_north.x, size_north.y);
+        PrintDebug(fmt::format(
+            "West face {0} has differing size: [{1}, {2}] vs. [{3}, {4}]\n",
+            m_fname_west, size_west.x, size_west.y, size_north.x, size_north.y));
         return;
     }
 
     if (size_north != size_top) {
-        PrintDebug(
-            "Top face %s has differing size: [%d, %d] vs. [%d, %d]\n",
-            m_fname_top.c_str(), size_top.x, size_top.y, size_north.x, size_north.y);
+        PrintDebug(fmt::format(
+            "Top face {0} has differing size: [{1}, {2}] vs. [{3}, {4}]\n",
+            m_fname_top, size_top.x, size_top.y, size_north.x, size_north.y));
         return;
     }
 
     if (size_north != size_bottom) {
-        PrintDebug(
-            "Bottom face %s has differing size: [%d, %d] vs. [%d, %d]\n",
-            m_fname_bottom.c_str(), size_bottom.x, size_bottom.y, size_north.x, size_north.y);
+        PrintDebug(fmt::format(
+            "Bottom face {0} has differing size: [{1}, {2}] vs. [{3}, {4}]\n",
+            m_fname_bottom, size_bottom.x, size_bottom.y, size_north.x, size_north.y));
         return;
     }
 

@@ -13,6 +13,7 @@ public:
         const std::string &fname_west,
         const std::string &fname_top,
         const std::string &fname_bottom);
+
     virtual ~DrawCubemapTexture();
 
     const std::string &getFileNameNorth()  const { return m_fname_north; }
@@ -25,10 +26,9 @@ public:
     GLuint getTextureId() const { return m_cubemap_texture_id; }
     
 private:
-    // Forbid copies, and default ctor.
-    DrawCubemapTexture() = delete;
-    DrawCubemapTexture(const DrawCubemapTexture &that) = delete;
-    void operator=(const DrawCubemapTexture &that) = delete;
+    DISALLOW_DEFAULT(DrawCubemapTexture)
+    DISALLOW_COPYING(DrawCubemapTexture)
+    DISALLOW_MOVING(DrawCubemapTexture)
 
     std::string m_fname_north;
     std::string m_fname_south;

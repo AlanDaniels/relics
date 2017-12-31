@@ -1,6 +1,8 @@
 
 #include "stdafx.h"
 #include "common_util.h"
+
+#include "format.h"
 #include "relics.h"
 #include "utils.h"
 #include "lua.hpp"
@@ -11,7 +13,7 @@ bool MAGIC_BREAKPOINT;
 
 
 // TODO: One day, turn this into a zip file.
-const char *RESOURCE_PATH = "D:\\relics\\resources\\";
+const std::string RESOURCE_PATH = "D:\\relics\\resources\\";
 
 
 // Convert a face enum to a string.
@@ -108,48 +110,48 @@ MyPlane GetBottomGridPlane(int grid_y)
 
 
 // Print all the OpenGL state stuff, so we can see what's going on.
-static const char *CapToStr(GLenum cap)
+static std::string CapToStr(GLenum cap)
 {
     return (glIsEnabled(cap) ? "enabled" : "disabled");
 }
 
 
-void PrintOpenglEnabledState(const char *title, bool details)
+void PrintOpenglEnabledState(const std::string &title, bool details)
 {
-    PrintDebug("%s - OpenGL flags:\n", title);
-    PrintDebug("    BLEND = %s\n", CapToStr(GL_BLEND));
-    PrintDebug("    CLIP_DISTANCE0 = %s\n", CapToStr(GL_CLIP_DISTANCE0));
-    PrintDebug("    CLIP_DISTANCE1 = %s\n", CapToStr(GL_CLIP_DISTANCE1));
-    PrintDebug("    CLIP_DISTANCE2 = %s\n", CapToStr(GL_CLIP_DISTANCE2));
-    PrintDebug("    CLIP_DISTANCE3 = %s\n", CapToStr(GL_CLIP_DISTANCE3));
-    PrintDebug("    CLIP_DISTANCE4 = %s\n", CapToStr(GL_CLIP_DISTANCE4));
-    PrintDebug("    CLIP_DISTANCE5 = %s\n", CapToStr(GL_CLIP_DISTANCE5));
-    PrintDebug("    COLOR_LOGIC_OP = %s\n", CapToStr(GL_COLOR_LOGIC_OP));
-    PrintDebug("    CULL_FACE      = %s\n", CapToStr(GL_CULL_FACE));
-    PrintDebug("    DEBUG_OUTPUT   = %s\n", CapToStr(GL_DEBUG_OUTPUT));
-    PrintDebug("    DEBUG_OUTPUT_SYNCHRONOUS = %s\n", CapToStr(GL_DEBUG_OUTPUT_SYNCHRONOUS));
-    PrintDebug("    DEPTH_CLAMP = %s\n", CapToStr(GL_DEPTH_CLAMP));
-    PrintDebug("    DEPTH_TEST = %s\n", CapToStr(GL_DEPTH_TEST));
-    PrintDebug("    DITHER = %s\n", CapToStr(GL_DITHER));
-    PrintDebug("    FRAMEBUFFER_SRGB = %s\n", CapToStr(GL_FRAMEBUFFER_SRGB));
-    PrintDebug("    LINE_SMOOTH = %s\n", CapToStr(GL_LINE_SMOOTH));
-    PrintDebug("    MULTISAMPLE = %s\n", CapToStr(GL_MULTISAMPLE));
-    PrintDebug("    POLYGON_OFFSET_FILL = %s\n", CapToStr(GL_POLYGON_OFFSET_FILL));
-    PrintDebug("    POLYGON_OFFSET_LINE = %s\n", CapToStr(GL_POLYGON_OFFSET_LINE));
-    PrintDebug("    POLYGON_OFFSET_POINT = %s\n", CapToStr(GL_POLYGON_OFFSET_POINT));
-    PrintDebug("    POLYGON_SMOOTH = %s\n", CapToStr(GL_POLYGON_SMOOTH));
-    PrintDebug("    PRIMITIVE_RESTART = %s\n", CapToStr(GL_PRIMITIVE_RESTART));
-    PrintDebug("    PRIMITIVE_RESTART_FIXED_INDEX = %s\n", CapToStr(GL_PRIMITIVE_RESTART_FIXED_INDEX));
-    PrintDebug("    RASTERIZER_DISCARD = %s\n", CapToStr(GL_RASTERIZER_DISCARD));
-    PrintDebug("    SAMPLE_ALPHA_TO_COVERAGE = %s\n", CapToStr(GL_SAMPLE_ALPHA_TO_COVERAGE));
-    PrintDebug("    SAMPLE_ALPHA_TO_ONE = %s\n", CapToStr(GL_SAMPLE_ALPHA_TO_ONE));
-    PrintDebug("    SAMPLE_COVERAGE = %s\n", CapToStr(GL_SAMPLE_COVERAGE));
-    PrintDebug("    SAMPLE_SHADING = %s\n", CapToStr(GL_SAMPLE_SHADING));
-    PrintDebug("    SAMPLE_MASK = %s\n", CapToStr(GL_SAMPLE_MASK));
-    PrintDebug("    SCISSOR_TEST = %s\n", CapToStr(GL_SCISSOR_TEST));
-    PrintDebug("    STENCIL_TEST = %s\n", CapToStr(GL_STENCIL_TEST));
-    PrintDebug("    TEXTURE_CUBE_MAP_SEAMLESS = %s\n", CapToStr(GL_TEXTURE_CUBE_MAP_SEAMLESS));
-    PrintDebug("    PROGRAM_POINT_SIZE = %s\n", CapToStr(GL_PROGRAM_POINT_SIZE));
+    PrintDebug(fmt::format("{} - OpenGL flags:\n", title));
+    PrintDebug(fmt::format("    BLEND = {}\n", CapToStr(GL_BLEND)));
+    PrintDebug(fmt::format("    CLIP_DISTANCE0 = {}\n", CapToStr(GL_CLIP_DISTANCE0)));
+    PrintDebug(fmt::format("    CLIP_DISTANCE1 = {}\n", CapToStr(GL_CLIP_DISTANCE1)));
+    PrintDebug(fmt::format("    CLIP_DISTANCE2 = {}\n", CapToStr(GL_CLIP_DISTANCE2)));
+    PrintDebug(fmt::format("    CLIP_DISTANCE3 = {}\n", CapToStr(GL_CLIP_DISTANCE3)));
+    PrintDebug(fmt::format("    CLIP_DISTANCE4 = {}\n", CapToStr(GL_CLIP_DISTANCE4)));
+    PrintDebug(fmt::format("    CLIP_DISTANCE5 = {}\n", CapToStr(GL_CLIP_DISTANCE5)));
+    PrintDebug(fmt::format("    COLOR_LOGIC_OP = {}\n", CapToStr(GL_COLOR_LOGIC_OP)));
+    PrintDebug(fmt::format("    CULL_FACE      = {}\n", CapToStr(GL_CULL_FACE)));
+    PrintDebug(fmt::format("    DEBUG_OUTPUT   = {}\n", CapToStr(GL_DEBUG_OUTPUT)));
+    PrintDebug(fmt::format("    DEBUG_OUTPUT_SYNCHRONOUS = {}\n", CapToStr(GL_DEBUG_OUTPUT_SYNCHRONOUS)));
+    PrintDebug(fmt::format("    DEPTH_CLAMP = {}\n", CapToStr(GL_DEPTH_CLAMP)));
+    PrintDebug(fmt::format("    DEPTH_TEST = {}\n", CapToStr(GL_DEPTH_TEST)));
+    PrintDebug(fmt::format("    DITHER = {}\n", CapToStr(GL_DITHER)));
+    PrintDebug(fmt::format("    FRAMEBUFFER_SRGB = {}\n", CapToStr(GL_FRAMEBUFFER_SRGB)));
+    PrintDebug(fmt::format("    LINE_SMOOTH = {}\n", CapToStr(GL_LINE_SMOOTH)));
+    PrintDebug(fmt::format("    MULTISAMPLE = {}\n", CapToStr(GL_MULTISAMPLE)));
+    PrintDebug(fmt::format("    POLYGON_OFFSET_FILL = {}\n", CapToStr(GL_POLYGON_OFFSET_FILL)));
+    PrintDebug(fmt::format("    POLYGON_OFFSET_LINE = {}\n", CapToStr(GL_POLYGON_OFFSET_LINE)));
+    PrintDebug(fmt::format("    POLYGON_OFFSET_POINT = {}\n", CapToStr(GL_POLYGON_OFFSET_POINT)));
+    PrintDebug(fmt::format("    POLYGON_SMOOTH = {}\n", CapToStr(GL_POLYGON_SMOOTH)));
+    PrintDebug(fmt::format("    PRIMITIVE_RESTART = {}\n", CapToStr(GL_PRIMITIVE_RESTART)));
+    PrintDebug(fmt::format("    PRIMITIVE_RESTART_FIXED_INDEX = {}\n", CapToStr(GL_PRIMITIVE_RESTART_FIXED_INDEX)));
+    PrintDebug(fmt::format("    RASTERIZER_DISCARD = {}\n", CapToStr(GL_RASTERIZER_DISCARD)));
+    PrintDebug(fmt::format("    SAMPLE_ALPHA_TO_COVERAGE = {}\n", CapToStr(GL_SAMPLE_ALPHA_TO_COVERAGE)));
+    PrintDebug(fmt::format("    SAMPLE_ALPHA_TO_ONE = {}\n", CapToStr(GL_SAMPLE_ALPHA_TO_ONE)));
+    PrintDebug(fmt::format("    SAMPLE_COVERAGE = {}\n", CapToStr(GL_SAMPLE_COVERAGE)));
+    PrintDebug(fmt::format("    SAMPLE_SHADING = {}\n", CapToStr(GL_SAMPLE_SHADING)));
+    PrintDebug(fmt::format("    SAMPLE_MASK = {}\n", CapToStr(GL_SAMPLE_MASK)));
+    PrintDebug(fmt::format("    SCISSOR_TEST = {}\n", CapToStr(GL_SCISSOR_TEST)));
+    PrintDebug(fmt::format("    STENCIL_TEST = {}\n", CapToStr(GL_STENCIL_TEST)));
+    PrintDebug(fmt::format("    TEXTURE_CUBE_MAP_SEAMLESS = {}\n", CapToStr(GL_TEXTURE_CUBE_MAP_SEAMLESS)));
+    PrintDebug(fmt::format("    PROGRAM_POINT_SIZE = {}\n", CapToStr(GL_PROGRAM_POINT_SIZE)));
 
     // Most flags are boring. Only print all of theme if we really want.
     if (details) {
@@ -158,7 +160,7 @@ void PrintOpenglEnabledState(const char *title, bool details)
 
 
 // Convert a Lua error value to a string.
-const char *LuaErrorToString(int val)
+std::string LuaErrorToString(int val)
 {
     switch (val) {
     case LUA_OK:        return "okay";
@@ -178,7 +180,7 @@ const char *LuaErrorToString(int val)
 // Only do this once, when we're first loading the config file.
 bool DoesResourcePathExist() {
     struct stat info;
-    int got_stats = stat(RESOURCE_PATH, &info);
+    int got_stats = stat(RESOURCE_PATH.c_str(), &info);
     if (got_stats != 0) {
         return false;
     }
@@ -212,7 +214,7 @@ std::string ReadTextResource(const std::string &fname)
 
     std::ifstream fs(full_name);
     if (!fs.is_open()) {
-        PrintDebug("Count not open text resource %s.\n", fname.c_str());
+        PrintDebug(fmt::format("Count not open text resource {}.\n", fname));
         return "";
     }
 
@@ -230,7 +232,7 @@ bool ReadFontResource(sf::Font *pOut, const std::string &fname)
     full_name.append(fname);
 
     if (!pOut->loadFromFile(full_name.c_str())) {
-        PrintDebug("Could not open font resource %s.'\n", fname.c_str());
+        PrintDebug(fmt::format("Could not open font resource {}.\n", fname));
         return false;
     }
 
@@ -246,7 +248,7 @@ bool ReadImageResource(sf::Image *pOut, const std::string &fname)
 
     // Load the image.
     if (!pOut->loadFromFile(full_name)) {
-        PrintDebug("Could not load texture resource %s.\n", fname.c_str());
+        PrintDebug(fmt::format("Could not load texture resource {}.\n", fname));
         return false;
     }
 

@@ -41,7 +41,7 @@ GameWorld::GameWorld(sqlite3 *db) :
         }
     }
 
-    PrintDebug("Created %d chunks.\n", count);
+    PrintDebug(fmt::format("Created {} chunks.\n", count));
 
     // Recalc and realize every chunk that we've loaded.
     // This leaves a ring of unrealized chunks around us, and that's okay.

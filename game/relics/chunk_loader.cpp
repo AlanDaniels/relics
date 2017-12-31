@@ -18,20 +18,16 @@ static const std::string STONE_TOP("stone_top");
 // This just deals with the block data. The landscape is are dealt with later.
 std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
 {
-    PrintDebug("Loading chunk [%d, %d]\n", origin.debugX(), origin.debugZ());
-
     sqlite3 *db = world.getDatabase();
 
-    std::unique_ptr<char[]> buffer(new char[1024]);
-
-    sprintf(buffer.get(),
+    std::string buffer = fmt::format(
         "SELECT x, y, z, block_type FROM blocks "
-        "WHERE x >= %d AND x < %d "
-        "AND   z >= %d AND z < %d "
+        "WHERE x >= {0} AND x < {1} "
+        "AND   z >= {2} AND z < {3} "
         "ORDER BY x, z, y",
         origin.x(), origin.x() + CHUNK_WIDTH,
         origin.z(), origin.z() + CHUNK_WIDTH);
-    sqlite3_stmt *stmt = SQL_prepare(db, buffer.get());
+    sqlite3_stmt *stmt = SQL_prepare(db, buffer.c_str());
     if (stmt == nullptr) {
         assert(false);
         return nullptr;
@@ -65,7 +61,7 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
             coal_spots[pillar].emplace_back(y);
         }
         else {
-            PrintDebug("Impossible value for block: %s", text);
+            PrintDebug(fmt::format("Impossible value for block: {}", text));
             assert(false);
         }
 
@@ -75,20 +71,26 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
     // Now, build the chunk.
     std::unique_ptr<Chunk> chunk = std::make_unique<Chunk>(world, origin);
 
+    int dirt_top_count = 0;
+
     for (const auto &iter : dirt_tops) {
         const GlobalPillar &global_pillar = iter.first;
-        LocalPillar &pillar = GlobalPillarToLocal(global_pillar, origin);
         int dirt_top = iter.second;
+
+        LocalPillar &pillar = GlobalPillarToLocal(global_pillar, origin);
         for (int y = 0; y <= dirt_top; y++) {
             LocalGrid coord(pillar.x(), y, pillar.z());
             chunk->setBlockType(coord, BlockType::DIRT);
         }
+
+        dirt_top_count++;
     }
 
     for (const auto &iter : stone_tops) {
         const GlobalPillar &global_pillar = iter.first;
-        LocalPillar &pillar = GlobalPillarToLocal(global_pillar, origin);
         int stone_top = iter.second;
+
+        LocalPillar &pillar = GlobalPillarToLocal(global_pillar, origin);
         for (int y = 0; y <= stone_top; y++) {
             LocalGrid coord(pillar.x(), y, pillar.z());
             chunk->setBlockType(coord, BlockType::STONE);
@@ -98,6 +100,7 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
     for (const auto &iter : coal_spots) {
         const GlobalPillar &global_pillar = iter.first;
         const std::vector<int> spots_vec  = iter.second;
+
         LocalPillar &pillar = GlobalPillarToLocal(global_pillar, origin);
         for (int y : spots_vec) {
             LocalGrid coord(pillar.x(), y, pillar.z());
@@ -106,6 +109,10 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
     }
 
     // All done.
+    PrintDebug(fmt::format(
+        "Loaded chunk [{0}, {1}] with {2} dirt tops.\n", 
+        origin.debugX(), origin.debugZ(), dirt_top_count));
+
     return chunk;
 }
 

@@ -29,8 +29,19 @@ const MyColor MY_LT_YELLOW(1.0f, 1.0f, 0.3f);
 const MyColor MY_LT_PURPLE(1.0f, 0.3f, 1.0f);
 
 
-// Color assignment operator.
+// Color copy operator.
 MyColor &MyColor::operator=(const MyColor &that)
+{
+    m_red   = that.m_red;
+    m_green = that.m_green;
+    m_blue  = that.m_blue;
+    m_alpha = that.m_alpha;
+    return *this;
+}
+
+
+// Color move operator.
+MyColor &MyColor::operator=(MyColor &&that)
 {
     m_red   = that.m_red;
     m_green = that.m_green;

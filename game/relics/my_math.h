@@ -16,16 +16,35 @@ const GLfloat EPSILON = 0.0001f;
 GLfloat DegreesToRadians(GLfloat degrees);
 
 
-// A color is technically a vec4, but we'll never want to do any matrix-style transformations on these.
+// A color is technically just a vec-4, but we'll never want to do any matrix-style 
+// transformations on these. For the default value, set it to that hideous purple.
 class MyColor
 {
 public:
+    MyColor() :
+        m_red(1.0f), m_green(0.0f), m_blue(1.0f), m_alpha(1.0f) {}
+
     MyColor(GLfloat red, GLfloat green, GLfloat blue) :
         m_red(red), m_green(green), m_blue(blue), m_alpha(1.0f) {}
+
     MyColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) :
         m_red(red), m_green(green), m_blue(blue), m_alpha(alpha) {}
 
+    MyColor(const MyColor &that) :
+        m_red(that.m_red),
+        m_green(that.m_green),
+        m_blue(that.m_blue),
+        m_alpha(that.m_alpha) {}
+
+    MyColor(MyColor &&that) :
+        m_red(that.m_red),
+        m_green(that.m_green),
+        m_blue(that.m_blue),
+        m_alpha(that.m_alpha) {}
+
     MyColor &operator=(const MyColor &that);
+
+    MyColor &operator=(MyColor &&that);
 
     inline GLfloat red()   const { return m_red; }
     inline GLfloat green() const { return m_green; }
@@ -33,9 +52,6 @@ public:
     inline GLfloat alpha() const { return m_alpha; }
 
 private:
-    // Forbit default ctor.
-    MyColor() = delete;
-
     GLfloat m_red;
     GLfloat m_green;
     GLfloat m_blue;

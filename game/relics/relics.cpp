@@ -11,6 +11,7 @@
 #include "event_handler.h"
 #include "game_world.h"
 #include "heads_up_display.h"
+#include "obj_file_reader.h"
 #include "renderer.h"
 #include "utils.h"
 
@@ -92,6 +93,24 @@ sqlite3 *OpenDatabase()
 }
 
 
+// A main method for testing our file reader.
+int WINAPI wWinMain(
+    _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
+{
+    LoadConfig();
+
+    std::string full_name = RESOURCE_PATH;
+    full_name.append("objects/curved_cube.obj");
+    ObjFileReader reader(full_name);
+
+    PrintDebug(reader.toDescr());
+
+    return 0;
+}
+
+
+
 #if 0
 // A minimalist version to look for memory leaks in the initial setup.
 int WINAPI wWinMain(
@@ -124,7 +143,6 @@ int WINAPI wWinMain(
     _CrtDumpMemoryLeaks();
     return 0;
 }
-#endif
 
 
 // And away we go. Forgive the Microsoft SAL annotations here. We'll make sure this is portable later.
@@ -314,3 +332,4 @@ int WINAPI wWinMain(
 
     return 0;
 }
+#endif

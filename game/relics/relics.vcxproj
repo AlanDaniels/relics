@@ -178,6 +178,7 @@
     <ClInclude Include="draw_state_pt.h" />
     <ClInclude Include="heads_up_display.h" />
     <ClInclude Include="my_math.h" />
+    <ClInclude Include="obj_file_reader.h" />
     <ClInclude Include="relics.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="Resource.h" />
@@ -209,6 +210,7 @@
     <ClCompile Include="draw_state_pt.cpp" />
     <ClCompile Include="heads_up_display.cpp" />
     <ClCompile Include="my_math.cpp" />
+    <ClCompile Include="obj_file_reader.cpp" />
     <ClCompile Include="relics.cpp" />
     <ClCompile Include="draw_state_pct.cpp" />
     <ClCompile Include="renderer.cpp" />

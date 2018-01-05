@@ -5,45 +5,22 @@
 #include "my_math.h"
 
 
-// TODO: We'll probably need a Vec4 here that has a name and index.
-
-
-// An MTL file material. We probably won't need every field mentioned
-// in the file spec, but for now, just include everything.
+// A material from a Wavefront ".MTL" file.
+// For now, we just want a name and a texture map.
 class ObjMaterial
 {
 public:
     ObjMaterial(const std::string &name) : 
-        m_name(name),
-        m_ambient(1, 1, 1),
-        m_diffuse(1, 1, 1),
-        m_emmissive(0, 0, 0),
-        m_specular(0, 0, 0),
-        m_specular_exponent(10.0f),
-        m_transparency(0),
-        m_refraction_index(1),
-        m_transmission_filter(1, 1, 1) {}
+        m_name(name) {}
 
     ~ObjMaterial() {}
 
-    void setAmbient(const MyColor &val)   { m_ambient   = val; }
-    void setDiffuse(const MyColor &val)   { m_diffuse   = val; }
-    void setEmmissive(const MyColor &val) { m_emmissive = val; }
-    void setSpecular(const MyColor &val)  { m_specular  = val; }
-    void setSpecularExponent(GLfloat val) { m_specular_exponent = val; }
-    void setTransparency(GLfloat val)     { m_transparency = val; }
-    void setRefractionIndex(GLfloat val)  { m_refraction_index = val; }
-    void setTransmissionFilter(const MyColor &val) { m_transmission_filter = val; }
-
     const std::string &getName()  const { return m_name; }
-    const MyColor &getAmbient()   const { return m_ambient; }
-    const MyColor &getDiffuse()   const { return m_diffuse; }
-    const MyColor &getEmmissive() const { return m_emmissive; }
-    const MyColor &getSpecular()  const { return m_specular; }
-    GLfloat getSpecularExponent() const { return m_specular_exponent; }
-    GLfloat getTransparency()     const { return m_transparency; }
-    GLfloat getRefractionIndex()  const { return m_refraction_index; }
-    const MyColor &getTransmissionFilter() const { return m_transmission_filter; }
+    const sf::Image   *getImage() const { return m_image.get(); }
+
+    void setImage(std::unique_ptr<sf::Image> image) {
+        m_image = std::move(image);
+    }
 
 private:
     DISALLOW_DEFAULT(ObjMaterial)
@@ -51,21 +28,15 @@ private:
     DISALLOW_MOVING(ObjMaterial)
 
     std::string m_name;
-    MyColor m_ambient;
-    MyColor m_diffuse;
-    MyColor m_emmissive;
-    MyColor m_specular;
-    GLfloat m_specular_exponent;
-    GLfloat m_transparency;
-    GLfloat m_refraction_index;
-    MyColor m_transmission_filter;
+    std::unique_ptr<sf::Image> m_image;
 };
 
 
+// The parsed contents of a Wavefront ".OBJ" file.
 class ObjFileReader
 {
 public:
-    ObjFileReader(const std::string &partial_OBJ_fname);
+    static std::unique_ptr<ObjFileReader> Create(const std::string &obj_file_name);
 
     std::string toDescr() const;
 
@@ -74,18 +45,21 @@ private:
     DISALLOW_COPYING(ObjFileReader)
     DISALLOW_MOVING(ObjFileReader)
 
-    // Private methods.
-    void parseObjLine(int line_num, const std::string &line);
+    // A private ctor, since "Create" does the work.
+    ObjFileReader(const std::string &obj_file_name);
 
-    void parseMtllibFile(const std::string &partial_MTL_fname);
+    // Private methods.
+    bool parseObjLine(int line_num, const std::string &line);
+
+    bool parseMtllibFile(const std::string &partial_MTL_fname);
     std::string parseMtllibLine(int line_num, const std::string &line, ObjMaterial *pOut_material);
 
+    std::string locateRelativeFile(const std::string &relative_fname);
     GLfloat parseFloat(int line_num, const std::string &val, const std::string &line);
     int parseInt(int line_num, const std::string &val, const std::string &line);
 
     // Private data.
-    std::string m_OBJ_fname;
-    std::string m_object_name;
+    std::string m_OBJ_file_name;
 
     std::string m_current_group_name;
 

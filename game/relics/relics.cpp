@@ -101,10 +101,11 @@ int WINAPI wWinMain(
     LoadConfig();
 
     std::string full_name = RESOURCE_PATH;
-    full_name.append("objects/curved_cube.obj");
-    ObjFileReader reader(full_name);
-
-    PrintDebug(reader.toDescr());
+    full_name.append("objects\\curved_cube.obj");
+    std::unique_ptr<ObjFileReader> reader = ObjFileReader::Create(full_name);
+    if (reader != nullptr) {
+        PrintDebug(reader->toDescr());
+    }
 
     return 0;
 }

@@ -19,6 +19,7 @@
 // C++ headers.
 #include <array>
 #include <bitset>
+#include <cctype>
 #include <fstream>
 #include <iterator>
 #include <memory>

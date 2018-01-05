@@ -4,6 +4,11 @@
 
 #include "my_math.h"
 
+// NEXT: Boost regex is slow as fuck. Kill it off.
+// Write your own string tokenizer.
+// In the year 2018, you have to do this by hand. Yeah, that's right.
+// Finally, the face parser. Same deal, roll your own.
+
 
 // A material from a Wavefront ".MTL" file.
 // For now, we just want a name and a texture map.
@@ -33,6 +38,8 @@ private:
 
 
 // The parsed contents of a Wavefront ".OBJ" file.
+// Side note: I tried using Boost regex to deal with splitting file lines
+// by spaces, and parsing floats and ints, but it was unacceptably slow.
 class ObjFileReader
 {
 public:
@@ -49,14 +56,18 @@ private:
     ObjFileReader(const std::string &obj_file_name);
 
     // Private methods.
+    std::vector<std::string> splitLineBySpaces(const std::string &line);
+
     bool parseObjLine(int line_num, const std::string &line);
 
     bool parseMtllibFile(const std::string &partial_MTL_fname);
     std::string parseMtllibLine(int line_num, const std::string &line, ObjMaterial *pOut_material);
 
     std::string locateRelativeFile(const std::string &relative_fname);
-    GLfloat parseFloat(int line_num, const std::string &val, const std::string &line);
-    int parseInt(int line_num, const std::string &val, const std::string &line);
+
+    GLfloat parseFloat(const std::string &val) const {
+        return static_cast<GLfloat>(::atof(val.c_str()));
+    }
 
     // Private data.
     std::string m_OBJ_file_name;

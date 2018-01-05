@@ -100,11 +100,20 @@ int WINAPI wWinMain(
 {
     LoadConfig();
 
-    std::string full_name = RESOURCE_PATH;
-    full_name.append("objects\\curved_cube.obj");
-    std::unique_ptr<ObjFileReader> reader = ObjFileReader::Create(full_name);
-    if (reader != nullptr) {
-        PrintDebug(reader->toDescr());
+    // Test our curved cube, which we got from Lightwave.
+    std::string curved_cube_fname = RESOURCE_PATH;
+    curved_cube_fname.append("objects\\curved_cube.obj");
+    std::unique_ptr<ObjFileReader> curved_cube_obj = ObjFileReader::Create(curved_cube_fname);
+    if (curved_cube_obj != nullptr) {
+        PrintDebug(curved_cube_obj->toDescr());
+    }
+
+    // Test our capsule, which we got from the web.
+    std::string capsule_fname = RESOURCE_PATH;
+    capsule_fname.append("objects\\capsule.obj");
+    std::unique_ptr<ObjFileReader> capsule_obj = ObjFileReader::Create(capsule_fname);
+    if (capsule_obj != nullptr) {
+        PrintDebug(capsule_obj->toDescr());
     }
 
     return 0;

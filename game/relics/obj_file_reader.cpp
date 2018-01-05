@@ -7,13 +7,12 @@
 #include "utils.h"
 
 #include <boost/filesystem.hpp>
-#include <boost/regex.hpp>
 
 
 /**
- * String trimming functions, found here:
- * https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
- */
+* String trimming functions, found here:
+*     https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
+*/
 
 // Left trim, in place.
 static void left_trim_in_place(std::string &s) {
@@ -36,11 +35,8 @@ static void trim_in_place(std::string &s) {
 }
 
 
-// Regular expressions.
-static const boost::regex RE_SPACES("\\s+");
-static const boost::regex RE_FLOAT("(-)?\\d+(.\\d+)?");
-static const boost::regex RE_INTEGER("\\d+");
-static const std::string  PARSING_ERROR = "ERROR!";
+// Parsing errors.
+static const std::string PARSING_ERROR = "ERROR!";
 
 
 // Our factory. We hide the constructor in case there's an issue with the file.
@@ -90,6 +86,32 @@ ObjFileReader::ObjFileReader(const std::string &OBJ_file_name) :
 }
 
 
+// We're rolling our own space string tokenizer, since Boost regex is ridiculously slow.
+// We deliberately don't save empty strings, and we're careful about trailing spaces too.
+// It appears to work, but feel free to test the living crap out of this later.
+std::vector<std::string> ObjFileReader::splitLineBySpaces(const std::string &line)
+{
+    std::vector<std::string> results;
+    results.reserve(3);
+
+    std::size_t pos   = 0;
+    std::size_t found = line.find_first_of(' ', pos);
+    while (found != std::string::npos) {
+        if (found != pos) {
+            results.push_back(line.substr(pos, found - pos));
+        }
+        pos   = found + 1;
+        found = line.find_first_of(' ', pos);
+    }
+
+    if ((pos < line.size()) && (line.at(pos) != ' ')) {
+        results.push_back(line.substr(pos));
+    }
+
+    return std::move(results);
+}
+
+
 // Parse an individual line in the OBJ file. For now, we're going to
 // assume our file is valid, and not go overboard on the error messages.
 // But, return false if we run into anything we genuinely can't make sense of.
@@ -100,27 +122,21 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
         return true;
     }
 
-    // Split the line by spaces. One keyword, then one or more tokens.
-    boost::sregex_token_iterator iter(line.begin(), line.end(), RE_SPACES, -1);
-    boost::sregex_token_iterator end_thingy;
+    // Split the line by spaces.
+    std::vector<std::string> tokens = splitLineBySpaces(line);
 
-    std::string keyword = *iter++;
-
-    std::vector<std::string> tokens;
-    while (iter != end_thingy) {
-        tokens.emplace_back(*iter++);
-    }
+    std::string keyword = tokens[0];
 
     // Make sure the line has enough tokens.
     int expected;
-    if      (keyword == "v")      { expected = 3; }
-    else if (keyword == "vn")     { expected = 3; }
-    else if (keyword == "vt")     { expected = 2; }
-    else if (keyword == "f")      { expected = 3; }
-    else if (keyword == "g")      { expected = 1; }
-    else if (keyword == "mtlib")  { expected = 1; }
-    else if (keyword == "usemtl") { expected = 1; }
-    else                          { expected = 0; }
+    if      (keyword == "v")      { expected = 4; }
+    else if (keyword == "vn")     { expected = 4; }
+    else if (keyword == "vt")     { expected = 3; }
+    else if (keyword == "f")      { expected = 4; }
+    else if (keyword == "g")      { expected = 2; }
+    else if (keyword == "mtlib")  { expected = 2; }
+    else if (keyword == "usemtl") { expected = 2; }
+    else                          { expected = 1; }
 
     int what_we_got = static_cast<int>(tokens.size());
     if (what_we_got < expected) {
@@ -134,26 +150,26 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
 
     // Vertex. Remember to translate to our world's block scale.
     if (keyword == "v") {
-        GLfloat x = parseFloat(line_num, tokens[0], line) * BLOCK_SCALE;
-        GLfloat y = parseFloat(line_num, tokens[1], line) * BLOCK_SCALE;
-        GLfloat z = parseFloat(line_num, tokens[2], line) * BLOCK_SCALE;
+        GLfloat x = parseFloat(tokens[1]) * BLOCK_SCALE;
+        GLfloat y = parseFloat(tokens[2]) * BLOCK_SCALE;
+        GLfloat z = parseFloat(tokens[3]) * BLOCK_SCALE;
         m_vertices.emplace_back(x, y, z);
         return true;
     }
 
     // vertex normal
     else if (keyword == "vn") {
-        GLfloat x = parseFloat(line_num, tokens[0], line);
-        GLfloat y = parseFloat(line_num, tokens[1], line);
-        GLfloat z = parseFloat(line_num, tokens[2], line);
+        GLfloat x = parseFloat(tokens[1]);
+        GLfloat y = parseFloat(tokens[2]);
+        GLfloat z = parseFloat(tokens[3]);
         m_normals.emplace_back(x, y, z);
         return true;
     }
 
     // texture coord
     else if (keyword == "vt") {
-        GLfloat u = parseFloat(line_num, tokens[0], line);
-        GLfloat v = parseFloat(line_num, tokens[1], line);
+        GLfloat u = parseFloat(tokens[1]);
+        GLfloat v = parseFloat(tokens[2]);
         m_tex_coords.emplace_back(u, v);
         return true;
     }
@@ -165,13 +181,13 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
 
     // group name
     else if (keyword == "g") { 
-        m_current_group_name = tokens[0];
+        m_current_group_name = tokens[1];
         return true;
     }
 
     // material library
     else if (keyword == "mtllib") {
-        bool result = parseMtllibFile(tokens[0]);
+        bool result = parseMtllibFile(tokens[1]);
         return result;
     }
 
@@ -280,23 +296,16 @@ std::string ObjFileReader::parseMtllibLine(int line_num, const std::string &line
         return "";
     }
 
-    // Split the line by spaces. One keyword, then one or more tokens.
-    boost::sregex_token_iterator iter(line.begin(), line.end(), RE_SPACES, -1);
-    boost::sregex_token_iterator end_thingy;
-
-    std::string keyword = *iter++;
-
-    std::vector<std::string> tokens;
-    while (iter != end_thingy) {
-        tokens.emplace_back(*iter++);
-    }
+    // Split the line by spaces.
+    std::vector<std::string> tokens = splitLineBySpaces(line);
+    std::string keyword = tokens[0];
 
     // Make sure the line has enough tokens.
     int expected;
-    if      (keyword == "newmtl") { expected = 1; }
-    else if (keyword == "map_Ka") { expected = 1; }
-    else if (keyword == "map_Kd") { expected = 1; }
-    else                          { expected = 0; }
+    if      (keyword == "newmtl") { expected = 2; }
+    else if (keyword == "map_Ka") { expected = 2; }
+    else if (keyword == "map_Kd") { expected = 2; }
+    else                          { expected = 1; }
 
     int what_we_got = static_cast<int>(tokens.size());
     if (what_we_got < expected) {
@@ -310,13 +319,13 @@ std::string ObjFileReader::parseMtllibLine(int line_num, const std::string &line
 
     // new material
     if (keyword == "newmtl") {
-        return tokens[0];
+        return tokens[1];
     }
 
     // Whichever has the color texmap we want, ambient or diffuse.
     else if ((keyword == "map_Ka") || 
              (keyword == "map_Kd")) {
-        std::string img_file_name = locateRelativeFile(tokens[0]);
+        std::string img_file_name = locateRelativeFile(tokens[1]);
         if (img_file_name == "") {
             return PARSING_ERROR;
         }
@@ -391,38 +400,6 @@ std::string ObjFileReader::locateRelativeFile(const std::string &fname)
     else {
         PrintDebug(fmt::format("Referenced file {0} does not exist!\n", fname));
         return "";
-    }
-}
-
-
-// Parse a floating point value.
-GLfloat ObjFileReader::parseFloat(int line_num, const std::string &val, const std::string &line)
-{
-    if (boost::regex_match(val, RE_FLOAT)) {
-        double result = ::atof(val.c_str());
-        return static_cast<GLfloat>(result);
-    }
-    else {
-        PrintDebug(fmt::format(
-            "Line {0} has an invalid floating point value of '{1}'\n",
-            line_num, val));
-        return 0.0f;
-    }
-}
-
-
-// Parse an integer value.
-int ObjFileReader::parseInt(int line_num, const std::string &val, const std::string &line)
-{
-    if (boost::regex_match(val, RE_INTEGER)) {
-        int result = ::atoi(val.c_str());
-        return result;
-    }
-    else {
-        PrintDebug(fmt::format(
-            "Line {0} has an invalid integer value of '{1}'\n",
-            line_num, val));
-        return 0;
     }
 }
 

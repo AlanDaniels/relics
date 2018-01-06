@@ -3,11 +3,7 @@
 #include "stdafx.h"
 
 #include "my_math.h"
-
-// NEXT: Boost regex is slow as fuck. Kill it off.
-// Write your own string tokenizer.
-// In the year 2018, you have to do this by hand. Yeah, that's right.
-// Finally, the face parser. Same deal, roll your own.
+#include "draw_state_pnt.h"
 
 
 // A material from a Wavefront ".MTL" file.
@@ -37,6 +33,11 @@ private:
 };
 
 
+// TODO: Account for multiple groups/textures in a bit.
+// Just test this for now.
+
+
+
 // The parsed contents of a Wavefront ".OBJ" file.
 // Side note: I tried using Boost regex to deal with splitting file lines
 // by spaces, and parsing floats and ints, but it was unacceptably slow.
@@ -56,9 +57,12 @@ private:
     ObjFileReader(const std::string &obj_file_name);
 
     // Private methods.
-    std::vector<std::string> splitLineBySpaces(const std::string &line);
+    std::vector<std::string> splitStrBySpaces(const std::string &val);
+    std::vector<std::string> splitStrBySlashes(const std::string &val);
 
     bool parseObjLine(int line_num, const std::string &line);
+    
+    Vertex_PNT parseFaceToken(const std::string &token);
 
     bool parseMtllibFile(const std::string &partial_MTL_fname);
     std::string parseMtllibLine(int line_num, const std::string &line, ObjMaterial *pOut_material);
@@ -74,9 +78,11 @@ private:
 
     std::string m_current_group_name;
 
-    std::vector<MyVec4> m_vertices;
+    std::vector<MyVec4> m_positions;
     std::vector<MyVec4> m_normals;
     std::vector<MyVec2> m_tex_coords;
 
     std::vector<std::unique_ptr<ObjMaterial>> m_materials;
+
+    std::vector<Vertex_PNT> m_face_vertices;
 };

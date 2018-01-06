@@ -89,23 +89,48 @@ ObjFileReader::ObjFileReader(const std::string &OBJ_file_name) :
 // We're rolling our own space string tokenizer, since Boost regex is ridiculously slow.
 // We deliberately don't save empty strings, and we're careful about trailing spaces too.
 // It appears to work, but feel free to test the living crap out of this later.
-std::vector<std::string> ObjFileReader::splitLineBySpaces(const std::string &line)
+std::vector<std::string> ObjFileReader::splitStrBySpaces(const std::string &val)
 {
     std::vector<std::string> results;
     results.reserve(3);
 
     std::size_t pos   = 0;
-    std::size_t found = line.find_first_of(' ', pos);
+    std::size_t found = val.find_first_of(' ', pos);
     while (found != std::string::npos) {
         if (found != pos) {
-            results.push_back(line.substr(pos, found - pos));
+            results.push_back(val.substr(pos, found - pos));
         }
         pos   = found + 1;
-        found = line.find_first_of(' ', pos);
+        found = val.find_first_of(' ', pos);
     }
 
-    if ((pos < line.size()) && (line.at(pos) != ' ')) {
-        results.push_back(line.substr(pos));
+    if ((pos < val.size()) && (val.at(pos) != ' ')) {
+        results.push_back(val.substr(pos));
+    }
+
+    return std::move(results);
+}
+
+
+// Same thing for splitting a string by slashes, which we need to parse "face" entries.
+// But, empty entries between slashes are fine, and we'll assume our strings are already trimmed.
+std::vector<std::string> ObjFileReader::splitStrBySlashes(const std::string &val)
+{
+    std::vector<std::string> results;
+    results.reserve(3);
+
+    std::size_t pos = 0;
+    std::size_t found = val.find_first_of('/', pos);
+    while (found != std::string::npos) {
+        if (found != pos) {
+            results.push_back(val.substr(pos, found - pos));
+        }
+        pos = found + 1;
+        found = val.find_first_of(' ', pos);
+    }
+
+    if ((pos < val.size()) && (val.at(pos) != ' ')) {
+        results.push_back(val.substr(pos));
     }
 
     return std::move(results);
@@ -123,7 +148,7 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
     }
 
     // Split the line by spaces.
-    std::vector<std::string> tokens = splitLineBySpaces(line);
+    std::vector<std::string> tokens = splitStrBySpaces(line);
 
     std::string keyword = tokens[0];
 
@@ -148,16 +173,16 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
 
     // Deal with all the possible keywords...
 
-    // Vertex. Remember to translate to our world's block scale.
+    // Positions. Remember to translate to our world's block scale.
     if (keyword == "v") {
         GLfloat x = parseFloat(tokens[1]) * BLOCK_SCALE;
         GLfloat y = parseFloat(tokens[2]) * BLOCK_SCALE;
         GLfloat z = parseFloat(tokens[3]) * BLOCK_SCALE;
-        m_vertices.emplace_back(x, y, z);
+        m_positions.emplace_back(x, y, z);
         return true;
     }
 
-    // vertex normal
+    // Surface normals.
     else if (keyword == "vn") {
         GLfloat x = parseFloat(tokens[1]);
         GLfloat y = parseFloat(tokens[2]);
@@ -166,7 +191,7 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
         return true;
     }
 
-    // texture coord
+    // Texture coords.
     else if (keyword == "vt") {
         GLfloat u = parseFloat(tokens[1]);
         GLfloat v = parseFloat(tokens[2]);
@@ -176,22 +201,25 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
 
     // Faces.
     else if (keyword == "f") {
+        m_face_vertices.emplace_back(parseFaceToken(tokens[1]));
+        m_face_vertices.emplace_back(parseFaceToken(tokens[2]));
+        m_face_vertices.emplace_back(parseFaceToken(tokens[3]));
         return true;
     }
 
-    // group name
+    // Group name.
     else if (keyword == "g") { 
         m_current_group_name = tokens[1];
         return true;
     }
 
-    // material library
+    // Material library.
     else if (keyword == "mtllib") {
         bool result = parseMtllibFile(tokens[1]);
         return result;
     }
 
-    // material name
+    // Material name.
     else if (keyword == "usemtl") {
         return true;
     }
@@ -237,6 +265,67 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
         line_num, line));
     return false;
 }
+
+
+// Parse a token from a "face" line. We break this out  since the logic is 
+// complicated. Account for blank values, and the "offset by 1" business.
+// Side note: It's annoying that std::vector returns an "unsigned int" for size.
+// If your vector ever really does grow beyond 2GB entries, you have bigger problems.
+Vertex_PNT ObjFileReader::parseFaceToken(const std::string &token)
+{
+    std::vector<std::string> parts = splitStrBySlashes(token);
+
+    // First, the position.
+    MyVec4 position;
+
+    if (parts.size() > 0) {
+        if (parts[0] != "") {
+            int index = ::atoi(parts[0].c_str());
+            if (index > 0) {
+                index--;
+                int vec_count = static_cast<int>(m_positions.size());
+                if (index < vec_count) {
+                    position = m_positions.at(index);
+                }
+            }
+        }
+    }
+
+    // Second, the surface normal.
+    MyVec4 normal;
+
+    if (parts.size() > 1) {
+        if (parts[1] != "") {
+            int index = ::atoi(parts[1].c_str());
+            if (index > 0) {
+                index--;
+                int vec_count = static_cast<int>(m_normals.size());
+                if (index < vec_count) {
+                    normal = m_normals.at(index);
+                }
+            }
+        }
+    }
+
+    // Third, the tex coord.
+    MyVec2 tex_coord;
+
+    if (parts.size() > 2) {
+        if (parts[2] != "") {
+            int index = ::atoi(parts[2].c_str());
+            if (index > 0) {
+                index--;
+                int vec_count = static_cast<int>(m_tex_coords.size());
+                if (index < vec_count) {
+                    tex_coord = m_tex_coords.at(index);
+                }
+            }
+        }
+    }
+
+    return std::move(Vertex_PNT(position, normal, tex_coord));
+}
+
 
 
 // Parse the material file.
@@ -297,7 +386,7 @@ std::string ObjFileReader::parseMtllibLine(int line_num, const std::string &line
     }
 
     // Split the line by spaces.
-    std::vector<std::string> tokens = splitLineBySpaces(line);
+    std::vector<std::string> tokens = splitStrBySpaces(line);
     std::string keyword = tokens[0];
 
     // Make sure the line has enough tokens.
@@ -417,10 +506,10 @@ std::string ObjFileReader::toDescr() const
     GLfloat max_y = -FLT_MAX;
     GLfloat max_z = -FLT_MAX;
 
-    for (const MyVec4 &vert : m_vertices) {
-        GLfloat x = vert.x();
-        GLfloat y = vert.y();
-        GLfloat z = vert.z();
+    for (const MyVec4 &position : m_positions) {
+        GLfloat x = position.x();
+        GLfloat y = position.y();
+        GLfloat z = position.z();
 
         if (min_x > x) { min_x = x; }
         if (min_y > y) { min_y = y; }
@@ -442,8 +531,15 @@ std::string ObjFileReader::toDescr() const
         "    Dimensions = {0:.3f}m wide by {1:.3f}m deep x {2:.3f}m high\n",
         width, depth, height);
 
-    result += fmt::format("    Vertex count = {}\n", m_vertices.size());
+    result += fmt::format("    Position count = {}\n", m_positions.size());
     result += fmt::format("    Normal count = {}\n", m_normals.size());
+    result += fmt::format("    Tex Coord count = {}\n", m_tex_coords.size());
+    result += fmt::format("    Face Vertex count = {}\n", m_face_vertices.size());
+    result += fmt::format("    Resulting number of triangles = {}\n", m_face_vertices.size() / 3);
+
+    if ((m_face_vertices.size() % 3) != 0) {
+        result += "    ERROR! Number of Face Vertices is NOT divisible by 3!\n";
+    }
 
     return result;
 }

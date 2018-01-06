@@ -35,6 +35,27 @@ static void trim_in_place(std::string &s) {
 }
 
 
+// Less-than operator, since we'll be using Face Groups as a map key.
+// Compare the group name first, then the material second.
+// Note that ideally, these two names should always go hand-in-hand!
+// One group has one material. But, the code to go checking for that 
+// subtle and infrequent error would be madness, so I'm not going to try.
+bool operator<(const ObjFaceGroup &one, const ObjFaceGroup &two)
+{
+    const std::string &group1 = one.getGroupName();
+    const std::string &mat1   = one.getMaterialName();
+
+    const std::string &group2 = two.getGroupName();
+    const std::string &mat2   = two.getMaterialName();
+
+    if      (group1 < group2) { return true; }
+    else if (group1 > group2) { return false; }
+    else if (mat1   < mat2)   { return true; }
+    else if (mat1   > mat2)   { return false; }
+    else                      { return false; } // Must be equal.
+}
+
+
 // Parsing errors.
 static const std::string PARSING_ERROR = "ERROR!";
 
@@ -55,9 +76,10 @@ std::unique_ptr<ObjFileReader> ObjFileReader::Create(const std::string &OBJ_file
     std::string fixed_file_name = path.string();
 
     // Parse the file. If there are any issues, return null.
-    PrintDebug(fmt::format("Parsing OBJ file '{}'...\n", fixed_file_name));
+    PrintDebug(fmt::format("Parsing OBJ file: {}\n", fixed_file_name));
 
-    // TODO: Why can't I use "make_unique" here?
+    // TODO: Why can't I use "std::make_unique" here? 
+    // The compiler still looks for default ctor.
     std::unique_ptr<ObjFileReader> result(new ObjFileReader(fixed_file_name));
 
     std::ifstream infile(fixed_file_name);
@@ -82,7 +104,8 @@ std::unique_ptr<ObjFileReader> ObjFileReader::Create(const std::string &OBJ_file
 ObjFileReader::ObjFileReader(const std::string &file_name) :
     m_file_name(file_name),
     m_object_name(""),
-    m_current_group_name("")
+    m_current_group_name(""),
+    m_current_material_name("")
 {
 }
 
@@ -203,9 +226,19 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
 
     // Faces.
     else if (keyword == "f") {
-        m_face_vertices.emplace_back(parseFaceToken(tokens[1]));
-        m_face_vertices.emplace_back(parseFaceToken(tokens[2]));
-        m_face_vertices.emplace_back(parseFaceToken(tokens[3]));
+        // Look up which face group to add to. Note that total blanks is okay.
+        ObjFaceGroup key(m_current_group_name, m_current_material_name);
+
+        // Create the underlying vector if it doesn't exist already.
+        if (m_face_groups_map.find(key) == m_face_groups_map.end()) {
+            m_face_groups_map[key] = std::make_unique<std::vector<Vertex_PNT>>();
+        }
+
+        // Add the faces.
+        auto &face_group = m_face_groups_map[key];
+        face_group->emplace_back(parseFaceToken(tokens[1]));
+        face_group->emplace_back(parseFaceToken(tokens[2]));
+        face_group->emplace_back(parseFaceToken(tokens[3]));
         return true;
     }
 
@@ -230,6 +263,9 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
 
     // Material name.
     else if (keyword == "usemtl") {
+        const std::string &name = tokens[1];
+        assert(m_materials_map.find(name) != m_materials_map.end());
+        m_current_material_name = name;
         return true;
     }
 
@@ -348,7 +384,7 @@ bool ObjFileReader::parseMtllibFile(const std::string &MTL_file_name)
     std::unique_ptr<ObjMaterial> material = nullptr;
 
     // Parse the file line by line.
-    PrintDebug(fmt::format("Parsing MTL file '{}'...\n", real_file_name));
+    PrintDebug(fmt::format("Parsing MTL file: {}\n", real_file_name));
     std::ifstream infile(real_file_name);
 
     int line_num = 1;
@@ -550,19 +586,36 @@ std::string ObjFileReader::toDescr() const
     result += fmt::format("    Position count = {}\n", m_positions.size());
     result += fmt::format("    Normal count = {}\n", m_normals.size());
     result += fmt::format("    Tex Coord count = {}\n", m_tex_coords.size());
-    result += fmt::format("    Face Vertex count = {}\n", m_face_vertices.size());
-    result += fmt::format("    Resulting number of triangles = {}\n", m_face_vertices.size() / 3);
 
-    if ((m_face_vertices.size() % 3) != 0) {
-        result += "    ERROR! Number of Face Vertices is NOT divisible by 3!\n";
+    if (m_face_groups_map.size() > 0) {
+        int total_faces = 0;
+        result += "    Face Groups:\n";
+        for (const auto &iter : m_face_groups_map) {
+            result += fmt::format(
+                "        '{0}'-'{1}' = {2} face vertices\n",
+                iter.first.getGroupName(),
+                iter.first.getMaterialName(),
+                iter.second->size());
+            total_faces += iter.second->size();
+        }
+
+        result += fmt::format(
+            "    Total Face Vertex count = {0} (or, {1} triangles)\n", 
+            total_faces, total_faces / 3);
+        if ((total_faces % 3) != 0) {
+            result += "    ERROR! Number of Face Vertices is NOT divisible by 3!\n";
+        }
+    }
+    else {
+        result += "    ERROR! No faces! WTF?!\n";
     }
 
     if (m_materials_map.size() > 0) {
         result += "    Materials:\n";
         for (const auto &iter : m_materials_map) {
-            const std::string &key = iter.first;
-            const ObjMaterial *val = iter.second.get();
-            result += fmt::format("    Name = {0}, Texture = {1}\n", key, val->getTextureFileName());
+            result += fmt::format(
+                "        Name = '{0}', Texture = '{1}'\n", 
+                iter.first, iter.second->getTextureFileName());
         }
     }
     else {

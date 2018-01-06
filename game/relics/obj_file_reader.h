@@ -38,8 +38,51 @@ private:
 };
 
 
-// TODO: Account for multiple groups/textures in a bit.
-// Just test this for now.
+class ObjFaceGroup
+{
+public:
+    ObjFaceGroup() :
+        m_group_name(""),
+        m_material_name("") {}
+
+    ObjFaceGroup(const std::string &group_name, 
+                 const std::string &material_name) :
+        m_group_name   (group_name),
+        m_material_name(material_name) {}
+
+    ObjFaceGroup(const ObjFaceGroup &that) :
+        m_group_name   (that.m_group_name),
+        m_material_name(that.m_material_name) {}
+
+    ObjFaceGroup(ObjFaceGroup &&that) :
+        m_group_name   (std::move(that.m_group_name)),
+        m_material_name(std::move(that.m_material_name)) {}
+
+    ObjFaceGroup &operator=(const ObjFaceGroup &that) {
+        m_group_name    = that.m_group_name;
+        m_material_name = that.m_material_name;
+        return *this;
+    }
+
+    ObjFaceGroup &operator=(ObjFaceGroup &&that) {
+        m_group_name    = std::move(that.m_group_name);
+        m_material_name = std::move(that.m_material_name);
+        return *this;
+    }
+
+    const std::string &getGroupName()    const { return m_group_name; }
+    const std::string &getMaterialName() const { return m_material_name; }
+
+    ~ObjFaceGroup() {}
+
+private:
+    std::string m_group_name;
+    std::string m_material_name;
+};
+
+
+// Less-than operator, since we'll be using Face Groups as a map key.
+bool operator<(const ObjFaceGroup &one, const ObjFaceGroup &two);
 
 
 
@@ -86,6 +129,7 @@ private:
     std::string m_object_name;
 
     std::string m_current_group_name;
+    std::string m_current_material_name;
 
     std::vector<MyVec4> m_positions;
     std::vector<MyVec4> m_normals;
@@ -93,5 +137,5 @@ private:
 
     std::map<std::string, std::unique_ptr<ObjMaterial>> m_materials_map;
 
-    std::vector<Vertex_PNT> m_face_vertices;
+    std::map<ObjFaceGroup, std::unique_ptr<std::vector<Vertex_PNT>>> m_face_groups_map;
 };

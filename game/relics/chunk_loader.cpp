@@ -7,6 +7,7 @@
 #include "chunk.h"
 #include "game_world.h"
 #include "utils.h"
+#include "wavefront_object.h"
 #include "sqlite3.h"
 
 
@@ -18,6 +19,16 @@ static const std::string STONE_TOP("stone_top");
 // This just deals with the block data. The landscape is are dealt with later.
 std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
 {
+    // A simple test.
+    if (origin == ChunkOrigin(0, 0)) {
+        MyVec4 move(0, 0, 0);
+
+        std::unique_ptr<WavefrontObject> testing =
+            world.cloneWavefrontObject("capsule", move);
+
+        PrintDebug(testing->toDescr());
+    }
+
     sqlite3 *db = world.getDatabase();
 
     std::string buffer = fmt::format(

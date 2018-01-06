@@ -24,6 +24,9 @@ GameWorld::GameWorld(sqlite3 *db) :
     m_camera_pitch(0.0f),
     m_camera_yaw(0.0f)
 {
+    // Load all of our Wavefront objects.
+    loadWavefrontObjects();
+
     // Figure out the size of our drawing region.
     // We load one border larger than what we will actually draw.
     int eval_blocks = GetConfig().logic.eval_blocks;
@@ -64,6 +67,21 @@ GameWorld::~GameWorld()
         ChunkOrigin origin = iter.first;
         m_chunk_map[origin] = nullptr;
     }
+}
+
+
+// For now, just hard-code the list.
+// Later we'll have this walk the directory.
+bool GameWorld::loadWavefrontObjects()
+{
+    std::unique_ptr<WavefrontObject> obj = WavefrontObject::Create("objects\\capsule.obj");
+    if (obj == nullptr) {
+        return false;
+    }
+
+    const std::string &key = obj->getObjectName();
+    m_wavefront_map.emplace(key, std::move(obj));
+    return true;
 }
 
 
@@ -392,4 +410,19 @@ void GameWorld::deleteBlockInFrontOfUs()
         chunk->setBlockType(local_coord, BlockType::AIR);
         chunk->recalcAllExposures();
     }
+}
+
+
+// Clone an instance of a Wavefront object.
+std::unique_ptr<WavefrontObject> 
+GameWorld::cloneWavefrontObject(const std::string &name, const MyVec4 &translate)
+{
+    const auto &iter = m_wavefront_map.find(name);
+    if (iter == m_wavefront_map.end()) {
+        PrintDebug(fmt::format("Could not find Wavefront object {}!\n", name));
+        return nullptr;
+    }
+
+    auto result = iter->second->Clone(translate);
+    return std::move(result);
 }

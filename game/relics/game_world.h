@@ -1,9 +1,11 @@
 #pragma once
 
 #include "stdafx.h"
+
 #include "my_math.h"
 #include "chunk_hit_test.h"
 #include "chunk_loader.h"
+#include "wavefront_object.h"
 
 
 struct sqlite3;
@@ -50,6 +52,9 @@ public:
 
     void deleteBlockInFrontOfUs();
 
+    std::unique_ptr<WavefrontObject> cloneWavefrontObject(
+        const std::string &name, const MyVec4 &translate);
+
 private:
     DISALLOW_DEFAULT(GameWorld)
     DISALLOW_COPYING(GameWorld)
@@ -59,23 +64,29 @@ private:
     static const int WORKER_PACE_MSECS = 2000;
 
     MyVec4 getCameraStartPos() const;
+    bool loadWavefrontObjects();
+
     void updateWorld();
     void clampRotations();
     void calcHitTest();
 
+    // Private data
     sqlite3 *m_database;
 
     bool m_paused;
     int  m_time_msec;
-    
-    GLfloat m_camera_pitch;
-    GLfloat m_camera_yaw;
-    MyVec4  m_camera_pos;
 
-    GlobalGrid   m_current_grid_coord;
+    GLfloat  m_camera_pitch;
+    GLfloat  m_camera_yaw;
+    MyVec4   m_camera_pos;
+
+    GlobalGrid  m_current_grid_coord;
     ChunkOrigin m_current_chunk_origin;
 
     std::map<ChunkOrigin, std::unique_ptr<Chunk>> m_chunk_map;
+
+    std::map<std::string, std::unique_ptr<WavefrontObject>> m_wavefront_map;
+
     bool m_hit_test_success;
     ChunkHitTestDetail m_hit_test_detail;
     VertList_PT m_hit_test_vert_list;

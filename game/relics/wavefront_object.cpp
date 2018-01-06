@@ -1,6 +1,6 @@
 
 #include "stdafx.h"
-#include "obj_file_reader.h"
+#include "wavefront_object.h"
 
 #include "common_util.h"
 #include "format.h"
@@ -40,7 +40,7 @@ static void trim_in_place(std::string &s) {
 // Note that ideally, these two names should always go hand-in-hand!
 // One group has one material. But, the code to go checking for that 
 // subtle and infrequent error would be madness, so I'm not going to try.
-bool operator<(const ObjFaceGroup &one, const ObjFaceGroup &two)
+bool operator<(const WavefrontFaceGroup &one, const WavefrontFaceGroup &two)
 {
     const std::string &group1 = one.getGroupName();
     const std::string &mat1   = one.getMaterialName();
@@ -61,28 +61,31 @@ static const std::string PARSING_ERROR = "ERROR!";
 
 
 // Our factory. We hide the constructor in case there's an issue with the file.
-std::unique_ptr<ObjFileReader> ObjFileReader::Create(const std::string &OBJ_file_name)
+std::unique_ptr<WavefrontObject> WavefrontObject::Create(const std::string &file_name)
 {
     // Make the file name absolute.
-    boost::filesystem::path path = boost::filesystem::canonical(OBJ_file_name);
+    std::string full_name = RESOURCE_PATH;
+    full_name.append(file_name);
 
     // Make sure the file exists.
-    if (!boost::filesystem::is_regular_file(path)) {
-        PrintDebug(fmt::format("OBJ file {0} does not exist!\n", OBJ_file_name));
+    boost::filesystem::path relative_path(full_name);
+    if (!boost::filesystem::is_regular_file(relative_path)) {
+        PrintDebug(fmt::format("OBJ file {0} does not exist!\n", full_name));
         assert(false);
         return nullptr;
     }
 
-    std::string fixed_file_name = path.string();
+    boost::filesystem::path absolute_path = boost::filesystem::canonical(relative_path);
+    std::string absolute_file_name = absolute_path.string();
 
     // Parse the file. If there are any issues, return null.
-    PrintDebug(fmt::format("Parsing OBJ file: {}\n", fixed_file_name));
+    PrintDebug(fmt::format("Parsing OBJ file: {}\n", absolute_file_name));
 
     // TODO: Why can't I use "std::make_unique" here? 
     // The compiler still looks for default ctor.
-    std::unique_ptr<ObjFileReader> result(new ObjFileReader(fixed_file_name));
+    std::unique_ptr<WavefrontObject> result(new WavefrontObject(absolute_file_name));
 
-    std::ifstream infile(fixed_file_name);
+    std::ifstream infile(absolute_file_name);
     int line_num = 1;
     std::string line;
     while (std::getline(infile, line)) {
@@ -95,13 +98,17 @@ std::unique_ptr<ObjFileReader> ObjFileReader::Create(const std::string &OBJ_file
         line_num++;
     }
 
+    // Now that we're done parsing, set the object name by hand.
+    // Alas, the .OBJ file itself is unreliable for having this.
+    result->m_object_name = absolute_path.filename().stem().string();
+
     // Otherwise we're okay! Have a great day.
     return std::move(result);
 }
 
 
 // The only allowed constructor.
-ObjFileReader::ObjFileReader(const std::string &file_name) :
+WavefrontObject::WavefrontObject(const std::string &file_name) :
     m_file_name(file_name),
     m_object_name(""),
     m_current_group_name(""),
@@ -110,10 +117,38 @@ ObjFileReader::ObjFileReader(const std::string &file_name) :
 }
 
 
-// We're rolling our own space string tokenizer, since Boost regex is ridiculously slow.
+// Now that we've loaded a Wavefront Object from a file, make a copy and 
+// move it around as needed. Don't carry along any data you don't need.
+// I'm nervous about C++ doing thing behind my back, so I'm doing the copying loops by hand.
+std::unique_ptr<WavefrontObject> WavefrontObject::Clone(const MyVec4 &move)
+{
+    std::unique_ptr<WavefrontObject> result(new WavefrontObject(m_file_name));
+
+    result->m_object_name = m_object_name;
+
+    for (const auto &iter : m_materials_map) {
+        result->m_materials_map.emplace(iter.first, iter.second);
+    }
+
+    for (const auto &iter : m_face_groups_map) {
+        std::vector<Vertex_PNT> new_verts;
+        new_verts.reserve(iter.second.size());
+
+        for (const auto &vert : iter.second) {
+            new_verts.emplace_back(vert);
+        }
+
+        result->m_face_groups_map.emplace(iter.first, std::move(new_verts));
+    }
+
+    return std::move(result);
+}
+
+
+// We're rolling our own string space tokenizer, since Boost regex is ridiculously slow.
 // We deliberately don't save empty strings, and we're careful about trailing spaces too.
 // It appears to work, but feel free to test the living crap out of this later.
-std::vector<std::string> ObjFileReader::splitStrBySpaces(const std::string &val)
+std::vector<std::string> WavefrontObject::splitStrBySpaces(const std::string &val)
 {
     std::vector<std::string> results;
     results.reserve(3);
@@ -138,7 +173,7 @@ std::vector<std::string> ObjFileReader::splitStrBySpaces(const std::string &val)
 
 // Same thing for splitting a string by slashes, which we need to parse "face" entries.
 // But, empty entries between slashes are fine, and we'll assume our strings are already trimmed.
-std::vector<std::string> ObjFileReader::splitStrBySlashes(const std::string &val)
+std::vector<std::string> WavefrontObject::splitStrBySlashes(const std::string &val)
 {
     std::vector<std::string> results;
     results.reserve(3);
@@ -164,7 +199,7 @@ std::vector<std::string> ObjFileReader::splitStrBySlashes(const std::string &val
 // Parse an individual line in the OBJ file. For now, we're going to
 // assume our file is valid, and not go overboard on the error messages.
 // But, return false if we run into anything we genuinely can't make sense of.
-bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
+bool WavefrontObject::parseObjLine(int line_num, const std::string &line)
 {
     // Skip blank lines and comments.
     if ((line == "") || (line.at(0) == '#')) {
@@ -182,7 +217,6 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
     else if (keyword == "vn")     { expected = 4; }
     else if (keyword == "vt")     { expected = 3; }
     else if (keyword == "f")      { expected = 4; }
-    else if (keyword == "o")      { expected = 2; }
     else if (keyword == "g")      { expected = 2; }
     else if (keyword == "mtlib")  { expected = 2; }
     else if (keyword == "usemtl") { expected = 2; }
@@ -227,25 +261,18 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
     // Faces.
     else if (keyword == "f") {
         // Look up which face group to add to. Note that total blanks is okay.
-        ObjFaceGroup key(m_current_group_name, m_current_material_name);
+        WavefrontFaceGroup key(m_current_group_name, m_current_material_name);
 
         // Create the underlying vector if it doesn't exist already.
         if (m_face_groups_map.find(key) == m_face_groups_map.end()) {
-            m_face_groups_map[key] = std::make_unique<std::vector<Vertex_PNT>>();
+            m_face_groups_map.emplace(key, std::vector<Vertex_PNT>());
         }
 
         // Add the faces.
-        auto &face_group = m_face_groups_map[key];
-        face_group->emplace_back(parseFaceToken(tokens[1]));
-        face_group->emplace_back(parseFaceToken(tokens[2]));
-        face_group->emplace_back(parseFaceToken(tokens[3]));
-        return true;
-    }
-
-    // Object name. For right now, saving 
-    // this in case it might be useful later.
-    else if (keyword == "o") {
-        m_object_name = tokens[1];
+        auto &face_group = m_face_groups_map.at(key);
+        face_group.emplace_back(parseFaceToken(tokens[1]));
+        face_group.emplace_back(parseFaceToken(tokens[2]));
+        face_group.emplace_back(parseFaceToken(tokens[3]));
         return true;
     }
 
@@ -290,6 +317,7 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
         (keyword == "sp") ||         // Special point
         (keyword == "end") ||        // End of a curve
         (keyword == "con") ||        // Surface connection
+        (keyword == "o") ||          // Object name (just roll our own)
         (keyword == "s") ||          // Smoothing group
         (keyword == "mg") ||         // Merging group
         (keyword == "bevel") ||      // Bevel interpolation
@@ -315,7 +343,7 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
 // complicated. Account for blank values, and the "offset by 1" business.
 // Side note: It's annoying that std::vector returns an "unsigned int" for size.
 // If your vector ever really does grow beyond 2GB entries, you have bigger problems.
-Vertex_PNT ObjFileReader::parseFaceToken(const std::string &token)
+Vertex_PNT WavefrontObject::parseFaceToken(const std::string &token)
 {
     std::vector<std::string> parts = splitStrBySlashes(token);
 
@@ -373,7 +401,7 @@ Vertex_PNT ObjFileReader::parseFaceToken(const std::string &token)
 
 
 // Parse the material file.
-bool ObjFileReader::parseMtllibFile(const std::string &MTL_file_name)
+bool WavefrontObject::parseMtllibFile(const std::string &MTL_file_name)
 {
     std::string real_file_name = locateRelativeFile(MTL_file_name);
     if (real_file_name == "") {
@@ -381,7 +409,7 @@ bool ObjFileReader::parseMtllibFile(const std::string &MTL_file_name)
     }
 
     // We build material objects as we go.
-    std::unique_ptr<ObjMaterial> material = nullptr;
+    std::unique_ptr<WavefrontMaterial> material = nullptr;
 
     // Parse the file line by line.
     PrintDebug(fmt::format("Parsing MTL file: {}\n", real_file_name));
@@ -402,10 +430,10 @@ bool ObjFileReader::parseMtllibFile(const std::string &MTL_file_name)
 
             if (material != nullptr) {
                 const std::string key = material->getMaterialName();
-                m_materials_map[key] = std::move(material);
+                m_materials_map.emplace(key, std::move(material));
             }
 
-            material = std::make_unique<ObjMaterial>(new_name);
+            material = std::make_unique<WavefrontMaterial>(new_name);
         }
 
         line_num++;
@@ -414,7 +442,7 @@ bool ObjFileReader::parseMtllibFile(const std::string &MTL_file_name)
     // All done. Save any final material.
     if (material != nullptr) {
         const std::string key = material->getMaterialName();
-        m_materials_map[key] = std::move(material);
+        m_materials_map.emplace(key, std::move(material));
     }
 
     return true;
@@ -425,7 +453,7 @@ bool ObjFileReader::parseMtllibFile(const std::string &MTL_file_name)
 // Returning a string signals the beginning of a new material.
 // Returning a blank means we're still in the current material.
 // Ugly, but returning the word "ERROR" means there's an issue with the MTL file.
-std::string ObjFileReader::parseMtllibLine(int line_num, const std::string &line, ObjMaterial *pOut_material)
+std::string WavefrontObject::parseMtllibLine(int line_num, const std::string &line, WavefrontMaterial *pOut_material)
 {
     // Skip blanks
     if ((line == "") || (line.at(0) == '#')) {
@@ -530,23 +558,22 @@ std::string ObjFileReader::parseMtllibLine(int line_num, const std::string &line
 
 // .OBJ files refer to other files relatively.
 // Find them and make sure they exist. If they don't, return a blank.
-std::string ObjFileReader::locateRelativeFile(const std::string &fname)
+std::string WavefrontObject::locateRelativeFile(const std::string &fname)
 {
     boost::filesystem::path starter = boost::filesystem::canonical(m_file_name);
     boost::filesystem::path wanted  = starter.parent_path().append(fname);
 
-    if (boost::filesystem::is_regular_file(wanted)) {
-        return wanted.string();
-    }
-    else {
+    if (!boost::filesystem::is_regular_file(wanted)) {
         PrintDebug(fmt::format("Referenced file {0} does not exist!\n", fname));
         return "";
     }
+
+    return wanted.string();
 }
 
 
 // Return a description string.
-std::string ObjFileReader::toDescr() const
+std::string WavefrontObject::toDescr() const
 {
     // Figure out our object dimensions.
     GLfloat min_x =  FLT_MAX;
@@ -583,8 +610,8 @@ std::string ObjFileReader::toDescr() const
         "    Dimensions = {0:.3f}m wide, {1:.3f}m deep, {2:.3f}m high\n",
         width, depth, height);
 
-    result += fmt::format("    Position count = {}\n", m_positions.size());
-    result += fmt::format("    Normal count = {}\n", m_normals.size());
+    result += fmt::format("    Position count = {}\n",  m_positions.size());
+    result += fmt::format("    Normal count = {}\n",    m_normals.size());
     result += fmt::format("    Tex Coord count = {}\n", m_tex_coords.size());
 
     if (m_face_groups_map.size() > 0) {
@@ -595,8 +622,8 @@ std::string ObjFileReader::toDescr() const
                 "        '{0}'-'{1}' = {2} face vertices\n",
                 iter.first.getGroupName(),
                 iter.first.getMaterialName(),
-                iter.second->size());
-            total_faces += iter.second->size();
+                iter.second.size());
+            total_faces += iter.second.size();
         }
 
         result += fmt::format(

@@ -8,15 +8,15 @@
 
 // A material from a Wavefront ".MTL" file.
 // For now, we just want a name and a texture map.
-class ObjMaterial
+class WavefrontMaterial
 {
 public:
-    ObjMaterial(const std::string &name) : 
+    WavefrontMaterial(const std::string &name) : 
         m_material_name(name),
         m_texture_file_name(""),
         m_texture_image(nullptr) {}
 
-    ~ObjMaterial() {}
+    ~WavefrontMaterial() {}
 
     const std::string &getMaterialName() const { return m_material_name; }
     const std::string &getTextureFileName() const { return m_texture_file_name; }
@@ -28,9 +28,9 @@ public:
     }
 
 private:
-    DISALLOW_DEFAULT(ObjMaterial)
-    DISALLOW_COPYING(ObjMaterial)
-    DISALLOW_MOVING(ObjMaterial)
+    DISALLOW_DEFAULT(WavefrontMaterial)
+    DISALLOW_COPYING(WavefrontMaterial)
+    DISALLOW_MOVING(WavefrontMaterial)
 
     std::string m_material_name;
     std::string m_texture_file_name;
@@ -38,33 +38,33 @@ private:
 };
 
 
-class ObjFaceGroup
+class WavefrontFaceGroup
 {
 public:
-    ObjFaceGroup() :
+    WavefrontFaceGroup() :
         m_group_name(""),
         m_material_name("") {}
 
-    ObjFaceGroup(const std::string &group_name, 
+    WavefrontFaceGroup(const std::string &group_name, 
                  const std::string &material_name) :
         m_group_name   (group_name),
         m_material_name(material_name) {}
 
-    ObjFaceGroup(const ObjFaceGroup &that) :
+    WavefrontFaceGroup(const WavefrontFaceGroup &that) :
         m_group_name   (that.m_group_name),
         m_material_name(that.m_material_name) {}
 
-    ObjFaceGroup(ObjFaceGroup &&that) :
+    WavefrontFaceGroup(WavefrontFaceGroup &&that) :
         m_group_name   (std::move(that.m_group_name)),
         m_material_name(std::move(that.m_material_name)) {}
 
-    ObjFaceGroup &operator=(const ObjFaceGroup &that) {
+    WavefrontFaceGroup &operator=(const WavefrontFaceGroup &that) {
         m_group_name    = that.m_group_name;
         m_material_name = that.m_material_name;
         return *this;
     }
 
-    ObjFaceGroup &operator=(ObjFaceGroup &&that) {
+    WavefrontFaceGroup &operator=(WavefrontFaceGroup &&that) {
         m_group_name    = std::move(that.m_group_name);
         m_material_name = std::move(that.m_material_name);
         return *this;
@@ -73,7 +73,7 @@ public:
     const std::string &getGroupName()    const { return m_group_name; }
     const std::string &getMaterialName() const { return m_material_name; }
 
-    ~ObjFaceGroup() {}
+    ~WavefrontFaceGroup() {}
 
 private:
     std::string m_group_name;
@@ -82,17 +82,19 @@ private:
 
 
 // Less-than operator, since we'll be using Face Groups as a map key.
-bool operator<(const ObjFaceGroup &one, const ObjFaceGroup &two);
+bool operator<(const WavefrontFaceGroup &one, const WavefrontFaceGroup &two);
 
 
 
 // The parsed contents of a Wavefront ".OBJ" file.
 // Side note: I tried using Boost regex to deal with splitting file lines
 // by spaces, and parsing floats and ints, but it was unacceptably slow.
-class ObjFileReader
+class WavefrontObject
 {
 public:
-    static std::unique_ptr<ObjFileReader> Create(const std::string &obj_file_name);
+    static std::unique_ptr<WavefrontObject> Create(const std::string &obj_file_name);
+
+    std::unique_ptr<WavefrontObject> Clone(const MyVec4 &translate);
 
     const std::string &getFileName() const { return m_file_name; }
     const std::string &getObjectName() const { return m_object_name; }
@@ -100,12 +102,12 @@ public:
     std::string toDescr() const;
 
 private:
-    DISALLOW_DEFAULT(ObjFileReader)
-    DISALLOW_COPYING(ObjFileReader)
-    DISALLOW_MOVING(ObjFileReader)
+    DISALLOW_DEFAULT(WavefrontObject)
+    DISALLOW_COPYING(WavefrontObject)
+    DISALLOW_MOVING(WavefrontObject)
 
     // A private ctor, since "Create" does the work.
-    ObjFileReader(const std::string &obj_file_name);
+    WavefrontObject(const std::string &file_name);
 
     // Private methods.
     std::vector<std::string> splitStrBySpaces(const std::string &val);
@@ -116,7 +118,7 @@ private:
     Vertex_PNT parseFaceToken(const std::string &token);
 
     bool parseMtllibFile(const std::string &partial_MTL_fname);
-    std::string parseMtllibLine(int line_num, const std::string &line, ObjMaterial *pOut_material);
+    std::string parseMtllibLine(int line_num, const std::string &line, WavefrontMaterial *pOut_material);
 
     std::string locateRelativeFile(const std::string &relative_fname);
 
@@ -135,7 +137,8 @@ private:
     std::vector<MyVec4> m_normals;
     std::vector<MyVec2> m_tex_coords;
 
-    std::map<std::string, std::unique_ptr<ObjMaterial>> m_materials_map;
+    // For materials, use shared pointers since they're shared between clones.
+    std::map<std::string, std::shared_ptr<WavefrontMaterial>> m_materials_map;
 
-    std::map<ObjFaceGroup, std::unique_ptr<std::vector<Vertex_PNT>>> m_face_groups_map;
+    std::map<WavefrontFaceGroup, std::vector<Vertex_PNT>> m_face_groups_map;
 };

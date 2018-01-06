@@ -11,9 +11,9 @@
 #include "event_handler.h"
 #include "game_world.h"
 #include "heads_up_display.h"
-#include "obj_file_reader.h"
 #include "renderer.h"
 #include "utils.h"
+#include "wavefront_object.h"
 
 #include <boost/filesystem.hpp>
 
@@ -93,7 +93,8 @@ sqlite3 *OpenDatabase()
 }
 
 
-// A main method for testing our file reader.
+#if 0
+// A main method for testing our Wavefront File parser.
 int WINAPI wWinMain(
     _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
@@ -103,7 +104,7 @@ int WINAPI wWinMain(
     // Test our curved cube, which we got from Lightwave.
     std::string curved_cube_fname = RESOURCE_PATH;
     curved_cube_fname.append("objects\\curved_cube.obj");
-    std::unique_ptr<ObjFileReader> curved_cube_obj = ObjFileReader::Create(curved_cube_fname);
+    std::unique_ptr<WavefrontObject> curved_cube_obj = WavefrontObject::Create(curved_cube_fname);
     if (curved_cube_obj != nullptr) {
         PrintDebug(curved_cube_obj->toDescr());
     }
@@ -111,7 +112,7 @@ int WINAPI wWinMain(
     // Test our capsule, which we got from the web.
     std::string capsule_fname = RESOURCE_PATH;
     capsule_fname.append("objects\\capsule.obj");
-    std::unique_ptr<ObjFileReader> capsule_obj = ObjFileReader::Create(capsule_fname);
+    std::unique_ptr<WavefrontObject> capsule_obj = WavefrontObject::Create(capsule_fname);
     if (capsule_obj != nullptr) {
         PrintDebug(capsule_obj->toDescr());
     }
@@ -120,8 +121,6 @@ int WINAPI wWinMain(
 }
 
 
-
-#if 0
 // A minimalist version to look for memory leaks in the initial setup.
 int WINAPI wWinMain(
     _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
@@ -153,6 +152,7 @@ int WINAPI wWinMain(
     _CrtDumpMemoryLeaks();
     return 0;
 }
+#endif
 
 
 // And away we go. Forgive the Microsoft SAL annotations here. We'll make sure this is portable later.
@@ -342,4 +342,3 @@ int WINAPI wWinMain(
 
     return 0;
 }
-#endif

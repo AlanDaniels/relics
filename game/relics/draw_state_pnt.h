@@ -11,8 +11,6 @@
 
 struct Vertex_PNT
 {
-    Vertex_PNT() {}
-
     Vertex_PNT(const MyVec4 &arg_pos, const MyVec4 &arg_normal, const MyVec2 &arg_texuv) :
         position(arg_pos), normal(arg_normal), texuv(arg_texuv) {}
 

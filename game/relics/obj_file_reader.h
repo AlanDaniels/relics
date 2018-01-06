@@ -12,15 +12,19 @@ class ObjMaterial
 {
 public:
     ObjMaterial(const std::string &name) : 
-        m_name(name) {}
+        m_material_name(name),
+        m_texture_file_name(""),
+        m_texture_image(nullptr) {}
 
     ~ObjMaterial() {}
 
-    const std::string &getName()  const { return m_name; }
-    const sf::Image   *getImage() const { return m_image.get(); }
+    const std::string &getMaterialName() const { return m_material_name; }
+    const std::string &getTextureFileName() const { return m_texture_file_name; }
+    const sf::Image   *getTextureImage() const { return m_texture_image.get(); }
 
-    void setImage(std::unique_ptr<sf::Image> image) {
-        m_image = std::move(image);
+    void setTexture(const std::string &file_name, std::unique_ptr<sf::Image> image) {
+        m_texture_file_name = file_name;
+        m_texture_image = std::move(image);
     }
 
 private:
@@ -28,8 +32,9 @@ private:
     DISALLOW_COPYING(ObjMaterial)
     DISALLOW_MOVING(ObjMaterial)
 
-    std::string m_name;
-    std::unique_ptr<sf::Image> m_image;
+    std::string m_material_name;
+    std::string m_texture_file_name;
+    std::unique_ptr<sf::Image> m_texture_image;
 };
 
 
@@ -45,6 +50,9 @@ class ObjFileReader
 {
 public:
     static std::unique_ptr<ObjFileReader> Create(const std::string &obj_file_name);
+
+    const std::string &getFileName() const { return m_file_name; }
+    const std::string &getObjectName() const { return m_object_name; }
 
     std::string toDescr() const;
 
@@ -74,7 +82,8 @@ private:
     }
 
     // Private data.
-    std::string m_OBJ_file_name;
+    std::string m_file_name;
+    std::string m_object_name;
 
     std::string m_current_group_name;
 
@@ -82,7 +91,7 @@ private:
     std::vector<MyVec4> m_normals;
     std::vector<MyVec2> m_tex_coords;
 
-    std::vector<std::unique_ptr<ObjMaterial>> m_materials;
+    std::map<std::string, std::unique_ptr<ObjMaterial>> m_materials_map;
 
     std::vector<Vertex_PNT> m_face_vertices;
 };

@@ -79,8 +79,9 @@ std::unique_ptr<ObjFileReader> ObjFileReader::Create(const std::string &OBJ_file
 
 
 // The only allowed constructor.
-ObjFileReader::ObjFileReader(const std::string &OBJ_file_name) :
-    m_OBJ_file_name(OBJ_file_name),
+ObjFileReader::ObjFileReader(const std::string &file_name) :
+    m_file_name(file_name),
+    m_object_name(""),
     m_current_group_name("")
 {
 }
@@ -158,6 +159,7 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
     else if (keyword == "vn")     { expected = 4; }
     else if (keyword == "vt")     { expected = 3; }
     else if (keyword == "f")      { expected = 4; }
+    else if (keyword == "o")      { expected = 2; }
     else if (keyword == "g")      { expected = 2; }
     else if (keyword == "mtlib")  { expected = 2; }
     else if (keyword == "usemtl") { expected = 2; }
@@ -207,6 +209,13 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
         return true;
     }
 
+    // Object name. For right now, saving 
+    // this in case it might be useful later.
+    else if (keyword == "o") {
+        m_object_name = tokens[1];
+        return true;
+    }
+
     // Group name.
     else if (keyword == "g") { 
         m_current_group_name = tokens[1];
@@ -247,7 +256,6 @@ bool ObjFileReader::parseObjLine(int line_num, const std::string &line)
         (keyword == "con") ||        // Surface connection
         (keyword == "s") ||          // Smoothing group
         (keyword == "mg") ||         // Merging group
-        (keyword == "o") ||          // Object name
         (keyword == "bevel") ||      // Bevel interpolation
         (keyword == "c_interp") ||   // Color interpolation
         (keyword == "d_interp") ||   // Dissolve interp
@@ -348,7 +356,8 @@ bool ObjFileReader::parseMtllibFile(const std::string &MTL_file_name)
     while (std::getline(infile, line)) {
         trim_in_place(line);
 
-        // As we parse each line, look for the beginning of a new material.
+        // As we parse each line, look for the beginning of a new material name.
+        // When we see that, save the current material and start a new one.
         std::string new_name = parseMtllibLine(line_num, line, material.get());
         if (new_name != "") {
             if (new_name == PARSING_ERROR) {
@@ -356,7 +365,8 @@ bool ObjFileReader::parseMtllibFile(const std::string &MTL_file_name)
             }
 
             if (material != nullptr) {
-                m_materials.emplace_back(std::move(material));
+                const std::string key = material->getMaterialName();
+                m_materials_map[key] = std::move(material);
             }
 
             material = std::make_unique<ObjMaterial>(new_name);
@@ -367,7 +377,8 @@ bool ObjFileReader::parseMtllibFile(const std::string &MTL_file_name)
 
     // All done. Save any final material.
     if (material != nullptr) {
-        m_materials.emplace_back(std::move(material));
+        const std::string key = material->getMaterialName();
+        m_materials_map[key] = std::move(material);
     }
 
     return true;
@@ -411,25 +422,30 @@ std::string ObjFileReader::parseMtllibLine(int line_num, const std::string &line
         return tokens[1];
     }
 
+    // Beyond here, it's possible we haven't hit a "newmtl" line yet.
+    // If so, there's no material to work with. Account for that.
+
     // Whichever has the color texmap we want, ambient or diffuse.
     else if ((keyword == "map_Ka") || 
              (keyword == "map_Kd")) {
-        std::string img_file_name = locateRelativeFile(tokens[1]);
-        if (img_file_name == "") {
-            return PARSING_ERROR;
-        }
-
-        if (pOut_material->getImage() == nullptr) {
-            std::unique_ptr<sf::Image> image = std::make_unique<sf::Image>();
-            if (!image->loadFromFile(img_file_name)) {
-                PrintDebug(fmt::format(
-                    "Line {0}: Could not load image {1}.\n", 
-                    line_num, img_file_name));
+        if (pOut_material != nullptr) {
+            std::string image_file_name = locateRelativeFile(tokens[1]);
+            if (image_file_name == "") {
                 return PARSING_ERROR;
             }
 
-            pOut_material->setImage(std::move(image));
-            return "";
+            if (pOut_material->getTextureImage() == nullptr) {
+                std::unique_ptr<sf::Image> image = std::make_unique<sf::Image>();
+                if (!image->loadFromFile(image_file_name)) {
+                    PrintDebug(fmt::format(
+                        "Line {0}: Could not load image {1}.\n",
+                        line_num, image_file_name));
+                    return PARSING_ERROR;
+                }
+
+                pOut_material->setTexture(image_file_name, std::move(image));
+                return "";
+            }
         }
     }
 
@@ -480,7 +496,7 @@ std::string ObjFileReader::parseMtllibLine(int line_num, const std::string &line
 // Find them and make sure they exist. If they don't, return a blank.
 std::string ObjFileReader::locateRelativeFile(const std::string &fname)
 {
-    boost::filesystem::path starter = boost::filesystem::canonical(m_OBJ_file_name);
+    boost::filesystem::path starter = boost::filesystem::canonical(m_file_name);
     boost::filesystem::path wanted  = starter.parent_path().append(fname);
 
     if (boost::filesystem::is_regular_file(wanted)) {
@@ -494,7 +510,6 @@ std::string ObjFileReader::locateRelativeFile(const std::string &fname)
 
 
 // Return a description string.
-// TODO: Add more here...
 std::string ObjFileReader::toDescr() const
 {
     // Figure out our object dimensions.
@@ -525,10 +540,11 @@ std::string ObjFileReader::toDescr() const
     GLfloat depth  = (max_z - min_z) / BLOCK_SCALE;
 
     // Compose our description.
-    std::string result = fmt::format("OBJ File: {}\n", m_OBJ_file_name);
+    std::string result = fmt::format("OBJ File: '{}'\n", m_object_name);
+    result += fmt::format("    File path = {}\n", m_file_name);
 
     result += fmt::format(
-        "    Dimensions = {0:.3f}m wide by {1:.3f}m deep x {2:.3f}m high\n",
+        "    Dimensions = {0:.3f}m wide, {1:.3f}m deep, {2:.3f}m high\n",
         width, depth, height);
 
     result += fmt::format("    Position count = {}\n", m_positions.size());
@@ -539,6 +555,18 @@ std::string ObjFileReader::toDescr() const
 
     if ((m_face_vertices.size() % 3) != 0) {
         result += "    ERROR! Number of Face Vertices is NOT divisible by 3!\n";
+    }
+
+    if (m_materials_map.size() > 0) {
+        result += "    Materials:\n";
+        for (const auto &iter : m_materials_map) {
+            const std::string &key = iter.first;
+            const ObjMaterial *val = iter.second.get();
+            result += fmt::format("    Name = {0}, Texture = {1}\n", key, val->getTextureFileName());
+        }
+    }
+    else {
+        result += "    ERROR! No materials.\n";
     }
 
     return result;

@@ -8,117 +8,133 @@
 
 // A material from a Wavefront ".MTL" file.
 // For now, we just want a name and a texture map.
-class WavefrontMaterial
+class WFMaterial
 {
 public:
-    WavefrontMaterial(const std::string &name) : 
-        m_material_name(name),
-        m_texture_file_name(""),
-        m_texture_image(nullptr) {}
+    WFMaterial(const std::string &name) :
+        m_mat_name(name),
+        m_tex_path(""),
+        m_tex_image(nullptr) {}
 
-    ~WavefrontMaterial() {}
+    ~WFMaterial() {
+        // TODO: Free up the sf::Image resource.
+    }
 
-    const std::string &getMaterialName() const { return m_material_name; }
-    const std::string &getTextureFileName() const { return m_texture_file_name; }
-    const sf::Image   *getTextureImage() const { return m_texture_image.get(); }
+    const std::string &getMaterialName() const { return m_mat_name; }
+    const std::string &getTexturePath()  const { return m_tex_path; }
+    const sf::Image   *getTextureImage() const { return m_tex_image.get(); }
 
-    void setTexture(const std::string &file_name, std::unique_ptr<sf::Image> image) {
-        m_texture_file_name = file_name;
-        m_texture_image = std::move(image);
+    void setTexture(const std::string &path, std::unique_ptr<sf::Image> image) {
+        m_tex_path  = path;
+        m_tex_image = std::move(image);
     }
 
 private:
-    DISALLOW_DEFAULT(WavefrontMaterial)
-    DISALLOW_COPYING(WavefrontMaterial)
-    DISALLOW_MOVING(WavefrontMaterial)
+    DISALLOW_DEFAULT(WFMaterial)
+    DISALLOW_COPYING(WFMaterial)
+    DISALLOW_MOVING(WFMaterial)
 
-    std::string m_material_name;
-    std::string m_texture_file_name;
-    std::unique_ptr<sf::Image> m_texture_image;
+    // Private data.
+    std::string m_mat_name;
+    std::string m_tex_path;
+    std::unique_ptr<sf::Image> m_tex_image;
 };
 
 
-class WavefrontFaceGroup
+// A wavefront face group.
+// One name maps to a material, and the vertices to go with it.
+class WFGroup
 {
 public:
-    WavefrontFaceGroup() :
-        m_group_name(""),
-        m_material_name("") {}
+    WFGroup() {}
 
-    WavefrontFaceGroup(const std::string &group_name, 
-                 const std::string &material_name) :
-        m_group_name   (group_name),
-        m_material_name(material_name) {}
+    WFGroup(const std::string &name) :
+        m_name(name) {}
 
-    WavefrontFaceGroup(const WavefrontFaceGroup &that) :
-        m_group_name   (that.m_group_name),
-        m_material_name(that.m_material_name) {}
+    WFGroup(WFGroup &&that) :
+        m_name(std::move(that.m_name)),
+        m_mat(std::move(that.m_mat)),
+        m_vert_list(std::move(that.m_vert_list)) {}
 
-    WavefrontFaceGroup(WavefrontFaceGroup &&that) :
-        m_group_name   (std::move(that.m_group_name)),
-        m_material_name(std::move(that.m_material_name)) {}
+    ~WFGroup() {}
 
-    WavefrontFaceGroup &operator=(const WavefrontFaceGroup &that) {
-        m_group_name    = that.m_group_name;
-        m_material_name = that.m_material_name;
+    WFGroup &operator=(WFGroup &&that) {
+        m_name = std::move(m_name);
+        m_mat  = std::move(m_mat);
+        m_vert_list = std::move(m_vert_list);
         return *this;
     }
 
-    WavefrontFaceGroup &operator=(WavefrontFaceGroup &&that) {
-        m_group_name    = std::move(that.m_group_name);
-        m_material_name = std::move(that.m_material_name);
-        return *this;
+    const std::shared_ptr<WFMaterial> &getMaterial() const { return m_mat; }
+    const std::vector<Vertex_PNT>     &getVertList() const { return m_vert_list; }
+
+    void setMaterial(std::shared_ptr<WFMaterial> mat) {
+        m_mat = mat;
     }
 
-    const std::string &getGroupName()    const { return m_group_name; }
-    const std::string &getMaterialName() const { return m_material_name; }
-
-    ~WavefrontFaceGroup() {}
+    void addVertex(const Vertex_PNT &vert) {
+        m_vert_list.emplace_back(vert);
+    }
 
 private:
-    std::string m_group_name;
-    std::string m_material_name;
+    DISALLOW_COPYING(WFGroup)
+
+    // Privata data. Note that materials are shared, but vert lists aren't.
+    std::string m_name;
+    std::shared_ptr<WFMaterial> m_mat;
+    std::vector<Vertex_PNT> m_vert_list;
 };
-
-
-// Less-than operator, since we'll be using Face Groups as a map key.
-bool operator<(const WavefrontFaceGroup &one, const WavefrontFaceGroup &two);
-
 
 
 // The parsed contents of a Wavefront ".OBJ" file.
 // Side note: I tried using Boost regex to deal with splitting file lines
 // by spaces, and parsing floats and ints, but it was unacceptably slow.
-class WavefrontObject
+class WFObject
 {
 public:
-    static std::unique_ptr<WavefrontObject> Create(const std::string &obj_file_name);
+    static std::unique_ptr<WFObject> Create(const std::string &resource_path);
 
-    std::unique_ptr<WavefrontObject> Clone(const MyVec4 &translate);
+    std::unique_ptr<WFObject> clone(const MyVec4 &translate);
 
-    const std::string &getFileName() const { return m_file_name; }
-    const std::string &getObjectName() const { return m_object_name; }
+    const std::string &getPath() const { 
+        return m_original_path; 
+    }
+
+    const std::string &getObjectName() const { 
+        return m_object_name; 
+    }
+
+    const std::vector<std::string> &getGroupNames() const {
+        return m_group_names;
+    }
+
+    const WFGroup &getGroup(const std::string &name) const {
+        const auto &iter = m_group_map.at(name);
+        return *iter;
+    }
 
     std::string toDescr() const;
+    bool validate() const;
 
 private:
-    DISALLOW_DEFAULT(WavefrontObject)
-    DISALLOW_COPYING(WavefrontObject)
-    DISALLOW_MOVING(WavefrontObject)
+    DISALLOW_DEFAULT(WFObject)
+    DISALLOW_COPYING(WFObject)
+    DISALLOW_MOVING(WFObject)
 
     // A private ctor, since "Create" does the work.
-    WavefrontObject(const std::string &file_name);
+    WFObject(const std::string &path);
 
     // Private methods.
     std::vector<std::string> splitStrBySpaces(const std::string &val);
     std::vector<std::string> splitStrBySlashes(const std::string &val);
 
-    bool parseObjLine(int line_num, const std::string &line);
+    bool parseObjectLine(int line_num, const std::string &line);
+    void createFaceGroup(int line_num, const std::string &name);
     
     Vertex_PNT parseFaceToken(const std::string &token);
 
     bool parseMtllibFile(const std::string &partial_MTL_fname);
-    std::string parseMtllibLine(int line_num, const std::string &line, WavefrontMaterial *pOut_material);
+    std::string parseMtllibLine(int line_num, const std::string &line, WFMaterial *pOut_material);
 
     std::string locateRelativeFile(const std::string &relative_fname);
 
@@ -127,18 +143,19 @@ private:
     }
 
     // Private data.
-    std::string m_file_name;
+    std::string m_original_path;
     std::string m_object_name;
 
     std::string m_current_group_name;
-    std::string m_current_material_name;
 
     std::vector<MyVec4> m_positions;
     std::vector<MyVec4> m_normals;
     std::vector<MyVec2> m_tex_coords;
 
-    // For materials, use shared pointers since they're shared between clones.
-    std::map<std::string, std::shared_ptr<WavefrontMaterial>> m_materials_map;
+    // Keep our list of materials.
+    std::map<std::string, std::shared_ptr<WFMaterial>> m_mat_map;
 
-    std::map<WavefrontFaceGroup, std::vector<Vertex_PNT>> m_face_groups_map;
+    // Each group carries along its one material.
+    std::vector<std::string> m_group_names;
+    std::map<std::string, std::unique_ptr<WFGroup>> m_group_map;
 };

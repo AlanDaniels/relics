@@ -26,10 +26,10 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
     if (origin == ChunkOrigin(0, 0)) {
         MyVec4 move(0, 0, 0);
 
-        std::unique_ptr<WavefrontObject> capsule =
-            world.cloneWavefrontObject("capsule", move);
+        std::unique_ptr<WFObject> capsule =
+            world.cloneWFObject("capsule", move);
 
-        chunk->addWavefrontObject(std::move(capsule));
+        chunk->addWFObject(std::move(capsule));
     }
 
     sqlite3 *db = world.getDatabase();

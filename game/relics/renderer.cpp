@@ -159,6 +159,7 @@ bool Renderer::loadShaders()
         PrintDebug("Could not create the Wavefront draw state. Bye!\n");
         return false;
     }
+
     // Init our landscape draw state.
     DrawStateSettings landscape_settings;
     landscape_settings.title = "landscape";
@@ -316,6 +317,9 @@ RenderStats Renderer::renderWorld()
     renderLandscapeList(SurfaceType::STONE,     chunk_vec, *m_stone_tex, &stats);
     renderLandscapeList(SurfaceType::COAL,      chunk_vec, *m_coal_tex,  &stats);
 
+    // Render any wavefront objects.
+    renderWFObjects(chunk_vec, &stats);
+
     // Finally, render our hit test.
     renderHitTest(&stats);
 
@@ -340,7 +344,6 @@ void Renderer::renderSkybox(RenderStats *pOut_stats)
 
     pOut_stats->state_changes++;
 }
-
 
 
 // Render one of our landscapes. This should use standard depth testing, and no blending.
@@ -388,6 +391,24 @@ void Renderer::renderLandscapeList(
     }
 
     pOut_stats->state_changes++;
+}
+
+
+// Render our wavefront objects.
+// TODO: For now, just get this working. Worry about speed later.
+void Renderer::renderWFObjects(
+    std::vector<const Chunk *> &chunk_list, RenderStats *pOut_stats)
+{
+    for (const auto &chunk_it : chunk_list) {
+        for (const auto &wf_it : chunk_it->getWFObjects()) {
+            const WFObject *thing = wf_it.get();
+
+#if 0
+            m_wavefront_draw_state->render(thing->getVertList());
+            PrintDebug(fmt::format("TODO: I would render '{}';\n", thing->getObjectName()));
+#endif
+        }
+    }
 }
 
 

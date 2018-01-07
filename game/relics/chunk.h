@@ -121,13 +121,13 @@ public:
     const Chunk *getNeighborEast()  const;
     const Chunk *getNeighborWest()  const;
 
-    void addWavefrontObject(std::unique_ptr<WavefrontObject> obj) {
-        m_wavefront_objects.emplace_back(std::move(obj));
+    void addWFObject(std::unique_ptr<WFObject> obj) {
+        m_wfobj_list.emplace_back(std::move(obj));
     }
 
     // These definitions are getting ridiculous.
-    const std::vector<std::unique_ptr<WavefrontObject>> &getWavefrontObjects() const {
-        return m_wavefront_objects;
+    const std::vector<std::unique_ptr<WFObject>> &getWFObjects() const {
+        return m_wfobj_list;
     }
 
     std::string toDescription() const;
@@ -152,5 +152,5 @@ private:
     
     std::array<ChunkStripe, CHUNK_WIDTH * CHUNK_HEIGHT> m_stripes;
 
-    std::vector<std::unique_ptr<WavefrontObject>> m_wavefront_objects;
+    std::vector<std::unique_ptr<WFObject>> m_wfobj_list;
 };

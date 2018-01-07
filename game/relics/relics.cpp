@@ -94,7 +94,6 @@ sqlite3 *OpenDatabase()
 }
 
 
-#if 0
 // A main method for testing our Wavefront File parser.
 int WINAPI wWinMain(
     _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
@@ -102,26 +101,26 @@ int WINAPI wWinMain(
 {
     LoadConfig();
 
-    // Test our curved cube, which we got from Lightwave.
-    std::string curved_cube_fname = RESOURCE_PATH;
-    curved_cube_fname.append("objects\\curved_cube.obj");
-    std::unique_ptr<WavefrontObject> curved_cube_obj = WavefrontObject::Create(curved_cube_fname);
-    if (curved_cube_obj != nullptr) {
-        PrintDebug(curved_cube_obj->toDescr());
+    // Test our capsule, including cloning.
+    std::unique_ptr<WFObject> capsule = WFObject::Create("objects\\capsule.obj");
+    if (capsule == nullptr) {
+        PrintDebug("Could not load OBJ file! Darn.\n");
+        return 0;
     }
 
-    // Test our capsule, which we got from the web.
-    std::string capsule_fname = RESOURCE_PATH;
-    capsule_fname.append("objects\\capsule.obj");
-    std::unique_ptr<WavefrontObject> capsule_obj = WavefrontObject::Create(capsule_fname);
-    if (capsule_obj != nullptr) {
-        PrintDebug(capsule_obj->toDescr());
-    }
+    PrintDebug(capsule->toDescr());
+    PrintDebug("\n");
+
+    std::unique_ptr<WFObject> clone = capsule->clone(MyVec4(0, 0, 0));
+    PrintDebug(clone->toDescr());
+    PrintDebug("\n");
+    PrintDebug(capsule->toDescr());
 
     return 0;
 }
 
 
+#if 0
 // A minimalist version to look for memory leaks in the initial setup.
 int WINAPI wWinMain(
     _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
@@ -153,7 +152,6 @@ int WINAPI wWinMain(
     _CrtDumpMemoryLeaks();
     return 0;
 }
-#endif
 
 
 // And away we go. Forgive the Microsoft SAL annotations here. We'll make sure this is portable later.
@@ -351,3 +349,4 @@ int WINAPI wWinMain(
 
     return 0;
 }
+#endif

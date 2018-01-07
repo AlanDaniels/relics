@@ -25,7 +25,7 @@ GameWorld::GameWorld(sqlite3 *db) :
     m_camera_yaw(0.0f)
 {
     // Load all of our Wavefront objects.
-    loadWavefrontObjects();
+    loadWFObjects();
 
     // Figure out the size of our drawing region.
     // We load one border larger than what we will actually draw.
@@ -72,15 +72,15 @@ GameWorld::~GameWorld()
 
 // For now, just hard-code the list.
 // Later we'll have this walk the directory.
-bool GameWorld::loadWavefrontObjects()
+bool GameWorld::loadWFObjects()
 {
-    std::unique_ptr<WavefrontObject> obj = WavefrontObject::Create("objects\\capsule.obj");
+    std::unique_ptr<WFObject> obj = WFObject::Create("objects\\capsule.obj");
     if (obj == nullptr) {
         return false;
     }
 
     const std::string &key = obj->getObjectName();
-    m_wavefront_map.emplace(key, std::move(obj));
+    m_wfobj_map.emplace(key, std::move(obj));
     return true;
 }
 
@@ -414,15 +414,15 @@ void GameWorld::deleteBlockInFrontOfUs()
 
 
 // Clone an instance of a Wavefront object.
-std::unique_ptr<WavefrontObject> 
-GameWorld::cloneWavefrontObject(const std::string &name, const MyVec4 &translate)
+std::unique_ptr<WFObject> 
+GameWorld::cloneWFObject(const std::string &name, const MyVec4 &translate)
 {
-    const auto &iter = m_wavefront_map.find(name);
-    if (iter == m_wavefront_map.end()) {
+    const auto &iter = m_wfobj_map.find(name);
+    if (iter == m_wfobj_map.end()) {
         PrintDebug(fmt::format("Could not find Wavefront object {}!\n", name));
         return nullptr;
     }
 
-    auto result = iter->second->Clone(translate);
+    auto result = iter->second->clone(translate);
     return std::move(result);
 }

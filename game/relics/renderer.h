@@ -55,6 +55,8 @@ private:
         SurfaceType surf, const std::vector<const Chunk *> &chunk_list,
         const DrawTexture &tex, RenderStats *pOut_stats);
 
+    void renderWFObjects(std::vector<const Chunk *> &chunk_list, RenderStats *pOut_stats);
+
     void renderHitTest(RenderStats *pOut_stats);
 
     // Private data.

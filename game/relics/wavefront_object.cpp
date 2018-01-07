@@ -35,63 +35,41 @@ static void trim_in_place(std::string &s) {
 }
 
 
-// Less-than operator, since we'll be using Face Groups as a map key.
-// Compare the group name first, then the material second.
-// Note that ideally, these two names should always go hand-in-hand!
-// One group has one material. But, the code to go checking for that 
-// subtle and infrequent error would be madness, so I'm not going to try.
-bool operator<(const WavefrontFaceGroup &one, const WavefrontFaceGroup &two)
-{
-    const std::string &group1 = one.getGroupName();
-    const std::string &mat1   = one.getMaterialName();
-
-    const std::string &group2 = two.getGroupName();
-    const std::string &mat2   = two.getMaterialName();
-
-    if      (group1 < group2) { return true; }
-    else if (group1 > group2) { return false; }
-    else if (mat1   < mat2)   { return true; }
-    else if (mat1   > mat2)   { return false; }
-    else                      { return false; } // Must be equal.
-}
-
-
 // Parsing errors.
 static const std::string PARSING_ERROR = "ERROR!";
 
 
 // Our factory. We hide the constructor in case there's an issue with the file.
-std::unique_ptr<WavefrontObject> WavefrontObject::Create(const std::string &file_name)
+std::unique_ptr<WFObject> WFObject::Create(const std::string &resource_path)
 {
     // Make the file name absolute.
-    std::string full_name = RESOURCE_PATH;
-    full_name.append(file_name);
+    std::string full_path = RESOURCE_PATH;
+    full_path.append(resource_path);
 
     // Make sure the file exists.
-    boost::filesystem::path relative_path(full_name);
-    if (!boost::filesystem::is_regular_file(relative_path)) {
-        PrintDebug(fmt::format("OBJ file {0} does not exist!\n", full_name));
+    boost::filesystem::path our_path(full_path);
+    if (!boost::filesystem::is_regular_file(our_path)) {
+        PrintDebug(fmt::format("OBJ file {0} does not exist!\n", resource_path));
         assert(false);
         return nullptr;
     }
 
-    boost::filesystem::path absolute_path = boost::filesystem::canonical(relative_path);
-    std::string absolute_file_name = absolute_path.string();
+    std::string final_path = our_path.string();
 
     // Parse the file. If there are any issues, return null.
-    PrintDebug(fmt::format("Parsing OBJ file: {}\n", absolute_file_name));
+    PrintDebug(fmt::format("Parsing OBJ file: {}\n", final_path));
 
     // TODO: Why can't I use "std::make_unique" here? 
     // The compiler still looks for default ctor.
-    std::unique_ptr<WavefrontObject> result(new WavefrontObject(absolute_file_name));
+    std::unique_ptr<WFObject> result(new WFObject(final_path));
 
-    std::ifstream infile(absolute_file_name);
+    std::ifstream infile(final_path);
     int line_num = 1;
     std::string line;
     while (std::getline(infile, line)) {
         trim_in_place(line);
 
-        if (!result->parseObjLine(line_num, line)) {
+        if (!result->parseObjectLine(line_num, line)) {
             return nullptr;
         }
 
@@ -100,19 +78,19 @@ std::unique_ptr<WavefrontObject> WavefrontObject::Create(const std::string &file
 
     // Now that we're done parsing, set the object name by hand.
     // Alas, the .OBJ file itself is unreliable for having this.
-    result->m_object_name = absolute_path.filename().stem().string();
+    result->m_object_name = our_path.filename().stem().string();
 
     // Otherwise we're okay! Have a great day.
+    result->validate();
     return std::move(result);
 }
 
 
 // The only allowed constructor.
-WavefrontObject::WavefrontObject(const std::string &file_name) :
-    m_file_name(file_name),
+WFObject::WFObject(const std::string &path) :
+    m_original_path(path),
     m_object_name(""),
-    m_current_group_name(""),
-    m_current_material_name("")
+    m_current_group_name("")
 {
 }
 
@@ -120,27 +98,36 @@ WavefrontObject::WavefrontObject(const std::string &file_name) :
 // Now that we've loaded a Wavefront Object from a file, make a copy and 
 // move it around as needed. Don't carry along any data you don't need.
 // I'm nervous about C++ doing thing behind my back, so I'm doing the copying loops by hand.
-std::unique_ptr<WavefrontObject> WavefrontObject::Clone(const MyVec4 &move)
+std::unique_ptr<WFObject> WFObject::clone(const MyVec4 &move)
 {
-    std::unique_ptr<WavefrontObject> result(new WavefrontObject(m_file_name));
+    std::unique_ptr<WFObject> result(new WFObject(m_original_path));
 
     result->m_object_name = m_object_name;
 
-    for (const auto &iter : m_materials_map) {
-        result->m_materials_map.emplace(iter.first, iter.second);
+    for (const auto &iter : m_mat_map) {
+        result->m_mat_map.emplace(iter.first, iter.second);
     }
 
-    for (const auto &iter : m_face_groups_map) {
-        std::vector<Vertex_PNT> new_verts;
-        new_verts.reserve(iter.second.size());
+    for (const auto &iter : m_group_names) {
+        result->m_group_names.emplace_back(iter);
+    }
 
-        for (const auto &vert : iter.second) {
-            new_verts.emplace_back(vert);
+    for (const auto &iter : m_group_map) {
+        const std::string &group_name = iter.first;
+        const std::shared_ptr<WFMaterial> &material = iter.second->getMaterial();
+        const std::vector<Vertex_PNT>    &vert_list = iter.second->getVertList();
+
+        std::unique_ptr<WFGroup> new_group = std::make_unique<WFGroup>(group_name);
+        new_group->setMaterial(material);
+
+        for (const auto &vit : vert_list) {
+            new_group->addVertex(vit);
         }
 
-        result->m_face_groups_map.emplace(iter.first, std::move(new_verts));
+        result->m_group_map[group_name] = std::move(new_group);
     }
 
+    result->validate();
     return std::move(result);
 }
 
@@ -148,7 +135,7 @@ std::unique_ptr<WavefrontObject> WavefrontObject::Clone(const MyVec4 &move)
 // We're rolling our own string space tokenizer, since Boost regex is ridiculously slow.
 // We deliberately don't save empty strings, and we're careful about trailing spaces too.
 // It appears to work, but feel free to test the living crap out of this later.
-std::vector<std::string> WavefrontObject::splitStrBySpaces(const std::string &val)
+std::vector<std::string> WFObject::splitStrBySpaces(const std::string &val)
 {
     std::vector<std::string> results;
     results.reserve(3);
@@ -173,7 +160,7 @@ std::vector<std::string> WavefrontObject::splitStrBySpaces(const std::string &va
 
 // Same thing for splitting a string by slashes, which we need to parse "face" entries.
 // But, empty entries between slashes are fine, and we'll assume our strings are already trimmed.
-std::vector<std::string> WavefrontObject::splitStrBySlashes(const std::string &val)
+std::vector<std::string> WFObject::splitStrBySlashes(const std::string &val)
 {
     std::vector<std::string> results;
     results.reserve(3);
@@ -199,7 +186,7 @@ std::vector<std::string> WavefrontObject::splitStrBySlashes(const std::string &v
 // Parse an individual line in the OBJ file. For now, we're going to
 // assume our file is valid, and not go overboard on the error messages.
 // But, return false if we run into anything we genuinely can't make sense of.
-bool WavefrontObject::parseObjLine(int line_num, const std::string &line)
+bool WFObject::parseObjectLine(int line_num, const std::string &line)
 {
     // Skip blank lines and comments.
     if ((line == "") || (line.at(0) == '#')) {
@@ -261,24 +248,25 @@ bool WavefrontObject::parseObjLine(int line_num, const std::string &line)
     // Faces.
     else if (keyword == "f") {
         // Look up which face group to add to. Note that total blanks is okay.
-        WavefrontFaceGroup key(m_current_group_name, m_current_material_name);
+        std::string name = m_current_group_name;
 
-        // Create the underlying vector if it doesn't exist already.
-        if (m_face_groups_map.find(key) == m_face_groups_map.end()) {
-            m_face_groups_map.emplace(key, std::vector<Vertex_PNT>());
+        if (m_group_map.find(name) == m_group_map.end()) {
+            createFaceGroup(line_num, name);
         }
 
         // Add the faces.
-        auto &face_group = m_face_groups_map.at(key);
-        face_group.emplace_back(parseFaceToken(tokens[1]));
-        face_group.emplace_back(parseFaceToken(tokens[2]));
-        face_group.emplace_back(parseFaceToken(tokens[3]));
+        auto &face_group = m_group_map.at(name);
+        face_group->addVertex(parseFaceToken(tokens[1]));
+        face_group->addVertex(parseFaceToken(tokens[2]));
+        face_group->addVertex(parseFaceToken(tokens[3]));
         return true;
     }
 
     // Group name.
+    // Create a new face group.
     else if (keyword == "g") { 
         m_current_group_name = tokens[1];
+        createFaceGroup(line_num, tokens[1]);
         return true;
     }
 
@@ -289,10 +277,23 @@ bool WavefrontObject::parseObjLine(int line_num, const std::string &line)
     }
 
     // Material name.
+    // Use this for the current face group. Note that the "current"
+    // face group might be the default blank, so create it if needed.
     else if (keyword == "usemtl") {
-        const std::string &name = tokens[1];
-        assert(m_materials_map.find(name) != m_materials_map.end());
-        m_current_material_name = name;
+        const auto &iter = m_mat_map.find(tokens[1]);
+        if (iter == m_mat_map.end()) {
+            PrintDebug(fmt::format(
+                "Line {0}: Referenced material {1} is never defined!\n",
+                line_num, tokens[1]));
+        }
+
+        std::shared_ptr<WFMaterial> mat = iter->second;
+
+        if (m_group_map.find(m_current_group_name) == m_group_map.end()) {
+            createFaceGroup(line_num, m_current_group_name);
+        }
+
+        m_group_map.at(m_current_group_name)->setMaterial(mat);
         return true;
     }
 
@@ -339,11 +340,27 @@ bool WavefrontObject::parseObjLine(int line_num, const std::string &line)
 }
 
 
+// Create a new face group.
+void WFObject::createFaceGroup(int line_num, const std::string &name)
+{
+    const auto &iter = m_group_map.find(name);
+    if (iter != m_group_map.end()) {
+        PrintDebug(fmt::format(
+            "Line {0}: Tried to add group '{1}' twice. Ignoring.\n",
+            line_num, name));
+        return;
+    }
+
+    m_group_names.emplace_back(name);
+    m_group_map.emplace(name, std::make_unique<WFGroup>(name));
+}
+
+
 // Parse a token from a "face" line. We break this out  since the logic is 
 // complicated. Account for blank values, and the "offset by 1" business.
 // Side note: It's annoying that std::vector returns an "unsigned int" for size.
 // If your vector ever really does grow beyond 2GB entries, you have bigger problems.
-Vertex_PNT WavefrontObject::parseFaceToken(const std::string &token)
+Vertex_PNT WFObject::parseFaceToken(const std::string &token)
 {
     std::vector<std::string> parts = splitStrBySlashes(token);
 
@@ -401,19 +418,19 @@ Vertex_PNT WavefrontObject::parseFaceToken(const std::string &token)
 
 
 // Parse the material file.
-bool WavefrontObject::parseMtllibFile(const std::string &MTL_file_name)
+bool WFObject::parseMtllibFile(const std::string &path)
 {
-    std::string real_file_name = locateRelativeFile(MTL_file_name);
-    if (real_file_name == "") {
+    std::string real_path = locateRelativeFile(path);
+    if (real_path == "") {
         return false;
     }
 
     // We build material objects as we go.
-    std::unique_ptr<WavefrontMaterial> material = nullptr;
+    std::unique_ptr<WFMaterial> material = nullptr;
 
     // Parse the file line by line.
-    PrintDebug(fmt::format("Parsing MTL file: {}\n", real_file_name));
-    std::ifstream infile(real_file_name);
+    PrintDebug(fmt::format("Parsing MTL file: {}\n", real_path));
+    std::ifstream infile(real_path);
 
     int line_num = 1;
     std::string line;
@@ -430,10 +447,10 @@ bool WavefrontObject::parseMtllibFile(const std::string &MTL_file_name)
 
             if (material != nullptr) {
                 const std::string key = material->getMaterialName();
-                m_materials_map.emplace(key, std::move(material));
+                m_mat_map.emplace(key, std::move(material));
             }
 
-            material = std::make_unique<WavefrontMaterial>(new_name);
+            material = std::make_unique<WFMaterial>(new_name);
         }
 
         line_num++;
@@ -442,7 +459,7 @@ bool WavefrontObject::parseMtllibFile(const std::string &MTL_file_name)
     // All done. Save any final material.
     if (material != nullptr) {
         const std::string key = material->getMaterialName();
-        m_materials_map.emplace(key, std::move(material));
+        m_mat_map.emplace(key, std::move(material));
     }
 
     return true;
@@ -453,7 +470,7 @@ bool WavefrontObject::parseMtllibFile(const std::string &MTL_file_name)
 // Returning a string signals the beginning of a new material.
 // Returning a blank means we're still in the current material.
 // Ugly, but returning the word "ERROR" means there's an issue with the MTL file.
-std::string WavefrontObject::parseMtllibLine(int line_num, const std::string &line, WavefrontMaterial *pOut_material)
+std::string WFObject::parseMtllibLine(int line_num, const std::string &line, WFMaterial *pOut_material)
 {
     // Skip blanks
     if ((line == "") || (line.at(0) == '#')) {
@@ -558,13 +575,13 @@ std::string WavefrontObject::parseMtllibLine(int line_num, const std::string &li
 
 // .OBJ files refer to other files relatively.
 // Find them and make sure they exist. If they don't, return a blank.
-std::string WavefrontObject::locateRelativeFile(const std::string &fname)
+std::string WFObject::locateRelativeFile(const std::string &rel_path)
 {
-    boost::filesystem::path starter = boost::filesystem::canonical(m_file_name);
-    boost::filesystem::path wanted  = starter.parent_path().append(fname);
+    boost::filesystem::path starter = boost::filesystem::canonical(m_original_path);
+    boost::filesystem::path wanted  = starter.parent_path().append(rel_path);
 
     if (!boost::filesystem::is_regular_file(wanted)) {
-        PrintDebug(fmt::format("Referenced file {0} does not exist!\n", fname));
+        PrintDebug(fmt::format("Referenced file {0} does not exist!\n", rel_path));
         return "";
     }
 
@@ -573,7 +590,7 @@ std::string WavefrontObject::locateRelativeFile(const std::string &fname)
 
 
 // Return a description string.
-std::string WavefrontObject::toDescr() const
+std::string WFObject::toDescr() const
 {
     // Figure out our object dimensions.
     GLfloat min_x =  FLT_MAX;
@@ -602,9 +619,9 @@ std::string WavefrontObject::toDescr() const
     GLfloat height = (max_y - min_y) / BLOCK_SCALE;
     GLfloat depth  = (max_z - min_z) / BLOCK_SCALE;
 
-    // Compose our description.
+    // List the Object file details.
     std::string result = fmt::format("OBJ File: '{}'\n", m_object_name);
-    result += fmt::format("    File path = {}\n", m_file_name);
+    result += fmt::format("    File path = {}\n", m_original_path);
 
     result += fmt::format(
         "    Dimensions = {0:.3f}m wide, {1:.3f}m deep, {2:.3f}m high\n",
@@ -614,20 +631,41 @@ std::string WavefrontObject::toDescr() const
     result += fmt::format("    Normal count = {}\n",    m_normals.size());
     result += fmt::format("    Tex Coord count = {}\n", m_tex_coords.size());
 
-    if (m_face_groups_map.size() > 0) {
+    // List the materials.
+    if (m_mat_map.size() > 0) {
+        result += "    Materials:\n";
+        for (const auto &iter : m_mat_map) {
+            result += fmt::format(
+                "        Name = '{0}', Texture = '{1}'\n",
+                iter.first, iter.second->getTexturePath());
+        }
+    }
+    else {
+        result += "    ERROR! No materials.\n";
+    }
+
+    // List the face groups.
+    if (m_group_map.size() > 0) {
         int total_faces = 0;
         result += "    Face Groups:\n";
-        for (const auto &iter : m_face_groups_map) {
+        for (const auto &iter : m_group_map) {
+            std::string group_name = iter.first;
+            assert(iter.second->getMaterial() != nullptr);
+            const auto &mat_name   = iter.second->getMaterial()->getMaterialName();
+            const auto &vert_list  = iter.second->getVertList();
+
+            if (group_name == "") {
+                group_name = "[BLANK]";
+            }
+
             result += fmt::format(
-                "        '{0}'-'{1}' = {2} face vertices\n",
-                iter.first.getGroupName(),
-                iter.first.getMaterialName(),
-                iter.second.size());
-            total_faces += iter.second.size();
+                "        '{0}' = Using '{1}', with {2} face vertices\n",
+                group_name, mat_name, vert_list.size());
+            total_faces += vert_list.size();
         }
 
         result += fmt::format(
-            "    Total Face Vertex count = {0} (or, {1} triangles)\n", 
+            "    Total vertex count = {0} ({1} triangles)\n", 
             total_faces, total_faces / 3);
         if ((total_faces % 3) != 0) {
             result += "    ERROR! Number of Face Vertices is NOT divisible by 3!\n";
@@ -637,17 +675,61 @@ std::string WavefrontObject::toDescr() const
         result += "    ERROR! No faces! WTF?!\n";
     }
 
-    if (m_materials_map.size() > 0) {
-        result += "    Materials:\n";
-        for (const auto &iter : m_materials_map) {
-            result += fmt::format(
-                "        Name = '{0}', Texture = '{1}'\n", 
-                iter.first, iter.second->getTextureFileName());
-        }
-    }
-    else {
-        result += "    ERROR! No materials.\n";
+    return result;
+}
+
+
+// Validate our object contents.
+bool WFObject::validate() const
+{
+    bool success = true;
+
+    // Check the object name.
+    if (m_object_name == "") {
+        PrintDebug("ERROR: Object name wasn't set!\n");
+        success = false;
     }
 
-    return result;
+    // Check each material.
+    if (m_mat_map.size() == 0) {
+        PrintDebug("ERROR: No materials!\n");
+        success = false;
+    }
+
+    for (const auto &iter : m_mat_map) {
+        const auto &mat = iter.second;
+        if ((mat->getMaterialName() == "") ||
+            (mat->getTexturePath() == "") ||
+            (mat->getTextureImage() == nullptr)) {
+            PrintDebug("ERROR: Bad material!\n");
+            success = false;
+        }
+    }
+
+    // Face group name.
+    if (m_group_names.size() == 0) {
+        PrintDebug("ERROR: No group names!\n");
+        success = false;
+    }
+
+    // Face group map.
+    for (const auto &iter : m_group_map) {
+        const auto &group = iter.second;
+        if (group->getMaterial() == nullptr) {
+            PrintDebug("ERROR: Blank material!\n");
+            success = false;
+        }
+
+        if (group->getVertList().size() == 0) {
+            PrintDebug("ERROR: No vertices!\n");
+            success = false;
+        }
+    }
+
+    // All done.
+    if (!success) {
+        assert(false);
+    }
+
+    return success;
 }

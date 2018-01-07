@@ -52,7 +52,7 @@ public:
 
     void deleteBlockInFrontOfUs();
 
-    std::unique_ptr<WavefrontObject> cloneWavefrontObject(
+    std::unique_ptr<WFObject> cloneWFObject(
         const std::string &name, const MyVec4 &translate);
 
 private:
@@ -64,7 +64,7 @@ private:
     static const int WORKER_PACE_MSECS = 2000;
 
     MyVec4 getCameraStartPos() const;
-    bool loadWavefrontObjects();
+    bool loadWFObjects();
 
     void updateWorld();
     void clampRotations();
@@ -85,7 +85,7 @@ private:
 
     std::map<ChunkOrigin, std::unique_ptr<Chunk>> m_chunk_map;
 
-    std::map<std::string, std::unique_ptr<WavefrontObject>> m_wavefront_map;
+    std::map<std::string, std::unique_ptr<WFObject>> m_wfobj_map;
 
     bool m_hit_test_success;
     ChunkHitTestDetail m_hit_test_detail;

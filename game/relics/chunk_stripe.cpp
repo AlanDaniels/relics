@@ -32,7 +32,7 @@ int SurfaceTotals::get(SurfaceType surf) const
 {
     int index = static_cast<int>(surf);
     assert(index < SURFACE_TYPE_COUNT);
-    return m_counts[index];
+    return m_counts.at(index);
 }
 
 
@@ -41,7 +41,7 @@ int SurfaceTotals::getGrandTotal() const
 {
     int result = 0;
     for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
-        result += m_counts[i];
+        result += m_counts.at(i);
     }
 
     return result;
@@ -52,7 +52,7 @@ int SurfaceTotals::getGrandTotal() const
 BlockType ChunkStripe::getBlockType(int z) const
 {
     assert((z >= 0) && (z < CHUNK_WIDTH));
-    return m_blocks[z].getBlockType();
+    return m_blocks.at(z).getBlockType();
 }
 
 
@@ -60,7 +60,7 @@ BlockType ChunkStripe::getBlockType(int z) const
 void ChunkStripe::setBlockType(int z, BlockType block_type)
 {
     assert((z >= 0) && (z < CHUNK_WIDTH));
-    m_blocks[z].setBlockType(block_type);
+    m_blocks.at(z).setBlockType(block_type);
 }
 
 
@@ -101,7 +101,7 @@ void ChunkStripe::addToSurfaceLists(Chunk &owner, int local_x, int local_y)
 bool ChunkStripe::recalcExposureForBlock(
     const Chunk &owner, const LocalGrid local_coord, SurfaceTotals *pOut)
 {
-    Block &current = m_blocks[local_coord.z()];
+    Block &current = m_blocks.at(local_coord.z());
 
     current.clearSurfaces();
 
@@ -228,7 +228,7 @@ bool ChunkStripe::recalcExposureForBlock(
 // Add the quads for a block.
 void ChunkStripe::addVertsForBlock(Chunk &owner, const LocalGrid &local_coord)
 {
-    const Block &current = m_blocks[local_coord.z()];
+    const Block &current = m_blocks.at(local_coord.z());
 
     // If this block is empty, it doesn't generate any faces.
     if (IsBlockTypeEmpty(current.getBlockType())) {

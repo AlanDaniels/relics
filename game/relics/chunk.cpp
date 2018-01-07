@@ -34,7 +34,7 @@ Chunk::~Chunk()
 const VertList_PNT &Chunk::getSurfaceList_RO(SurfaceType surf) const 
 {
     int index = static_cast<int>(surf);
-    return *m_vert_lists[index];
+    return *m_vert_lists.at(index);
 }
 
 
@@ -42,7 +42,7 @@ const VertList_PNT &Chunk::getSurfaceList_RO(SurfaceType surf) const
 VertList_PNT &Chunk::getSurfaceListForWriting(SurfaceType surf)
 {
     int index = static_cast<int>(surf);
-    return *m_vert_lists[index];
+    return *m_vert_lists.at(index);
 }
 
 
@@ -77,7 +77,8 @@ bool Chunk::IsGlobalGridWithin(const GlobalGrid &coord) const
 // Get the type of a block.
 BlockType Chunk::getBlockType(const LocalGrid &coord) const
 {
-    const ChunkStripe &stripe = m_stripes[offset(coord.x(), coord.y())];
+    int index = offset(coord.x(), coord.y());
+    const ChunkStripe &stripe = m_stripes.at(index);
     BlockType result = stripe.getBlockType(coord.z());
     return result;
 }
@@ -86,7 +87,8 @@ BlockType Chunk::getBlockType(const LocalGrid &coord) const
 // Set the type of a block.
 void Chunk::setBlockType(const LocalGrid &coord, BlockType block_type)
 {
-    ChunkStripe &stripe = m_stripes[offset(coord.x(), coord.y())];
+    int index = offset(coord.x(), coord.y());
+    ChunkStripe &stripe = m_stripes.at(index);
     stripe.setBlockType(coord.z(), block_type);
 }
 
@@ -95,7 +97,7 @@ void Chunk::setBlockType(const LocalGrid &coord, BlockType block_type)
 int Chunk::getCountForSurface(SurfaceType surf) const
 {
     int index  = static_cast<int>(surf);
-    int result = m_vert_lists[index]->getByteCount();
+    int result = m_vert_lists.at(index)->getByteCount();
     return result;
 }
 
@@ -108,25 +110,27 @@ void Chunk::recalcAllExposures()
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            m_stripes[offset(x, y)].recalcAllExposures(*this, x, y, &totals);
+            int index = offset(x, y);
+            m_stripes.at(index).recalcAllExposures(*this, x, y, &totals);
         }
     }
 
     // Clear out the surface lists.
     for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
-        m_vert_lists[i]->reset();
+        m_vert_lists.at(i)->reset();
     }
 
     // Populate those surface lists.
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            m_stripes[offset(x, y)].addToSurfaceLists(*this, x, y);
+            int index = offset(x, y);
+            m_stripes.at(index).addToSurfaceLists(*this, x, y);
         }
     }
 
     // Update the surface lists.
     for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
-        m_vert_lists[i]->update();
+        m_vert_lists.at(i)->update();
     }
 
     m_up_to_date = true;

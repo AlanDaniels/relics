@@ -97,7 +97,7 @@ bool DrawState_Base::addUniformFloat(const std::string &name)
         return false;
     }
 
-    m_uniform_float_map[name] = 0;
+    m_uniform_float_map.emplace(name, 0);
     return true;
 }
 
@@ -116,7 +116,7 @@ bool DrawState_Base::addUniformVec4(const std::string &name)
         return false;
     }
 
-    m_uniform_vec4_map[name] = 0;
+    m_uniform_vec4_map.emplace(name, 0);
     return true;
 }
 
@@ -135,7 +135,7 @@ bool DrawState_Base::addUniformMatrix4by4(const std::string &name)
         return false;
     }
 
-    m_uniform_matrix4by4_map[name] = 0;
+    m_uniform_matrix4by4_map.emplace(name, 0);
     return true;
 }
 
@@ -182,6 +182,7 @@ bool DrawState_Base::create(
         const std::string &name = iter.first;
         GLint location = glGetUniformLocation(m_program_ID, name.c_str());
         assert(location != -1);
+        // TODO: Does this work?
         m_uniform_float_map[name] = location;
     }
 

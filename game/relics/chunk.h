@@ -1,10 +1,12 @@
 #pragma once
 
 #include "stdafx.h"
+
 #include "block.h"
 #include "chunk_stripe.h"
 #include "format.h"
 #include "draw_state_pnt.h"
+#include "wavefront_object.h"
 
 
 class Chunk;
@@ -119,6 +121,15 @@ public:
     const Chunk *getNeighborEast()  const;
     const Chunk *getNeighborWest()  const;
 
+    void addWavefrontObject(std::unique_ptr<WavefrontObject> obj) {
+        m_wavefront_objects.emplace_back(std::move(obj));
+    }
+
+    // These definitions are getting ridiculous.
+    const std::vector<std::unique_ptr<WavefrontObject>> &getWavefrontObjects() const {
+        return m_wavefront_objects;
+    }
+
     std::string toDescription() const;
 
 private:
@@ -138,5 +149,8 @@ private:
     bool m_up_to_date;
 
     std::array<std::unique_ptr<VertList_PNT>, SURFACE_TYPE_COUNT> m_vert_lists;
+    
     std::array<ChunkStripe, CHUNK_WIDTH * CHUNK_HEIGHT> m_stripes;
+
+    std::vector<std::unique_ptr<WavefrontObject>> m_wavefront_objects;
 };

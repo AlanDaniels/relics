@@ -19,14 +19,17 @@ static const std::string STONE_TOP("stone_top");
 // This just deals with the block data. The landscape is are dealt with later.
 std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
 {
+    // Our result.
+    std::unique_ptr<Chunk> chunk = std::make_unique<Chunk>(world, origin);
+
     // A simple test.
     if (origin == ChunkOrigin(0, 0)) {
         MyVec4 move(0, 0, 0);
 
-        std::unique_ptr<WavefrontObject> testing =
+        std::unique_ptr<WavefrontObject> capsule =
             world.cloneWavefrontObject("capsule", move);
 
-        PrintDebug(testing->toDescr());
+        chunk->addWavefrontObject(std::move(capsule));
     }
 
     sqlite3 *db = world.getDatabase();
@@ -80,8 +83,6 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
     }
 
     // Now, build the chunk.
-    std::unique_ptr<Chunk> chunk = std::make_unique<Chunk>(world, origin);
-
     int dirt_top_count = 0;
 
     for (const auto &iter : dirt_tops) {

@@ -162,6 +162,14 @@ bool Config::loadFromFile()
         }
         lua_pop(L, 1);
 
+        // Read the "wavefront" settings.
+        lua_getfield(L, -1, "wavefront");
+        if (lua_istable(L, -1)) {
+            render.wavefront.vert_shader = getStringField(L, "vert_shader");
+            render.wavefront.frag_shader = getStringField(L, "frag_shader");
+        }
+        lua_pop(L, 1);
+
         // Read the "landscape" settings.
         lua_getfield(L, -1, "landscape");
         if (lua_istable(L, -1)) {
@@ -177,17 +185,17 @@ bool Config::loadFromFile()
         lua_pop(L, 1);
 
         // Read the "sky" settings.
-        lua_getfield(L, -1, "sky");
+        lua_getfield(L, -1, "skybox");
         if (lua_istable(L, -1)) {
-            render.sky.vert_shader = getStringField(L, "vert_shader");
-            render.sky.frag_shader = getStringField(L, "frag_shader");
+            render.skybox.vert_shader = getStringField(L, "vert_shader");
+            render.skybox.frag_shader = getStringField(L, "frag_shader");
 
-            render.sky.north_texture  = getStringField(L, "north_texture");
-            render.sky.south_texture  = getStringField(L, "south_texture");
-            render.sky.east_texture   = getStringField(L, "east_texture");
-            render.sky.west_texture   = getStringField(L, "west_texture");
-            render.sky.top_texture    = getStringField(L, "top_texture");
-            render.sky.bottom_texture = getStringField(L, "bottom_texture");
+            render.skybox.north_texture  = getStringField(L, "north_texture");
+            render.skybox.south_texture  = getStringField(L, "south_texture");
+            render.skybox.east_texture   = getStringField(L, "east_texture");
+            render.skybox.west_texture   = getStringField(L, "west_texture");
+            render.skybox.top_texture    = getStringField(L, "top_texture");
+            render.skybox.bottom_texture = getStringField(L, "bottom_texture");
         }
         lua_pop(L, 1);
 
@@ -196,6 +204,7 @@ bool Config::loadFromFile()
         if (lua_istable(L, -1)) {
             render.hit_test.vert_shader = getStringField(L, "vert_shader");
             render.hit_test.frag_shader = getStringField(L, "frag_shader");
+            render.hit_test.texture     = getStringField(L, "texture");
         }
         lua_pop(L, 1);
     }
@@ -319,6 +328,11 @@ bool Config::validate() const
     // Fonts, textures and shaders.
     if (!validateResource("render.hud_font", render.hud_font)) { success = false; }
 
+    // Wavefront resources.
+    if (!validateResource("render.wavefront.vert_shader", render.wavefront.vert_shader)) { success = false; }
+    if (!validateResource("render.wavefront.frag_shader", render.wavefront.frag_shader)) { success = false; }
+
+    // Landscape resoures.
     if (!validateResource("render.landscape.vert_shader", render.landscape.vert_shader)) { success = false; }
     if (!validateResource("render.landscape.frag_shader", render.landscape.frag_shader)) { success = false; }
 
@@ -328,19 +342,21 @@ bool Config::validate() const
     if (!validateResource("render.landscape.coal_texture",    render.landscape.coal_texture)) { success = false; }
     if (!validateResource("render.landscape.bedrock_texture", render.landscape.bedrock_texture)) { success = false; }
 
-    // Sky resources.
-    if (!validateResource("render.sky.vert_shader", render.sky.vert_shader)) { success = false; }
-    if (!validateResource("render.sky.frag_shader", render.sky.frag_shader)) { success = false; }
+    // Skybox resources.
+    if (!validateResource("render.sky.vert_shader", render.skybox.vert_shader)) { success = false; }
+    if (!validateResource("render.sky.frag_shader", render.skybox.frag_shader)) { success = false; }
 
-    if (!validateResource("render.sky.north_texture",  render.sky.north_texture))  { success = false; }
-    if (!validateResource("render.sky.south_texture",  render.sky.south_texture))  { success = false; }
-    if (!validateResource("render.sky.east_texture",   render.sky.east_texture))   { success = false; }
-    if (!validateResource("render.sky.west_texture",   render.sky.west_texture))   { success = false; }
-    if (!validateResource("render.sky.top_texture",    render.sky.top_texture))    { success = false; }
-    if (!validateResource("render.sky.bottom_texture", render.sky.bottom_texture)) { success = false; }
+    if (!validateResource("render.sky.north_texture",  render.skybox.north_texture))  { success = false; }
+    if (!validateResource("render.sky.south_texture",  render.skybox.south_texture))  { success = false; }
+    if (!validateResource("render.sky.east_texture",   render.skybox.east_texture))   { success = false; }
+    if (!validateResource("render.sky.west_texture",   render.skybox.west_texture))   { success = false; }
+    if (!validateResource("render.sky.top_texture",    render.skybox.top_texture))    { success = false; }
+    if (!validateResource("render.sky.bottom_texture", render.skybox.bottom_texture)) { success = false; }
 
+    // Hit Test resources.
     if (!validateResource("render.hit_test.vert_shader", render.hit_test.vert_shader)) { success = false; }
     if (!validateResource("render.hit_test.frag_shader", render.hit_test.frag_shader)) { success = false; }
+    if (!validateResource("render.hit_test.texture",     render.hit_test.texture))     { success = false; }
 
     if (!success) {
         PrintDebug(fmt::format("File '{}' has errors. Fix these and try again.\n", config_fname));

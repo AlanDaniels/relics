@@ -84,6 +84,17 @@ struct ConfigWindow
 };
 
 
+struct ConfigWavefront
+{
+    ConfigWavefront() {}
+
+    ~ConfigWavefront() {}
+
+    std::string vert_shader;
+    std::string frag_shader;
+};
+
+
 struct ConfigLandscape
 {
     ConfigLandscape() {}
@@ -101,11 +112,11 @@ struct ConfigLandscape
 };
 
 
-struct ConfigSky
+struct ConfigSkybox
 {
-    ConfigSky() {}
+    ConfigSkybox() {}
 
-    ~ConfigSky() {}
+    ~ConfigSkybox() {}
 
     std::string vert_shader;
     std::string frag_shader;
@@ -127,6 +138,7 @@ struct ConfigHitTest
 
     std::string vert_shader;
     std::string frag_shader;
+    std::string texture;
 };
 
 
@@ -150,8 +162,9 @@ struct ConfigRender
     GLfloat far_plane_meters;
     GLfloat fade_distance_meters;
 
+    ConfigWavefront wavefront;
     ConfigLandscape landscape;
-    ConfigSky       sky;
+    ConfigSkybox    skybox;
     ConfigHitTest   hit_test;
 
     GLfloat getNearPlaneCm()    const { return near_plane_meters    * 100.0f; }

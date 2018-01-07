@@ -18,8 +18,9 @@ void EventHandler::centerMouse()
 }
 
 
-// Handle an event:
-void EventHandler::onEvent(sf::Event event)
+// Handle an event.
+// Return true if the game should keep running.
+bool EventHandler::onEvent(sf::Event event)
 {
     // If the game is paused, check for a click on the focused window, to un-pause again.
     if (m_game_world.isPaused()) {
@@ -29,7 +30,7 @@ void EventHandler::onEvent(sf::Event event)
             centerMouse();
             m_game_world.setPaused(false);
             m_window.setMouseCursorVisible(false);
-            return;
+            return true;
         }
     }
 
@@ -49,8 +50,13 @@ void EventHandler::onEvent(sf::Event event)
     }
 
     else if (event.type == sf::Event::KeyPressed) {
+        // For now, use "F4" to exit. Bye!
+        if (event.key.code == sf::Keyboard::F4) {
+            return false;
+        }
+
         // Use space to trigger our magic global breakpoint.
-        if (event.key.code == sf::Keyboard::Space) {
+        else if (event.key.code == sf::Keyboard::Space) {
             MAGIC_BREAKPOINT = true;
         }
 
@@ -93,6 +99,9 @@ void EventHandler::onEvent(sf::Event event)
              (event.mouseButton.button == sf::Mouse::Left)) {
         m_game_world.deleteBlockInFrontOfUs();
     }
+
+    // Keep going.
+    return true;
 }
 
 

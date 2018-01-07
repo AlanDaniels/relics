@@ -64,7 +64,7 @@ public:
         m_game_world(world),
         m_renderer(renderer) {}
 
-    void onEvent(sf::Event event);
+    bool onEvent(sf::Event event);
     void onGameTick(int elapsed);
 
 private:

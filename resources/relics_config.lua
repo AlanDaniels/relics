@@ -51,6 +51,11 @@ render = {
     far_plane      = 1000.0,
     fade_distance  = 5.0,
 
+    wavefront = {
+        vert_shader = 'shaders/wavefront_PNT.vert',
+        frag_shader = 'shaders/wavefront_PNT.frag'
+    },
+
     landscape = {
         vert_shader = 'shaders/landscape_PNT.vert',
         frag_shader = 'shaders/landscape_PNT.frag',
@@ -62,7 +67,7 @@ render = {
         bedrock_texture = 'textures/bedrock.png'
     },
 
-    sky = {
+    skybox = {
         vert_shader = 'shaders/skybox_P.vert',
         frag_shader = 'shaders/skybox_P.frag',
 
@@ -76,7 +81,9 @@ render = {
 
     hit_test = {
         vert_shader = 'shaders/hit_test_PT.vert',
-        frag_shader = 'shaders/hit_test_PT.frag'
+        frag_shader = 'shaders/hit_test_PT.frag',
+
+        texture = 'textures/hit_test.png'
     }
 }
 

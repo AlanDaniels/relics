@@ -70,14 +70,13 @@ private:
     std::unique_ptr<DrawTexture> m_coal_tex;
     std::unique_ptr<DrawTexture> m_bedrock_tex;
 
-    std::unique_ptr<DrawTexture> m_hit_test_tex;
-
+    std::unique_ptr<DrawTexture>        m_hit_test_tex;
     std::unique_ptr<DrawCubemapTexture> m_skybox_tex;
 
-    std::unique_ptr<DrawState_P> m_skybox_DS;
-
-    std::unique_ptr<DrawState_PNT> m_landscape_DS;
-    std::unique_ptr<DrawState_PT>  m_hit_test_DS;
+    std::unique_ptr<DrawState_PNT> m_wavefront_draw_state;
+    std::unique_ptr<DrawState_PNT> m_landscape_draw_state;
+    std::unique_ptr<DrawState_P>   m_skybox_draw_state;
+    std::unique_ptr<DrawState_PT>  m_hit_test_draw_state;
 
     VertList_P m_skybox_vert_list;
 };

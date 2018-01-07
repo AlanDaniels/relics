@@ -1,5 +1,6 @@
 ﻿
 #include "stdafx.h"
+
 #include "relics.h"
 #include "common_util.h"
 
@@ -288,14 +289,22 @@ int WINAPI wWinMain(
     while (window.isOpen()) {
 
         // Poll for events.
+        bool exit_game = false;
+
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
-                window.close();
+                exit_game = true;
             }
-            else {
-                event_handler.onEvent(event);
+            else if (!event_handler.onEvent(event)) {
+                exit_game = true;
             }
+       }
+
+        // If we want to exit the game, goodbye.
+        if (exit_game) {
+            window.close();
+            break;
         }
 
         // When enough time has passed, update the game state.

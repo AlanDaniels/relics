@@ -94,6 +94,7 @@ sqlite3 *OpenDatabase()
 }
 
 
+#if 0
 // A main method for testing our Wavefront File parser.
 int WINAPI wWinMain(
     _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
@@ -120,7 +121,6 @@ int WINAPI wWinMain(
 }
 
 
-#if 0
 // A minimalist version to look for memory leaks in the initial setup.
 int WINAPI wWinMain(
     _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
@@ -152,6 +152,7 @@ int WINAPI wWinMain(
     _CrtDumpMemoryLeaks();
     return 0;
 }
+#endif
 
 
 // And away we go. Forgive the Microsoft SAL annotations here. We'll make sure this is portable later.
@@ -349,4 +350,3 @@ int WINAPI wWinMain(
 
     return 0;
 }
-#endif

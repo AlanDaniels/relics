@@ -81,7 +81,7 @@ std::unique_ptr<WFObject> WFObject::Create(const std::string &resource_path)
     result->m_object_name = our_path.filename().stem().string();
 
     // Otherwise we're okay! Have a great day.
-    result->validate();
+    result->conclude();
     return std::move(result);
 }
 
@@ -113,21 +113,21 @@ std::unique_ptr<WFObject> WFObject::clone(const MyVec4 &move)
     }
 
     for (const auto &iter : m_group_map) {
-        const std::string &group_name = iter.first;
-        const std::shared_ptr<WFMaterial> &material = iter.second->getMaterial();
-        const std::vector<Vertex_PNT>    &vert_list = iter.second->getVertList();
+        const auto &group_name = iter.first;
+        const auto &material   = iter.second->getMaterial();
+        const auto &vert_list  = iter.second->getVertList();
 
         std::unique_ptr<WFGroup> new_group = std::make_unique<WFGroup>(group_name);
         new_group->setMaterial(material);
 
-        for (const auto &vit : vert_list) {
-            new_group->addVertex(vit);
+        for (const auto &vit : vert_list.getVerts()) {
+            new_group->add(vit);
         }
 
         result->m_group_map[group_name] = std::move(new_group);
     }
 
-    result->validate();
+    result->conclude();
     return std::move(result);
 }
 
@@ -256,9 +256,9 @@ bool WFObject::parseObjectLine(int line_num, const std::string &line)
 
         // Add the faces.
         auto &face_group = m_group_map.at(name);
-        face_group->addVertex(parseFaceToken(tokens[1]));
-        face_group->addVertex(parseFaceToken(tokens[2]));
-        face_group->addVertex(parseFaceToken(tokens[3]));
+        face_group->add(parseFaceToken(tokens[1]));
+        face_group->add(parseFaceToken(tokens[2]));
+        face_group->add(parseFaceToken(tokens[3]));
         return true;
     }
 
@@ -510,23 +510,16 @@ std::string WFObject::parseMtllibLine(int line_num, const std::string &line, WFM
     else if ((keyword == "map_Ka") || 
              (keyword == "map_Kd")) {
         if (pOut_material != nullptr) {
-            std::string image_file_name = locateRelativeFile(tokens[1]);
-            if (image_file_name == "") {
+            std::string image_path = locateRelativeFile(tokens[1]);
+            if (image_path == "") {
                 return PARSING_ERROR;
             }
 
-            if (pOut_material->getTextureImage() == nullptr) {
-                std::unique_ptr<sf::Image> image = std::make_unique<sf::Image>();
-                if (!image->loadFromFile(image_file_name)) {
-                    PrintDebug(fmt::format(
-                        "Line {0}: Could not load image {1}.\n",
-                        line_num, image_file_name));
-                    return PARSING_ERROR;
-                }
+            std::unique_ptr<DrawTexture> draw_texture = 
+                std::make_unique<DrawTexture>(image_path);
 
-                pOut_material->setTexture(image_file_name, std::move(image));
-                return "";
-            }
+            pOut_material->setDrawTexture(std::move(draw_texture));
+            return "";
         }
     }
 
@@ -592,44 +585,51 @@ std::string WFObject::locateRelativeFile(const std::string &rel_path)
 // Return a description string.
 std::string WFObject::toDescr() const
 {
-    // Figure out our object dimensions.
-    GLfloat min_x =  FLT_MAX;
-    GLfloat min_y =  FLT_MAX;
-    GLfloat min_z =  FLT_MAX;
-
-    GLfloat max_x = -FLT_MAX;
-    GLfloat max_y = -FLT_MAX;
-    GLfloat max_z = -FLT_MAX;
-
-    for (const MyVec4 &position : m_positions) {
-        GLfloat x = position.x();
-        GLfloat y = position.y();
-        GLfloat z = position.z();
-
-        if (min_x > x) { min_x = x; }
-        if (min_y > y) { min_y = y; }
-        if (min_z > z) { min_z = z; }
-
-        if (max_x < x) { max_x = x; }
-        if (max_y < y) { max_y = y; }
-        if (max_z < z) { max_z = z; }
-    }
-
-    GLfloat width  = (max_x - min_x) / BLOCK_SCALE;
-    GLfloat height = (max_y - min_y) / BLOCK_SCALE;
-    GLfloat depth  = (max_z - min_z) / BLOCK_SCALE;
-
     // List the Object file details.
     std::string result = fmt::format("OBJ File: '{}'\n", m_object_name);
     result += fmt::format("    File path = {}\n", m_original_path);
 
-    result += fmt::format(
-        "    Dimensions = {0:.3f}m wide, {1:.3f}m deep, {2:.3f}m high\n",
-        width, depth, height);
+    // Figure out our object dimensions.
+    if (m_positions.size() > 0) {
+        GLfloat min_x = FLT_MAX;
+        GLfloat min_y = FLT_MAX;
+        GLfloat min_z = FLT_MAX;
 
-    result += fmt::format("    Position count = {}\n",  m_positions.size());
-    result += fmt::format("    Normal count = {}\n",    m_normals.size());
-    result += fmt::format("    Tex Coord count = {}\n", m_tex_coords.size());
+        GLfloat max_x = -FLT_MAX;
+        GLfloat max_y = -FLT_MAX;
+        GLfloat max_z = -FLT_MAX;
+
+        for (const MyVec4 &position : m_positions) {
+            GLfloat x = position.x();
+            GLfloat y = position.y();
+            GLfloat z = position.z();
+
+            if (min_x > x) { min_x = x; }
+            if (min_y > y) { min_y = y; }
+            if (min_z > z) { min_z = z; }
+
+            if (max_x < x) { max_x = x; }
+            if (max_y < y) { max_y = y; }
+            if (max_z < z) { max_z = z; }
+        }
+
+        GLfloat width  = (max_x - min_x) / BLOCK_SCALE;
+        GLfloat height = (max_y - min_y) / BLOCK_SCALE;
+        GLfloat depth  = (max_z - min_z) / BLOCK_SCALE;
+
+        result += fmt::format(
+            "    Dimensions = {0:.3f}m wide, {1:.3f}m deep, {2:.3f}m high\n",
+            width, depth, height);
+        result += fmt::format("    Position count = {}\n", m_positions.size());
+    }
+
+    if (m_normals.size() > 0) {
+        result += fmt::format("    Normal count = {}\n", m_normals.size());
+    }
+
+    if (m_tex_coords.size() > 0) {
+        result += fmt::format("    Tex Coord count = {}\n", m_tex_coords.size());
+    }
 
     // List the materials.
     if (m_mat_map.size() > 0) {
@@ -637,7 +637,7 @@ std::string WFObject::toDescr() const
         for (const auto &iter : m_mat_map) {
             result += fmt::format(
                 "        Name = '{0}', Texture = '{1}'\n",
-                iter.first, iter.second->getTexturePath());
+                iter.first, iter.second->getDrawTexture()->getFileName());
         }
     }
     else {
@@ -660,8 +660,8 @@ std::string WFObject::toDescr() const
 
             result += fmt::format(
                 "        '{0}' = Using '{1}', with {2} face vertices\n",
-                group_name, mat_name, vert_list.size());
-            total_faces += vert_list.size();
+                group_name, mat_name, vert_list.getItemCount());
+            total_faces += vert_list.getItemCount();
         }
 
         result += fmt::format(
@@ -679,8 +679,9 @@ std::string WFObject::toDescr() const
 }
 
 
-// Validate our object contents.
-bool WFObject::validate() const
+// Now that we've loaded our Wavefront object, validate
+// that everything is okay and build our underlying Draw State stuff.
+bool WFObject::conclude() const
 {
     bool success = true;
 
@@ -699,20 +700,19 @@ bool WFObject::validate() const
     for (const auto &iter : m_mat_map) {
         const auto &mat = iter.second;
         if ((mat->getMaterialName() == "") ||
-            (mat->getTexturePath() == "") ||
-            (mat->getTextureImage() == nullptr)) {
+            (mat->getDrawTexture()  == nullptr)) {
             PrintDebug("ERROR: Bad material!\n");
             success = false;
         }
     }
 
-    // Face group name.
+    // Face Group names.
     if (m_group_names.size() == 0) {
         PrintDebug("ERROR: No group names!\n");
         success = false;
     }
 
-    // Face group map.
+    // Face Group map.
     for (const auto &iter : m_group_map) {
         const auto &group = iter.second;
         if (group->getMaterial() == nullptr) {
@@ -720,7 +720,7 @@ bool WFObject::validate() const
             success = false;
         }
 
-        if (group->getVertList().size() == 0) {
+        if (group->getVertList().getItemCount() == 0) {
             PrintDebug("ERROR: No vertices!\n");
             success = false;
         }
@@ -729,7 +729,12 @@ bool WFObject::validate() const
     // All done.
     if (!success) {
         assert(false);
+        return false;
     }
 
+    // Update each Face Group vertex list.
+    for (auto &iter : m_group_map) {
+        iter.second->updateVertList();
+    }
     return success;
 }

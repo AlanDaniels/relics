@@ -11,14 +11,15 @@ DrawTexture::DrawTexture(const std::string &fname)
     m_texture_id = 0;
 
     // Load the image.
-    sf::Image image;
-    if (!ReadImageResource(&image, fname)) {
+    m_image = std::make_unique<sf::Image>();
+    if (!ReadImageResource(m_image.get(), fname)) {
+        assert(false);
         return;
     }
 
-    image.flipVertically();
-    sf::Vector2u image_size = image.getSize();
-    const sf::Uint8 *pixels = image.getPixelsPtr();
+    m_image->flipVertically();
+    sf::Vector2u image_size = m_image->getSize();
+    const sf::Uint8 *pixels = m_image->getPixelsPtr();
 
     // Bind the texture.
     glGenTextures(1, &m_texture_id);

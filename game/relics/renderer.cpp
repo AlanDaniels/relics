@@ -110,12 +110,11 @@ void Renderer::loadTextures()
     const ConfigRender &conf_render = GetConfig().render;
     
     // Load our textures.
-    m_grass_tex   = std::make_unique<DrawTexture>(conf_render.landscape.grass_texture);
-    m_dirt_tex    = std::make_unique<DrawTexture>(conf_render.landscape.dirt_texture);
-    m_stone_tex   = std::make_unique<DrawTexture>(conf_render.landscape.stone_texture);
-    m_coal_tex    = std::make_unique<DrawTexture>(conf_render.landscape.coal_texture);
-    m_bedrock_tex = std::make_unique<DrawTexture>(conf_render.landscape.bedrock_texture);
-
+    m_grass_tex    = std::make_unique<DrawTexture>(conf_render.landscape.grass_texture);
+    m_dirt_tex     = std::make_unique<DrawTexture>(conf_render.landscape.dirt_texture);
+    m_stone_tex    = std::make_unique<DrawTexture>(conf_render.landscape.stone_texture);
+    m_coal_tex     = std::make_unique<DrawTexture>(conf_render.landscape.coal_texture);
+    m_bedrock_tex  = std::make_unique<DrawTexture>(conf_render.landscape.bedrock_texture);
     m_hit_test_tex = std::make_unique<DrawTexture>(conf_render.hit_test.texture);
 
     m_skybox_tex = std::make_unique<DrawCubemapTexture>(
@@ -399,14 +398,31 @@ void Renderer::renderLandscapeList(
 void Renderer::renderWFObjects(
     std::vector<const Chunk *> &chunk_list, RenderStats *pOut_stats)
 {
-    for (const auto &chunk_it : chunk_list) {
-        for (const auto &wf_it : chunk_it->getWFObjects()) {
-            const WFObject *thing = wf_it.get();
+    GLfloat fade_distance_cm = GetConfig().render.getFadeDistanceCm();
+    GLfloat draw_distance_cm = GetConfig().logic.getDrawDistanceCm();
 
-#if 0
-            m_wavefront_draw_state->render(thing->getVertList());
-            PrintDebug(fmt::format("TODO: I would render '{}';\n", thing->getObjectName()));
-#endif
+    GLfloat camera_yaw   = m_world.getCameraYaw();
+    GLfloat camera_pitch = m_world.getCameraPitch();
+    MyVec4  camera_pos   = m_world.getCameraPos();
+
+    m_wavefront_draw_state->updateUniformMatrix4by4("mat_frustum", m_frustum_matrix);
+    m_wavefront_draw_state->updateUniformFloat("fade_distance", fade_distance_cm);
+    m_wavefront_draw_state->updateUniformFloat("draw_distance", draw_distance_cm);
+
+    m_wavefront_draw_state->updateUniformFloat("camera_yaw",   camera_yaw);
+    m_wavefront_draw_state->updateUniformFloat("camera_pitch", camera_pitch);
+    m_wavefront_draw_state->updateUniformVec4 ("camera_pos",   camera_pos);
+
+    for (const auto &chunk_it : chunk_list) {
+        for (const auto &thing_it : chunk_it->getWFObjects()) {
+            for (const std::string &group_name : thing_it->getGroupNames()) {
+                const auto &face_group   = thing_it->getGroup(group_name);
+                const auto *draw_texture = face_group.getMaterial()->getDrawTexture();
+                const auto &vert_list    = face_group.getVertList();
+
+                m_wavefront_draw_state->updateUniformTexture(0, *draw_texture);
+                m_wavefront_draw_state->render(vert_list);
+            }
         }
     }
 }

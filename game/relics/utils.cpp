@@ -7,6 +7,8 @@
 #include "utils.h"
 #include "lua.hpp"
 
+#include <boost/filesystem.hpp>
+
 
 // A breakpoint to be triggered just once, when we hit the spacebar.
 bool MAGIC_BREAKPOINT;
@@ -192,10 +194,12 @@ bool DoesResourcePathExist() {
 
 // See if a file exists.
 bool IsResource(const std::string &fname) {
-    std::string full_name = RESOURCE_PATH;
-    full_name.append(fname);
+    boost::filesystem::path my_path(fname);
+    if (!my_path.is_complete()) {
+        my_path = boost::filesystem::path(RESOURCE_PATH) / fname;
+    }
 
-    std::ifstream fs(full_name);
+    std::ifstream fs(my_path.string());
     if (fs.is_open()) {
         fs.close();
         return true;
@@ -209,12 +213,20 @@ bool IsResource(const std::string &fname) {
 // Read a text file resource into a string.
 std::string ReadTextResource(const std::string &fname)
 {
-    std::string full_name = RESOURCE_PATH;
-    full_name.append(fname);
+    boost::filesystem::path my_path(fname);
+    if (!my_path.is_complete()) {
+        my_path = boost::filesystem::path(RESOURCE_PATH) / fname;
+    }
 
-    std::ifstream fs(full_name);
+    if (!boost::filesystem::is_regular_file((my_path))) {
+        PrintDebug(fmt::format("Text resource {} does not exist!\n", my_path.string()));
+        assert(false);
+        return false;
+    }
+
+    std::ifstream fs(my_path.string());
     if (!fs.is_open()) {
-        PrintDebug(fmt::format("Count not open text resource {}.\n", fname));
+        PrintDebug(fmt::format("Count not open text resource {} for reading!\n", my_path.string()));
         return "";
     }
 
@@ -228,11 +240,20 @@ std::string ReadTextResource(const std::string &fname)
 // Load a font resource.
 bool ReadFontResource(sf::Font *pOut, const std::string &fname)
 {
-    std::string full_name = RESOURCE_PATH;
-    full_name.append(fname);
+    boost::filesystem::path my_path(fname);
+    if (!my_path.is_complete()) {
+        my_path = boost::filesystem::path(RESOURCE_PATH) / fname;
+    }
 
-    if (!pOut->loadFromFile(full_name.c_str())) {
-        PrintDebug(fmt::format("Could not open font resource {}.\n", fname));
+    if (!boost::filesystem::is_regular_file((my_path))) {
+        PrintDebug(fmt::format("Font resource {} does not exist!\n", my_path.string()));
+        assert(false);
+        return false;
+    }
+
+    if (!pOut->loadFromFile(my_path.string())) {
+        PrintDebug(fmt::format("Could not open font resource {}.\n", my_path.string()));
+        assert(false);
         return false;
     }
 
@@ -241,14 +262,24 @@ bool ReadFontResource(sf::Font *pOut, const std::string &fname)
 
 
 // Load an image resource.
+// TODO: FIX THIS FILESYSTEM SHIT.
 bool ReadImageResource(sf::Image *pOut, const std::string &fname)
 {
-    std::string full_name = RESOURCE_PATH;
-    full_name.append(fname);
+    boost::filesystem::path my_path(fname);
+    if (!my_path.is_complete()) {
+        my_path = boost::filesystem::path(RESOURCE_PATH) / fname;
+    }
+
+    if (!boost::filesystem::is_regular_file((my_path))) {
+        PrintDebug(fmt::format("Texture resource {} does not exist!\n", my_path.string()));
+        assert(false);
+        return false;
+    }
 
     // Load the image.
-    if (!pOut->loadFromFile(full_name)) {
-        PrintDebug(fmt::format("Could not load texture resource {}.\n", fname));
+    if (!pOut->loadFromFile(my_path.string())) {
+        PrintDebug(fmt::format("Could not load texture resource {}.\n", my_path.string()));
+        assert(false);
         return false;
     }
 

@@ -90,16 +90,14 @@ bool GameWorld::loadWFObjects()
 // and one quarter of the way up.
 MyVec4 GameWorld::getCameraStartPos() const
 {
+#if 0
     GLfloat x = BLOCK_SCALE * CHUNK_WIDTH  * 0.5f;
     GLfloat y = BLOCK_SCALE * CHUNK_HEIGHT * 0.1f;
     GLfloat z = BLOCK_SCALE * CHUNK_WIDTH  * 0.5f;
-
-#if 0
-    // TODO: Find the top level.
-    ChunkOrigin origin(0, 0);
-    m_chunk_map[origin] @@@@;
-#endif
     return MyVec4(x, y, z);
+#endif
+
+    return MyVec4(0, 0, 0);
 }
 
 

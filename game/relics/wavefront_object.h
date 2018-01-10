@@ -4,6 +4,7 @@
 
 #include "my_math.h"
 #include "draw_state_pnt.h"
+#include "draw_texture.h"
 
 
 // A material from a Wavefront ".MTL" file.
@@ -13,20 +14,20 @@ class WFMaterial
 public:
     WFMaterial(const std::string &name) :
         m_mat_name(name),
-        m_tex_path(""),
-        m_tex_image(nullptr) {}
+        m_draw_texture(nullptr) {}
 
-    ~WFMaterial() {
-        // TODO: Free up the sf::Image resource.
+    ~WFMaterial() {}
+
+    const std::string &getMaterialName() const { 
+        return m_mat_name; 
     }
 
-    const std::string &getMaterialName() const { return m_mat_name; }
-    const std::string &getTexturePath()  const { return m_tex_path; }
-    const sf::Image   *getTextureImage() const { return m_tex_image.get(); }
+    const DrawTexture *getDrawTexture() const { 
+        return m_draw_texture.get();
+    }
 
-    void setTexture(const std::string &path, std::unique_ptr<sf::Image> image) {
-        m_tex_path  = path;
-        m_tex_image = std::move(image);
+    void setDrawTexture(std::unique_ptr<DrawTexture> draw_texture) {
+        m_draw_texture = std::move(draw_texture);
     }
 
 private:
@@ -36,8 +37,7 @@ private:
 
     // Private data.
     std::string m_mat_name;
-    std::string m_tex_path;
-    std::unique_ptr<sf::Image> m_tex_image;
+    std::unique_ptr<DrawTexture> m_draw_texture;
 };
 
 
@@ -53,7 +53,7 @@ public:
 
     WFGroup(WFGroup &&that) :
         m_name(std::move(that.m_name)),
-        m_mat(std::move(that.m_mat)),
+        m_mat (std::move(that.m_mat)),
         m_vert_list(std::move(that.m_vert_list)) {}
 
     ~WFGroup() {}
@@ -65,15 +65,24 @@ public:
         return *this;
     }
 
-    const std::shared_ptr<WFMaterial> &getMaterial() const { return m_mat; }
-    const std::vector<Vertex_PNT>     &getVertList() const { return m_vert_list; }
+    const std::shared_ptr<WFMaterial> &getMaterial() const { 
+        return m_mat; 
+    }
+
+    const VertList_PNT &getVertList() const { 
+        return m_vert_list; 
+    }
 
     void setMaterial(std::shared_ptr<WFMaterial> mat) {
         m_mat = mat;
     }
 
-    void addVertex(const Vertex_PNT &vert) {
-        m_vert_list.emplace_back(vert);
+    void add(const Vertex_PNT &vert) {
+        m_vert_list.add(&vert, 1);
+    }
+
+    void updateVertList() {
+        m_vert_list.update();
     }
 
 private:
@@ -82,7 +91,7 @@ private:
     // Privata data. Note that materials are shared, but vert lists aren't.
     std::string m_name;
     std::shared_ptr<WFMaterial> m_mat;
-    std::vector<Vertex_PNT> m_vert_list;
+    VertList_PNT m_vert_list;
 };
 
 
@@ -109,12 +118,11 @@ public:
     }
 
     const WFGroup &getGroup(const std::string &name) const {
-        const auto &iter = m_group_map.at(name);
-        return *iter;
+        return *m_group_map.at(name);
     }
 
     std::string toDescr() const;
-    bool validate() const;
+    bool conclude() const;
 
 private:
     DISALLOW_DEFAULT(WFObject)

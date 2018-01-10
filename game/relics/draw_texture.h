@@ -10,11 +10,12 @@ public:
     GLuint getTextureId() const { return m_texture_id;  }
 
 private:
-    // Forbid copies, and default ctor.
-    DrawTexture() = delete;
-    DrawTexture(const DrawTexture &that) = delete;
-    void operator=(const DrawTexture &that) = delete;
+    DISALLOW_DEFAULT(DrawTexture)
+    DISALLOW_COPYING(DrawTexture)
+    DISALLOW_MOVING(DrawTexture)
 
+    // Private data
     std::string m_fname;
+    std::unique_ptr<sf::Image> m_image;
     GLuint m_texture_id;
 };

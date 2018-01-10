@@ -30,20 +30,23 @@ static GLuint CompileShader(GLenum shader_type, const std::string &fname)
     int len;
     std::string text = ReadTextResource(fname);
     if (text == "") {
+        assert(false);
         return 0;
     }
 
     GLuint shader = glCreateShader(shader_type);
+
     const char *raw_text = text.c_str();
     glShaderSource(shader, 1, &raw_text, &len);
     glCompileShader(shader);
 
-    GLint shader_ok;
+    GLint shader_ok = GL_FALSE;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &shader_ok);
-    if (!shader_ok) {
-        PrintDebug(fmt::format("Failed to compile {}...\n", fname));
+    if (shader_ok == GL_FALSE) {
+        PrintDebug(fmt::format("Failed to compile shader {}...\n", fname));
         ShowInfoLog(shader, glGetShaderiv, glGetShaderInfoLog);
         glDeleteShader(shader);
+        assert(false);
         return 0;
     }
 
@@ -60,12 +63,13 @@ static GLuint CompileProgram(GLuint vertex_shader, GLuint fragment_shader)
     glLinkProgram(program);
 
     // Check that the linking worked.
-    GLint program_ok;
+    GLint program_ok = GL_FALSE;
     glGetProgramiv(program, GL_LINK_STATUS, &program_ok);
-    if (!program_ok) {
+    if (program_ok == GL_FALSE) {
         PrintDebug("Failed to link shader program...\n");
         ShowInfoLog(program, glGetProgramiv, glGetProgramInfoLog);
         glDeleteProgram(program);
+        assert(false);
         return 0;
     }
 

@@ -14,11 +14,9 @@ static std::string config_fname("relics_config.lua");
 // Our one global config object.
 static Config g_config;
 
-
 bool LoadConfig() {
     return g_config.loadFromFile();
 }
-
 
 const Config &GetConfig() {
     return g_config;

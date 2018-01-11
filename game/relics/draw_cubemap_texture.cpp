@@ -71,17 +71,6 @@ DrawCubemapTexture::DrawCubemapTexture(
     m_fname_top(fname_top),
     m_fname_bottom(fname_bottom)
 {
-    
-    // Flip all the images vertically.
-#if 0
-    image_north.flipVertically();
-    image_south.flipVertically();
-    image_east.flipVertically();
-    image_west.flipVertically();
-    image_top.flipVertically();
-    image_bottom.flipVertically();
-#endif
-
     // Make sure all the images are the same size.
     sf::Vector2u size_north  = image_north->getSize();
     sf::Vector2u size_south  = image_south->getSize();

@@ -8,14 +8,14 @@
 
 
 // Our one expedient resource pool.
-static ResourcePool resource_pool;
+static ResourcePool g_resource_pool;
 
 bool LoadResourcePool() {
-    return resource_pool.load();
+    return g_resource_pool.load();
 }
 
 const ResourcePool &GetResourcePool() {
-    return resource_pool;
+    return g_resource_pool;
 }
 
 

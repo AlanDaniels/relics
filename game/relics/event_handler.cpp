@@ -5,6 +5,7 @@
 #include "config.h"
 #include "game_world.h"
 #include "renderer.h"
+#include "resource_pool.h"
 #include "utils.h"
 
 
@@ -53,6 +54,18 @@ bool EventHandler::onEvent(sf::Event event)
         // For now, use "F4" to exit. Bye!
         if (event.key.code == sf::Keyboard::F4) {
             return false;
+        }
+
+        // Use "F5" to reload our config and resources.
+        // It's quite okay to catastrophically exit here.
+        if (event.key.code == sf::Keyboard::F5) {
+            if (!LoadConfig()) {
+                exit(1);
+            }
+
+            if (!LoadResourcePool()) {
+                exit(1);
+            }
         }
 
         // Use space to trigger our magic global breakpoint.

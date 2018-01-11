@@ -7,13 +7,63 @@
 #include "utils.h"
 
 
-DrawCubemapTexture::DrawCubemapTexture(
+std::unique_ptr<DrawCubemapTexture> DrawCubemapTexture::Create(
     const std::string &fname_north,
     const std::string &fname_south,
     const std::string &fname_east,
     const std::string &fname_west,
     const std::string &fname_top,
-    const std::string &fname_bottom) :
+    const std::string &fname_bottom)
+{
+    // Load our six images.
+    sf::Image image_north;
+    if (!ReadImageResource(&image_north, fname_north)) {
+        return nullptr;
+    }
+
+    sf::Image image_south;
+    if (!ReadImageResource(&image_south, fname_south)) {
+        return nullptr;
+    }
+
+    sf::Image image_east;
+    if (!ReadImageResource(&image_east, fname_east)) {
+        return nullptr;
+    }
+
+    sf::Image image_west;
+    if (!ReadImageResource(&image_west, fname_west)) {
+        return nullptr;
+    }
+
+    sf::Image image_top;
+    if (!ReadImageResource(&image_top, fname_top)) {
+        return nullptr;
+    }
+
+    sf::Image image_bottom;
+    if (!ReadImageResource(&image_bottom, fname_bottom)) {
+        return nullptr;
+    }
+
+    std::unique_ptr<DrawCubemapTexture> result(new DrawCubemapTexture(
+        fname_north,  &image_north,
+        fname_south,  &image_south,
+        fname_east,   &image_east,
+        fname_west,   &image_west,
+        fname_top,    &image_top,
+        fname_bottom, &image_bottom));
+    return std::move(result);
+}
+
+
+DrawCubemapTexture::DrawCubemapTexture(
+    const std::string &fname_north,  sf::Image *image_north,
+    const std::string &fname_south,  sf::Image *image_south,
+    const std::string &fname_east,   sf::Image *image_east,
+    const std::string &fname_west,   sf::Image *image_west,
+    const std::string &fname_top,    sf::Image *image_top,
+    const std::string &fname_bottom, sf::Image *image_bottom) :
     m_fname_north(fname_north),
     m_fname_south(fname_south),
     m_fname_east(fname_east),
@@ -21,36 +71,6 @@ DrawCubemapTexture::DrawCubemapTexture(
     m_fname_top(fname_top),
     m_fname_bottom(fname_bottom)
 {
-    // Load our six image.
-    sf::Image image_north;
-    if (!ReadImageResource(&image_north, fname_north)) {
-        return;
-    }
-
-    sf::Image image_south;
-    if (!ReadImageResource(&image_south, fname_south)) {
-        return;
-    }
-
-    sf::Image image_east;
-    if (!ReadImageResource(&image_east, fname_east)) {
-        return;
-    }
-
-    sf::Image image_west;
-    if (!ReadImageResource(&image_west, fname_west)) {
-        return;
-    }
-
-    sf::Image image_top;
-    if (!ReadImageResource(&image_top, fname_top)) {
-        return;
-    }
-
-    sf::Image image_bottom;
-    if (!ReadImageResource(&image_bottom, fname_bottom)) {
-        return;
-    }
     
     // Flip all the images vertically.
 #if 0
@@ -63,45 +83,21 @@ DrawCubemapTexture::DrawCubemapTexture(
 #endif
 
     // Make sure all the images are the same size.
-    sf::Vector2u size_north  = image_north.getSize();
-    sf::Vector2u size_south  = image_south.getSize();
-    sf::Vector2u size_east   = image_east.getSize();
-    sf::Vector2u size_west   = image_west.getSize();
-    sf::Vector2u size_top    = image_top.getSize();
-    sf::Vector2u size_bottom = image_bottom.getSize();
+    sf::Vector2u size_north  = image_north->getSize();
+    sf::Vector2u size_south  = image_south->getSize();
+    sf::Vector2u size_east   = image_east->getSize();
+    sf::Vector2u size_west   = image_west->getSize();
+    sf::Vector2u size_top    = image_top->getSize();
+    sf::Vector2u size_bottom = image_bottom->getSize();
 
-    if (size_north != size_south) {
+    if ((size_north != size_south) ||
+        (size_north != size_east)  ||
+        (size_north != size_west)  ||
+        (size_north != size_top)   ||
+        (size_north != size_bottom)) {
         PrintDebug(fmt::format(
-            "South face {0} has differing size: [{1}, {2}] vs. [{3}, {4}]\n",
-            m_fname_south, size_south.x, size_south.y, size_north.x, size_north.y));
-        return;
-    }
-
-    if (size_north != size_east) {
-        PrintDebug(fmt::format(
-            "East face {0} has differing size: [{1}, {2}] vs. [{3}, {4}]\n",
-            m_fname_east, size_east.x, size_east.y, size_north.x, size_north.y));
-        return;
-    }
-
-    if (size_north != size_west) {
-        PrintDebug(fmt::format(
-            "West face {0} has differing size: [{1}, {2}] vs. [{3}, {4}]\n",
-            m_fname_west, size_west.x, size_west.y, size_north.x, size_north.y));
-        return;
-    }
-
-    if (size_north != size_top) {
-        PrintDebug(fmt::format(
-            "Top face {0} has differing size: [{1}, {2}] vs. [{3}, {4}]\n",
-            m_fname_top, size_top.x, size_top.y, size_north.x, size_north.y));
-        return;
-    }
-
-    if (size_north != size_bottom) {
-        PrintDebug(fmt::format(
-            "Bottom face {0} has differing size: [{1}, {2}] vs. [{3}, {4}]\n",
-            m_fname_bottom, size_bottom.x, size_bottom.y, size_north.x, size_north.y));
+            "Not all the faces in the skybox for {0} have the same dimensions.\n",
+            fname_north));
         return;
     }
 
@@ -111,12 +107,12 @@ DrawCubemapTexture::DrawCubemapTexture(
 
     // Load the six faces. Hard to find an answer on the exact format SFML uses.
     // I'm going to presume it's standard RGBA (8 bits per channel) until I find otherwise.
-    const sf::Uint8 *pixels_north  = image_north.getPixelsPtr();
-    const sf::Uint8 *pixels_south  = image_south.getPixelsPtr();
-    const sf::Uint8 *pixels_east   = image_east.getPixelsPtr();
-    const sf::Uint8 *pixels_west   = image_west.getPixelsPtr();
-    const sf::Uint8 *pixels_top    = image_top.getPixelsPtr();
-    const sf::Uint8 *pixels_bottom = image_bottom.getPixelsPtr();
+    const sf::Uint8 *pixels_north  = image_north->getPixelsPtr();
+    const sf::Uint8 *pixels_south  = image_south->getPixelsPtr();
+    const sf::Uint8 *pixels_east   = image_east->getPixelsPtr();
+    const sf::Uint8 *pixels_west   = image_west->getPixelsPtr();
+    const sf::Uint8 *pixels_top    = image_top->getPixelsPtr();
+    const sf::Uint8 *pixels_bottom = image_bottom->getPixelsPtr();
 
     glTexImage2D(
         GL_TEXTURE_CUBE_MAP_POSITIVE_Z,  // target, level of detail

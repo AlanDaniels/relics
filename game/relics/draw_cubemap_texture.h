@@ -6,7 +6,7 @@
 class DrawCubemapTexture
 {
 public:
-    DrawCubemapTexture(
+    static std::unique_ptr<DrawCubemapTexture> Create(
         const std::string &fname_north,
         const std::string &fname_south,
         const std::string &fname_east,
@@ -30,6 +30,16 @@ private:
     DISALLOW_COPYING(DrawCubemapTexture)
     DISALLOW_MOVING(DrawCubemapTexture)
 
+    // Private ctor, since Create does the work.
+    DrawCubemapTexture(
+        const std::string &fname_north,  sf::Image *image_north,
+        const std::string &fname_south,  sf::Image *image_south,
+        const std::string &fname_east,   sf::Image *image_east,
+        const std::string &fname_west,   sf::Image *image_west,
+        const std::string &fname_top,    sf::Image *image_top,
+        const std::string &fname_bottom, sf::Image *image_bottom);
+
+    // Private data.
     std::string m_fname_north;
     std::string m_fname_south;
     std::string m_fname_east;

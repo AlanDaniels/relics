@@ -1,25 +1,32 @@
 
 #include "stdafx.h"
 #include "draw_texture.h"
+
 #include "utils.h"
 
 
-// Constructor from a texture file name.
-DrawTexture::DrawTexture(const std::string &fname)
+// Only create the texture if the path exists.
+std::unique_ptr<DrawTexture> DrawTexture::Create(const std::string &fname)
 {
-    m_fname = fname;
-    m_texture_id = 0;
-
     // Load the image.
-    m_image = std::make_unique<sf::Image>();
-    if (!ReadImageResource(m_image.get(), fname)) {
-        assert(false);
-        return;
+    sf::Image image;
+    if (!ReadImageResource(&image, fname)) {
+        return nullptr;
     }
 
-    m_image->flipVertically();
-    sf::Vector2u image_size = m_image->getSize();
-    const sf::Uint8 *pixels = m_image->getPixelsPtr();
+    std::unique_ptr<DrawTexture> result(new DrawTexture(fname, &image));
+    return std::move(result);
+}
+
+
+// Constructor from a texture file name.
+DrawTexture::DrawTexture(const std::string &fname, sf::Image *image) :
+    m_filename(fname),
+    m_texture_id(0)
+{
+    image->flipVertically();
+    sf::Vector2u image_size = image->getSize();
+    const sf::Uint8 *pixels = image->getPixelsPtr();
 
     // Bind the texture.
     glGenTextures(1, &m_texture_id);
@@ -55,6 +62,6 @@ DrawTexture::~DrawTexture()
         glDeleteTextures(1, &m_texture_id);
     }
 
-    m_fname = "";
+    m_filename = "";
     m_texture_id = 0;
 }

@@ -8,12 +8,12 @@
 #include "draw_state_pnt.h"
 #include "draw_state_pt.h"
 #include "draw_texture.h"
+#include "resource_pool.h"
 
 
 bool Renderer::init()
 {
     buildSkyboxVertList();
-    loadTextures();
     if (!loadShaders()) {
         return false;
     }
@@ -102,28 +102,6 @@ void Renderer::buildSkyboxVertList()
     m_skybox_vert_list.addQuad(top_quad);
     m_skybox_vert_list.addQuad(bottom_quad);
     m_skybox_vert_list.update();
-}
-
-
-void Renderer::loadTextures()
-{
-    const ConfigRender &conf_render = GetConfig().render;
-    
-    // Load our textures.
-    m_grass_tex    = std::make_unique<DrawTexture>(conf_render.landscape.grass_texture);
-    m_dirt_tex     = std::make_unique<DrawTexture>(conf_render.landscape.dirt_texture);
-    m_stone_tex    = std::make_unique<DrawTexture>(conf_render.landscape.stone_texture);
-    m_coal_tex     = std::make_unique<DrawTexture>(conf_render.landscape.coal_texture);
-    m_bedrock_tex  = std::make_unique<DrawTexture>(conf_render.landscape.bedrock_texture);
-    m_hit_test_tex = std::make_unique<DrawTexture>(conf_render.hit_test.texture);
-
-    m_skybox_tex = std::make_unique<DrawCubemapTexture>(
-        conf_render.skybox.north_texture,
-        conf_render.skybox.south_texture,
-        conf_render.skybox.east_texture,
-        conf_render.skybox.west_texture,
-        conf_render.skybox.top_texture,
-        conf_render.skybox.bottom_texture);
 }
 
 
@@ -311,10 +289,16 @@ RenderStats Renderer::renderWorld()
     std::vector<const Chunk *> chunk_vec = getChunksToRender(&stats);
 
     // Render our surfaces.
-    renderLandscapeList(SurfaceType::GRASS_TOP, chunk_vec, *m_grass_tex, &stats);
-    renderLandscapeList(SurfaceType::DIRT,      chunk_vec, *m_dirt_tex,  &stats);
-    renderLandscapeList(SurfaceType::STONE,     chunk_vec, *m_stone_tex, &stats);
-    renderLandscapeList(SurfaceType::COAL,      chunk_vec, *m_coal_tex,  &stats);
+    const auto &pool = GetResourcePool();
+    const auto &grass_tex = pool.getGrassTexture();
+    const auto &dirt_tex  = pool.getDirtTexture();
+    const auto &stone_tex = pool.getStoneTexture();
+    const auto &coal_tex  = pool.getCoalTexture();
+
+    renderLandscapeList(SurfaceType::GRASS_TOP, chunk_vec, grass_tex, &stats);
+    renderLandscapeList(SurfaceType::DIRT,      chunk_vec, dirt_tex,  &stats);
+    renderLandscapeList(SurfaceType::STONE,     chunk_vec, stone_tex, &stats);
+    renderLandscapeList(SurfaceType::COAL,      chunk_vec, coal_tex,  &stats);
 
     // Render any wavefront objects.
     renderWFObjects(chunk_vec, &stats);
@@ -330,6 +314,9 @@ RenderStats Renderer::renderWorld()
 // Render our sky.
 void Renderer::renderSkybox(RenderStats *pOut_stats)
 {
+    const auto &pool = GetResourcePool();
+    const auto &skybox_tex = pool.getSkyboxTexture();
+
     // Pluck out what we need from the game world.
     GLfloat camera_yaw   = m_world.getCameraYaw();
     GLfloat camera_pitch = m_world.getCameraPitch();
@@ -337,7 +324,7 @@ void Renderer::renderSkybox(RenderStats *pOut_stats)
     m_skybox_draw_state->updateUniformMatrix4by4("mat_frustum", m_frustum_matrix);
     m_skybox_draw_state->updateUniformMatrix4by4("mat_frustum_rotate", m_frustum_rotate_matrix);
 
-    m_skybox_draw_state->updateUniformCubemapTexture(0, *m_skybox_tex);
+    m_skybox_draw_state->updateUniformCubemapTexture(0, skybox_tex);
 
     m_skybox_draw_state->render(m_skybox_vert_list);
 
@@ -432,6 +419,9 @@ void Renderer::renderWFObjects(
 // Don't use depth testing here, since it overlays the rest. Allow blending.
 void Renderer::renderHitTest(RenderStats *pOut_stats)
 {
+    const auto &pool = GetResourcePool();
+    const auto &hit_test_tex = pool.getHitTestTexture();
+
     GLfloat fade_distance_cm = GetConfig().render.getFadeDistanceCm();
     GLfloat draw_distance_cm = GetConfig().logic.getDrawDistanceCm();
 
@@ -450,7 +440,7 @@ void Renderer::renderHitTest(RenderStats *pOut_stats)
         m_hit_test_draw_state->updateUniformFloat("camera_pitch", camera_pitch);
         m_hit_test_draw_state->updateUniformVec4("camera_pos",    camera_pos);
 
-        m_hit_test_draw_state->updateUniformTexture(0, *m_hit_test_tex);
+        m_hit_test_draw_state->updateUniformTexture(0, hit_test_tex);
 
         m_hit_test_draw_state->render(vert_list);
 

@@ -515,9 +515,7 @@ std::string WFObject::parseMtllibLine(int line_num, const std::string &line, WFM
                 return PARSING_ERROR;
             }
 
-            std::unique_ptr<DrawTexture> draw_texture = 
-                std::make_unique<DrawTexture>(image_path);
-
+            std::unique_ptr<DrawTexture> draw_texture = DrawTexture::Create(image_path);
             pOut_material->setDrawTexture(std::move(draw_texture));
             return "";
         }
@@ -637,7 +635,7 @@ std::string WFObject::toDescr() const
         for (const auto &iter : m_mat_map) {
             result += fmt::format(
                 "        Name = '{0}', Texture = '{1}'\n",
-                iter.first, iter.second->getDrawTexture()->getFileName());
+                iter.first, iter.second->getDrawTexture()->getPath());
         }
     }
     else {

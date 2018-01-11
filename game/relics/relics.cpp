@@ -13,6 +13,7 @@
 #include "game_world.h"
 #include "heads_up_display.h"
 #include "renderer.h"
+#include "resource_pool.h"
 #include "utils.h"
 #include "wavefront_object.h"
 
@@ -160,7 +161,7 @@ int WINAPI wWinMain(
     _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
-    // Hello and welcome! Read our config file.
+    // Hello and welcome! Read our config file and resource pool.
     if (!LoadConfig()) {
         return 1;
     }
@@ -223,6 +224,12 @@ int WINAPI wWinMain(
 		PrintDebug(fmt::format("Call to initiate GLEW failed: {}\n", glewGetErrorString(glew_result)));
 		return 1;
 	}
+
+    // Immediately after GLEW, load our resource pool.
+    // We'd do this right at the beginning, but OpenGL has to be running first.
+    if (!LoadResourcePool()) {
+        return 1;
+    }
 
     // Turn on OpenGL debugging.
     if (config.debug.opengl) {

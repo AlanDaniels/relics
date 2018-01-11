@@ -44,7 +44,6 @@ private:
     // Private methods.
     void rebuildUniformMatrices();
     void buildSkyboxVertList();
-    void loadTextures();
     bool loadShaders();
 
     std::vector<const Chunk *> getChunksToRender(RenderStats *pOut_stats);
@@ -52,8 +51,10 @@ private:
     void renderSkybox(RenderStats *pOut_stats);
 
     void renderLandscapeList(
-        SurfaceType surf, const std::vector<const Chunk *> &chunk_list,
-        const DrawTexture &tex, RenderStats *pOut_stats);
+        SurfaceType surf, 
+        const std::vector<const Chunk *> &chunk_list,
+        const DrawTexture &tex,
+        RenderStats *pOut_stats);
 
     void renderWFObjects(std::vector<const Chunk *> &chunk_list, RenderStats *pOut_stats);
 
@@ -65,15 +66,6 @@ private:
 
     MyMatrix4by4 m_frustum_matrix;
     MyMatrix4by4 m_frustum_rotate_matrix;
-
-    std::unique_ptr<DrawTexture> m_grass_tex;
-    std::unique_ptr<DrawTexture> m_dirt_tex;
-    std::unique_ptr<DrawTexture> m_stone_tex;
-    std::unique_ptr<DrawTexture> m_coal_tex;
-    std::unique_ptr<DrawTexture> m_bedrock_tex;
-
-    std::unique_ptr<DrawTexture>        m_hit_test_tex;
-    std::unique_ptr<DrawCubemapTexture> m_skybox_tex;
 
     std::unique_ptr<DrawState_PNT> m_wavefront_draw_state;
     std::unique_ptr<DrawState_PNT> m_landscape_draw_state;

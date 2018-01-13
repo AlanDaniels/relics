@@ -29,8 +29,8 @@ public:
     const DrawCubemapTexture &getSkyboxTexture() const { return *m_skybox_tex; }
 
 private:
-    DISALLOW_COPYING(ResourcePool)
-    DISALLOW_MOVING(ResourcePool)
+    FORBID_COPYING(ResourcePool)
+    FORBID_MOVING(ResourcePool)
 
     // Private methods.
     bool loadTextures();

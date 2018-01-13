@@ -34,7 +34,7 @@ public:
     bool render(const VertList_PCT &vert_list);
 
 private:
-    DISALLOW_DEFAULT(DrawState_PCT)
-    DISALLOW_COPYING(DrawState_PCT)
-    DISALLOW_MOVING(DrawState_PCT)
+    FORBID_DEFAULT_CTOR(DrawState_PCT)
+    FORBID_COPYING(DrawState_PCT)
+    FORBID_MOVING(DrawState_PCT)
 };

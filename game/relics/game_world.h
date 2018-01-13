@@ -56,9 +56,9 @@ public:
         const std::string &name, const MyVec4 &translate);
 
 private:
-    DISALLOW_DEFAULT(GameWorld)
-    DISALLOW_COPYING(GameWorld)
-    DISALLOW_MOVING(GameWorld)
+    FORBID_DEFAULT_CTOR(GameWorld)
+    FORBID_COPYING(GameWorld)
+    FORBID_MOVING(GameWorld)
 
     // Every couple of seconds, cash in a worker thread.
     static const int WORKER_PACE_MSECS = 2000;

@@ -71,9 +71,9 @@ protected:
     DrawStateSettings m_settings;
 
 private:
-    DISALLOW_DEFAULT(DrawState_Base)
-    DISALLOW_COPYING(DrawState_Base)
-    DISALLOW_MOVING(DrawState_Base)
+    FORBID_DEFAULT_CTOR(DrawState_Base)
+    FORBID_COPYING(DrawState_Base)
+    FORBID_MOVING(DrawState_Base)
 
     // Private data.
     bool m_initialized;

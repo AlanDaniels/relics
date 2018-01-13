@@ -26,9 +26,9 @@ public:
     GLuint getTextureId() const { return m_cubemap_texture_id; }
     
 private:
-    DISALLOW_DEFAULT(DrawCubemapTexture)
-    DISALLOW_COPYING(DrawCubemapTexture)
-    DISALLOW_MOVING(DrawCubemapTexture)
+    FORBID_DEFAULT_CTOR(DrawCubemapTexture)
+    FORBID_COPYING(DrawCubemapTexture)
+    FORBID_MOVING(DrawCubemapTexture)
 
     // Private ctor, since Create does the work.
     DrawCubemapTexture(

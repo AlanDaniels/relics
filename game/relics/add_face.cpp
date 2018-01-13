@@ -1,13 +1,9 @@
 
 #include "stdafx.h"
 #include "add_face.h"
-#include "common_util.h"
 
+#include "common_util.h"
 #include "chunk.h"
-#include "draw_state_pnt.h"
-#include "draw_state_pt.h"
-#include "config.h"
-#include "simplex_noise.h"
 #include "utils.h"
 
 

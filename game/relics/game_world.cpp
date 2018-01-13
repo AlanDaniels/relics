@@ -360,7 +360,7 @@ void GameWorld::calcHitTest()
                 success       = true;
                 best_distance = detail.getDist();
                 best_chunk    = chunk;
-                best_detail   = detail;
+                best_detail   = std::move(detail);
             }
         }
     }
@@ -381,11 +381,11 @@ void GameWorld::calcHitTest()
 
     m_hit_test_success = success;
     if (success) {
-        m_hit_test_detail = best_detail;
+        m_hit_test_detail = std::move(best_detail);
     }
     else {
         ChunkHitTestDetail blank;
-        m_hit_test_detail = blank;
+        m_hit_test_detail = std::move(blank);
     }
 }
 
@@ -395,9 +395,9 @@ void GameWorld::calcHitTest()
 void GameWorld::deleteBlockInFrontOfUs()
 {
     if (m_hit_test_success) {
-        ChunkOrigin origin       = m_hit_test_detail.getChunkOrigin();
-        GlobalGrid  global_coord = m_hit_test_detail.getGlobalCoord();
-        LocalGrid   local_coord  = GlobalGridToLocal(global_coord, origin);
+        const auto &origin       = m_hit_test_detail.getChunkOrigin();
+        const auto &global_coord = m_hit_test_detail.getGlobalCoord();
+        const auto &local_coord  = GlobalGridToLocal(global_coord, origin);
 
         const auto &iter = m_chunk_map.find(origin);
         Chunk *chunk = iter->second.get();

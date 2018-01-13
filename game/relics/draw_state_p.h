@@ -30,7 +30,7 @@ public:
     bool render(const VertList_P &vert_list);
 
 private:
-    DISALLOW_DEFAULT(DrawState_P)
-    DISALLOW_COPYING(DrawState_P)
-    DISALLOW_MOVING(DrawState_P)
+    FORBID_DEFAULT_CTOR(DrawState_P)
+    FORBID_COPYING(DrawState_P)
+    FORBID_MOVING(DrawState_P)
 };

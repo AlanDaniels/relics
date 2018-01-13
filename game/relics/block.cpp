@@ -7,15 +7,11 @@
 #include "utils.h"
 
 // Return true if a block type should generate ever landscape surfaces.
-bool IsBlockTypeFilled(BlockType block_type)
-{
+bool IsBlockTypeFilled(BlockType block_type) {
     return (block_type != BlockType::AIR);
 }
 
-
-// And the opposite.
-bool IsBlockTypeEmpty(BlockType block_type)
-{
+bool IsBlockTypeEmpty(BlockType block_type) {
     return (block_type == BlockType::AIR);
 }
 

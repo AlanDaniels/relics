@@ -83,7 +83,7 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
     // Print our hit-test debugging info.
     if (config.debug.hud_hit_test) {
         if (game_world.getHitTestSuccess()) {
-            std::string descr = game_world.getHitTestDetail().toDescription();
+            std::string descr = game_world.getHitTestDetail().toDescr();
             std::string msg   = fmt::format("Hit Test: {}", descr);
             m_text.setString(msg);
         }

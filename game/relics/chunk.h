@@ -69,7 +69,7 @@ public:
     }
 
     // Convert this as a string.
-    std::string toString() const {
+    std::string toDescr() const {
         return fmt::format("Origin [{0}, {1}]", m_debug_x, m_debug_z);
     }
 
@@ -133,9 +133,9 @@ public:
     std::string toDescription() const;
 
 private:
-    DISALLOW_DEFAULT(Chunk)
-    DISALLOW_COPYING(Chunk)
-    DISALLOW_MOVING(Chunk)
+    FORBID_DEFAULT_CTOR(Chunk)
+    FORBID_COPYING(Chunk)
+    FORBID_MOVING(Chunk)
 
     // Private methods.
     int offset(int x, int y) const { 

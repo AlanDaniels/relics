@@ -36,10 +36,9 @@ public:
     RenderStats renderWorld();
 
 private:
-    // Forbid copying, and default ctor.
-    Renderer() = delete;
-    Renderer(const Renderer &that) = delete;
-    void operator=(const Renderer &that) = delete;
+    FORBID_DEFAULT_CTOR(Renderer)
+    FORBID_COPYING(Renderer)
+    FORBID_MOVING(Renderer)
 
     // Private methods.
     void rebuildUniformMatrices();

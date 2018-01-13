@@ -1,30 +1,16 @@
 #pragma once
 
 #include "stdafx.h"
-#include "draw_state_pt.h"
-#include "utils.h"
-
 
 #include "common_util.h"
+#include "draw_state_pt.h"
+#include "utils.h"
 
 class Chunk;
 
 
-#if 0
-enum class BlockType : unsigned char
-{
-    AIR   = 0,
-    DIRT  = 1,
-    STONE = 2,
-    COAL  = 3
-};
-#endif
-
-
 bool IsBlockTypeFilled(BlockType block_type);
 bool IsBlockTypeEmpty (BlockType block_type);
-
-
 
 enum class SurfaceType : unsigned char
 {
@@ -58,8 +44,8 @@ public:
     void setSurface(FaceType face, SurfaceType val);
 
 private:
-    DISALLOW_COPYING(Block)
-    DISALLOW_MOVING(Block)
+    FORBID_COPYING(Block)
+    FORBID_MOVING(Block)
 
     BlockType m_block_type;
 

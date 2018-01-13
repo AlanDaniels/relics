@@ -1,27 +1,15 @@
 
 #include "stdafx.h"
 #include "chunk_hit_test.h"
-#include "common_util.h"
 
 #include "add_face.h"
+#include "common_util.h"
 #include "game_world.h"
 #include "utils.h"
 
 
-// Chunk Hit Test Details assignment operator.
-const ChunkHitTestDetail &ChunkHitTestDetail::operator=(const ChunkHitTestDetail &that)
-{
-    m_chunk_origin = that.m_chunk_origin;
-    m_global_coord = that.m_global_coord;
-    m_face   = that.m_face;
-    m_impact = that.m_impact;
-    m_dist   = that.m_dist;
-    return *this;
-}
-
-
 // Hit-test details to a description. Handy for debugging.
-std::string ChunkHitTestDetail::toDescription() const
+std::string ChunkHitTestDetail::toDescr() const
 {
     std::string face_to_str;
     switch (m_face) {

@@ -49,13 +49,22 @@
 #include <crtdbg.h>
 
 // Some macros to bullet-proof our classes.
-#define DISALLOW_DEFAULT(ClassName) \
+#define DEFAULT_COPYING(ClassName) \
+    ClassName(const ClassName &) = default; \
+    ClassName &operator=(const ClassName &) = default;
+
+#define DEFAULT_MOVING(ClassName) \
+    ClassName(ClassName &&) = default; \
+    ClassName &operator=(ClassName &&) = default;
+
+
+#define FORBID_DEFAULT_CTOR(ClassName) \
     ClassName() = delete;
 
-#define DISALLOW_COPYING(ClassName) \
+#define FORBID_COPYING(ClassName) \
     ClassName(const ClassName &) = delete; \
     void operator=(const ClassName &) = delete;
 
-#define DISALLOW_MOVING(ClassName) \
+#define FORBID_MOVING(ClassName) \
     ClassName(ClassName &&) = delete; \
     void operator=(ClassName &&) = delete;

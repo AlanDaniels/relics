@@ -1,5 +1,7 @@
 #pragma once
 
+#include "stdafx.h"
+
 #include "chunk.h"
 #include "draw_state_pt.h"
 
@@ -8,14 +10,13 @@
 class ChunkHitTestDetail
 {
 public:
-    // The default ctor, which we should only call in one place.
-    // Note that we set the distance to the worst possible value.
+    // Default ctor. Set the distance to the worst possible value.
     ChunkHitTestDetail() :
         m_face(FaceType::NONE),
         m_dist(FLT_MAX) {}
         
     ChunkHitTestDetail(
-        const ChunkOrigin &origin, 
+        const ChunkOrigin &origin,
         const GlobalGrid &coord,
         FaceType face, 
         const MyVec4 &impact, 
@@ -26,24 +27,20 @@ public:
         m_impact(impact),
         m_dist(dist) {}
 
-    ChunkHitTestDetail(const ChunkHitTestDetail &that) :
-        m_chunk_origin(that.m_chunk_origin),
-        m_global_coord(that.m_global_coord),
-        m_face(that.m_face),
-        m_impact(that.m_impact),
-        m_dist(that.m_dist) {}
-
-    const ChunkHitTestDetail &operator=(const ChunkHitTestDetail &that);
+    DEFAULT_MOVING(ChunkHitTestDetail)
 
     const ChunkOrigin &getChunkOrigin() const { return m_chunk_origin; }
-    const GlobalGrid &getGlobalCoord() const { return m_global_coord; }
+    const GlobalGrid  &getGlobalCoord() const { return m_global_coord; }
     FaceType getFace() const { return m_face; }
     const MyVec4 &getImpact() const { return m_impact; }
     GLfloat getDist() const { return m_dist; }
 
-    std::string toDescription() const;
+    std::string toDescr() const;
 
 private:
+    FORBID_COPYING(ChunkHitTestDetail)
+
+    // Private data
     ChunkOrigin m_chunk_origin;
     GlobalGrid  m_global_coord;
     FaceType    m_face;

@@ -20,9 +20,9 @@ public:
     void render(const GameWorld &game_world, const RenderStats &stats, GLfloat fps);
 
 private:
-    DISALLOW_DEFAULT(HeadsUpDisplay)
-    DISALLOW_COPYING(HeadsUpDisplay)
-    DISALLOW_MOVING(HeadsUpDisplay)
+    FORBID_DEFAULT_CTOR(HeadsUpDisplay)
+    FORBID_COPYING(HeadsUpDisplay)
+    FORBID_MOVING(HeadsUpDisplay)
 
     sf::RenderWindow &m_window;
 

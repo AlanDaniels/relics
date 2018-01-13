@@ -19,6 +19,9 @@ public:
     int  getGrandTotal() const;
 
 private:
+    FORBID_COPYING(SurfaceTotals)
+    FORBID_MOVING(SurfaceTotals)
+
     std::array<int, SURFACE_TYPE_COUNT> m_counts;
 };
 
@@ -27,7 +30,9 @@ private:
 class ChunkStripe
 {
 public:
-    ChunkStripe() : m_has_exposures(false) {}
+    ChunkStripe() : 
+        m_has_exposures(false) {}
+
     ~ChunkStripe() {}
 
     BlockType getBlockType(int local_z) const;
@@ -37,8 +42,8 @@ public:
     void addToSurfaceLists(Chunk &owner, int local_x, int local_y);
 
 private:
-    DISALLOW_COPYING(ChunkStripe)
-    DISALLOW_MOVING(ChunkStripe)
+    FORBID_COPYING(ChunkStripe)
+    FORBID_MOVING(ChunkStripe)
 
     // Private methods.
     bool recalcExposureForBlock(const Chunk &chunk, const LocalGrid local_coord, SurfaceTotals *pOut);

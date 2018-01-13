@@ -11,9 +11,9 @@ public:
     GLuint getTextureId() const { return m_texture_id; }
 
 private:
-    DISALLOW_DEFAULT(DrawTexture)
-    DISALLOW_COPYING(DrawTexture)
-    DISALLOW_MOVING(DrawTexture)
+    FORBID_DEFAULT_CTOR(DrawTexture)
+    FORBID_COPYING(DrawTexture)
+    FORBID_MOVING(DrawTexture)
 
     // Private ctor, since Create does the work.
     DrawTexture(const std::string &fname, sf::Image *image);

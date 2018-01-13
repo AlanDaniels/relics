@@ -29,28 +29,6 @@ const MyColor MY_LT_YELLOW(1.0f, 1.0f, 0.3f);
 const MyColor MY_LT_PURPLE(1.0f, 0.3f, 1.0f);
 
 
-// Color copy operator.
-MyColor &MyColor::operator=(const MyColor &that)
-{
-    m_red   = that.m_red;
-    m_green = that.m_green;
-    m_blue  = that.m_blue;
-    m_alpha = that.m_alpha;
-    return *this;
-}
-
-
-// Color move operator.
-MyColor &MyColor::operator=(MyColor &&that)
-{
-    m_red   = that.m_red;
-    m_green = that.m_green;
-    m_blue  = that.m_blue;
-    m_alpha = that.m_alpha;
-    return *this;
-}
-
-
 // Do a linear interpolation between two Vec2 values.
 MyVec2 MyVec2::lerp(const MyVec2 &that, float amount) const
 {
@@ -146,61 +124,6 @@ MyVec4 FourWayLerp4(
     MyVec4 upper_mid = upper_left.lerp(upper_right, amount_x);
     return lower_mid.lerp(upper_mid, amount_y);
 }
-
-
-// Matrix 4x4 copy operator.
-const MyMatrix4by4 &MyMatrix4by4::operator=(const MyMatrix4by4 &that)
-{
-    m_v00 = that.m_v00;
-    m_v01 = that.m_v01;
-    m_v02 = that.m_v02;
-    m_v03 = that.m_v03;
-
-    m_v10 = that.m_v10;
-    m_v11 = that.m_v11;
-    m_v12 = that.m_v12;
-    m_v13 = that.m_v13;
-
-    m_v20 = that.m_v20;
-    m_v21 = that.m_v21;
-    m_v22 = that.m_v22;
-    m_v23 = that.m_v23;
-
-    m_v30 = that.m_v30;
-    m_v31 = that.m_v31;
-    m_v32 = that.m_v32;
-    m_v33 = that.m_v33;
-
-    return *this;
-}
-
-
-// Matrix 4x4 move operator.
-const MyMatrix4by4 &MyMatrix4by4::operator=(MyMatrix4by4 &&that)
-{
-    m_v00 = that.m_v00;
-    m_v01 = that.m_v01;
-    m_v02 = that.m_v02;
-    m_v03 = that.m_v03;
-
-    m_v10 = that.m_v10;
-    m_v11 = that.m_v11;
-    m_v12 = that.m_v12;
-    m_v13 = that.m_v13;
-
-    m_v20 = that.m_v20;
-    m_v21 = that.m_v21;
-    m_v22 = that.m_v22;
-    m_v23 = that.m_v23;
-
-    m_v30 = that.m_v30;
-    m_v31 = that.m_v31;
-    m_v32 = that.m_v32;
-    m_v33 = that.m_v33;
-
-    return *this;
-}
-
 
 
 // Matrix mulitplication for a vector.
@@ -326,26 +249,8 @@ MyMatrix4by4 MyMatrix4by4::Frustum(
 }
 
 
-// Ray copy operator.
-const MyRay &MyRay::operator=(const MyRay &that)
-{
-    m_start = that.m_start;
-    m_dir   = that.m_dir;
-    return *this;
-}
-
-
-// Ray move operator.
-const MyRay &MyRay::operator=(MyRay &&that)
-{
-    m_start = std::move(that.m_start);
-    m_dir   = std::move(that.m_dir);
-    return *this;
-}
-
-
 // Convert a ray to a plane.
-// TODO: I'm pretty sure the negative value for the distance is right.
+// The negative value for the distance is correct.
 MyPlane MyRay::toPlane() const
 {
     GLfloat dot = (
@@ -353,24 +258,6 @@ MyPlane MyRay::toPlane() const
         (m_dir.y() * m_start.y()) +
         (m_dir.z() * m_start.z()));
     return MyPlane(m_dir, dot);
-}
-
-
-// Plane copy operator.
-MyPlane &MyPlane::operator=(const MyPlane &that)
-{
-    m_normal = that.m_normal;
-    m_dist   = that.m_dist;
-    return *this;
-}
-
-
-// Plane move operator.
-MyPlane &MyPlane::operator=(MyPlane &&that)
-{
-    m_normal = std::move(that.m_normal);
-    m_dist   = that.m_dist;
-    return *this;
 }
 
 
@@ -544,36 +431,6 @@ bool EvalRegion::operator!=(const EvalRegion &that) const
         (m_east  != that.m_east)  ||
         (m_south != that.m_south) ||
         (m_north != that.m_north));
-}
-
-
-// Eval Region copy operator.
-EvalRegion &EvalRegion::operator=(const EvalRegion &that)
-{
-    m_west  = that.m_west;
-    m_east  = that.m_east;
-    m_south = that.m_south;
-    m_north = that.m_north;
-    m_debug_west  = that.m_debug_west;
-    m_debug_east  = that.m_debug_east;
-    m_debug_south = that.m_debug_south;
-    m_debug_north = that.m_debug_north;
-    return *this;
-}
-
-
-// Eval Region move operator.
-EvalRegion &EvalRegion::operator=(EvalRegion &&that)
-{
-    m_west  = that.m_west;
-    m_east  = that.m_east;
-    m_south = that.m_south;
-    m_north = that.m_north;
-    m_debug_west  = that.m_debug_west;
-    m_debug_east  = that.m_debug_east;
-    m_debug_south = that.m_debug_south;
-    m_debug_north = that.m_debug_north;
-    return *this;
 }
 
 

@@ -37,7 +37,7 @@ public:
     bool render(const VertList_PNT &vert_list);
 
 private:
-    DISALLOW_DEFAULT(DrawState_PNT)
-    DISALLOW_COPYING(DrawState_PNT)
-    DISALLOW_MOVING(DrawState_PNT)
+    FORBID_DEFAULT_CTOR(DrawState_PNT)
+    FORBID_COPYING(DrawState_PNT)
+    FORBID_MOVING(DrawState_PNT)
 };

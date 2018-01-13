@@ -31,9 +31,9 @@ public:
     }
 
 private:
-    DISALLOW_DEFAULT(WFMaterial)
-    DISALLOW_COPYING(WFMaterial)
-    DISALLOW_MOVING(WFMaterial)
+    FORBID_DEFAULT_CTOR(WFMaterial)
+    FORBID_COPYING(WFMaterial)
+    FORBID_MOVING(WFMaterial)
 
     // Private data.
     std::string m_mat_name;
@@ -86,7 +86,7 @@ public:
     }
 
 private:
-    DISALLOW_COPYING(WFGroup)
+    FORBID_COPYING(WFGroup)
 
     // Privata data. Note that materials are shared, but vert lists aren't.
     std::string m_name;
@@ -125,9 +125,9 @@ public:
     bool conclude() const;
 
 private:
-    DISALLOW_DEFAULT(WFObject)
-    DISALLOW_COPYING(WFObject)
-    DISALLOW_MOVING(WFObject)
+    FORBID_DEFAULT_CTOR(WFObject)
+    FORBID_COPYING(WFObject)
+    FORBID_MOVING(WFObject)
 
     // A private ctor, since "Create" does the work.
     WFObject(const std::string &path);

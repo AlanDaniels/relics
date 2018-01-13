@@ -16,6 +16,9 @@ struct ConfigWorld
 
     ~ConfigWorld() {}
 
+    DEFAULT_COPYING(ConfigWorld)
+    DEFAULT_MOVING(ConfigWorld)
+
     std::string file_name;
 };
 
@@ -43,6 +46,9 @@ struct ConfigDebug
         noclip_flight_speed(1.0f) {}
 
     ~ConfigDebug() {}
+
+    DEFAULT_COPYING(ConfigDebug)
+    DEFAULT_MOVING(ConfigDebug)
 
     bool opengl;
     bool check_for_leaks;
@@ -76,6 +82,9 @@ struct ConfigWindow
 
     ~ConfigWindow() {}
 
+    DEFAULT_COPYING(ConfigWindow)
+    DEFAULT_MOVING(ConfigWindow)
+
     int  width;
     int  height;
     bool fullscreen;
@@ -90,6 +99,9 @@ struct ConfigWavefront
 
     ~ConfigWavefront() {}
 
+    DEFAULT_COPYING(ConfigWavefront)
+    DEFAULT_MOVING(ConfigWavefront)
+
     std::string vert_shader;
     std::string frag_shader;
 };
@@ -100,6 +112,9 @@ struct ConfigLandscape
     ConfigLandscape() {}
 
     ~ConfigLandscape() {}
+
+    DEFAULT_COPYING(ConfigLandscape)
+    DEFAULT_MOVING(ConfigLandscape)
 
     std::string vert_shader;
     std::string frag_shader;
@@ -117,6 +132,9 @@ struct ConfigSkybox
     ConfigSkybox() {}
 
     ~ConfigSkybox() {}
+
+    DEFAULT_COPYING(ConfigSkybox)
+    DEFAULT_MOVING(ConfigSkybox)
 
     std::string vert_shader;
     std::string frag_shader;
@@ -136,6 +154,9 @@ struct ConfigHitTest
 
     ~ConfigHitTest() {}
 
+    DEFAULT_COPYING(ConfigHitTest)
+    DEFAULT_MOVING(ConfigHitTest)
+
     std::string vert_shader;
     std::string frag_shader;
     std::string texture;
@@ -153,6 +174,9 @@ struct ConfigRender
         fade_distance_meters(80.0f) {}
 
     ~ConfigRender() {}
+
+    DEFAULT_COPYING(ConfigRender)
+    DEFAULT_MOVING(ConfigRender)
 
     std::string hud_font;
 
@@ -181,13 +205,16 @@ struct ConfigLogic
 
     ~ConfigLogic() {}
 
-    int     eval_blocks;
-    GLfloat hit_test_distance_meters;
+    DEFAULT_COPYING(ConfigLogic)
+    DEFAULT_MOVING(ConfigLogic)
 
     GLfloat getHitTestDistanceCm() const { return hit_test_distance_meters * 100.0f; }
 
     // Note that our OpenGL drawing distance can't be more than what's loaded in the world.
     GLfloat getDrawDistanceCm() const { return eval_blocks * CHUNK_WIDTH * 100.0f; }
+
+    int     eval_blocks;
+    GLfloat hit_test_distance_meters;
 };
 
 
@@ -198,6 +225,9 @@ public:
 
     ~Config() {}
 
+    DEFAULT_COPYING(Config)
+    DEFAULT_MOVING(Config)
+
     bool loadFromFile();
 
     ConfigWorld  world;
@@ -207,10 +237,6 @@ public:
     ConfigLogic  logic;
 
 private:
-    // Forbid copying.
-    Config(const Config &that) = delete;
-    void operator=(const Config &that) = delete;
-
     int clampInt(int val, int min_val, int max_val);
     GLfloat clampFloat(GLfloat val, GLfloat min_val, GLfloat max_val);
 

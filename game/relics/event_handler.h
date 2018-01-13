@@ -26,22 +26,22 @@ public:
         m_mouse_diff_x(mouse_diff_x),
         m_mouse_diff_y(mouse_diff_y) {}
 
-    bool getMoveFwd()    const { return m_move_fwd; }
-    bool getMoveBkwd()   const { return m_move_bkwd; }
-    bool getMoveLeft()   const { return m_move_left; }
-    bool getMoveRight()  const { return m_move_right; }
-    bool getMoveUp()     const { return m_move_up; }
-    bool getMoveDown()   const { return m_move_down; }
-    bool getSpeedBoost() const { return m_speed_boost; }
-    int  getMouseDiffX() const { return m_mouse_diff_x; }
-    int  getMouseDiffY() const { return m_mouse_diff_y; }
+    inline bool getMoveFwd()    const { return m_move_fwd; }
+    inline bool getMoveBkwd()   const { return m_move_bkwd; }
+    inline bool getMoveLeft()   const { return m_move_left; }
+    inline bool getMoveRight()  const { return m_move_right; }
+    inline bool getMoveUp()     const { return m_move_up; }
+    inline bool getMoveDown()   const { return m_move_down; }
+    inline bool getSpeedBoost() const { return m_speed_boost; }
+    inline int  getMouseDiffX() const { return m_mouse_diff_x; }
+    inline int  getMouseDiffY() const { return m_mouse_diff_y; }
 
 private:
-    // Forbid copying, and default ctor.
-    EventStateMsg() = delete;
-    EventStateMsg(const EventStateMsg &that) = delete;
-    void operator=(const EventStateMsg &that) = delete;
+    FORBID_DEFAULT_CTOR(EventStateMsg)
+    FORBID_COPYING(EventStateMsg)
+    FORBID_MOVING(EventStateMsg)
 
+    // Private data
     bool m_move_fwd;
     bool m_move_bkwd;
     bool m_move_left;
@@ -68,10 +68,9 @@ public:
     void onGameTick(int elapsed);
 
 private:
-    // Forbid copying, and default ctor.
-    EventHandler() = delete;
-    EventHandler(const EventHandler &that) = delete;
-    void operator=(const EventHandler &that) = delete;
+    FORBID_DEFAULT_CTOR(EventHandler)
+    FORBID_COPYING(EventHandler)
+    FORBID_MOVING(EventHandler)
 
     void centerMouse();
 

@@ -11,19 +11,9 @@ class VertList_Base
 public:
     VertList_Base();
 
-    VertList_Base(VertList_Base &&that) :
-        m_vertex_buffer_ID(that.m_vertex_buffer_ID),
-        m_current(that.m_current),
-        m_verts(std::move(that.m_verts)) {}
-
     virtual ~VertList_Base();
 
-    VertList_Base &operator=(VertList_Base &&that) {
-        m_vertex_buffer_ID = that.m_vertex_buffer_ID;
-        m_current = that.m_current;
-        m_verts   = std::move(that.m_verts);
-        return *this;
-    }
+    DEFAULT_MOVING(VertList_Base)
 
     void addQuad(const T(&items)[4]);
     void add(const T *items, int count);
@@ -32,16 +22,15 @@ public:
 
     void reserve(int cap) { m_verts.reserve(cap); }
 
-    bool isCurrent()    const { return m_current; }
-    int  getItemCount() const { return m_verts.size(); }
-    int  getByteCount() const { return m_verts.size() * sizeof(T); }
-    int  getTriCount()  const { return m_verts.size() / 3; }
-
-    GLuint getVertexBufferID() const { return m_vertex_buffer_ID; }
-    const std::vector<T> &getVerts() const { return m_verts; }
+    inline bool isCurrent()    const { return m_current; }
+    inline int  getItemCount() const { return m_verts.size(); }
+    inline int  getByteCount() const { return m_verts.size() * sizeof(T); }
+    inline int  getTriCount()  const { return m_verts.size() / 3; }
+    inline GLuint getVertexBufferID() const { return m_vertex_buffer_ID; }
+    inline const std::vector<T> &getVerts() const { return m_verts; }
 
 private:
-    DISALLOW_COPYING(VertList_Base)
+    FORBID_COPYING(VertList_Base)
 
     // Private data.
     GLuint m_vertex_buffer_ID;

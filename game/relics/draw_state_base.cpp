@@ -257,7 +257,7 @@ bool DrawState_Base::create(
 
 
 // Update a uniform float.
-bool DrawState_Base::updateUniformFloat(const std::string &name, GLfloat value)
+bool DrawState_Base::updateUniformFloat(const std::string &name, GLfloat value) const
 {
     // Use our compiled program.
     glUseProgram(m_program_ID);
@@ -274,7 +274,7 @@ bool DrawState_Base::updateUniformFloat(const std::string &name, GLfloat value)
 
 
 // Update a uniform vec4.
-bool DrawState_Base::updateUniformVec4(const std::string &name, const MyVec4 &val)
+bool DrawState_Base::updateUniformVec4(const std::string &name, const MyVec4 &val) const
 {
     // Use our compiled program.
     glUseProgram(m_program_ID);
@@ -291,7 +291,7 @@ bool DrawState_Base::updateUniformVec4(const std::string &name, const MyVec4 &va
 
 
 // Update a uniform matrix-4by4.
-bool DrawState_Base::updateUniformMatrix4by4(const std::string &name, const MyMatrix4by4 &val)
+bool DrawState_Base::updateUniformMatrix4by4(const std::string &name, const MyMatrix4by4 &val) const
 {
     // Use our compiled program.
     glUseProgram(m_program_ID);
@@ -308,7 +308,7 @@ bool DrawState_Base::updateUniformMatrix4by4(const std::string &name, const MyMa
 
 
 // Update a uniform texture.
-bool DrawState_Base::updateUniformTexture(int index, const DrawTexture &texture)
+bool DrawState_Base::updateUniformTexture(int index, const DrawTexture &texture) const
 {
     assert(index <= MAX_TEXTURES);
 
@@ -326,7 +326,7 @@ bool DrawState_Base::updateUniformTexture(int index, const DrawTexture &texture)
 
 
 // Update a uniform texture, cubemap version.
-bool DrawState_Base::updateUniformCubemapTexture(int index, const DrawCubemapTexture &cubemap_texture)
+bool DrawState_Base::updateUniformCubemapTexture(int index, const DrawCubemapTexture &cubemap_texture) const
 {
     assert(index <= MAX_TEXTURES);
 
@@ -344,7 +344,7 @@ bool DrawState_Base::updateUniformCubemapTexture(int index, const DrawCubemapTex
 
 
 // Stuff right before the render.
-bool DrawState_Base::renderSetup()
+bool DrawState_Base::renderSetup() const
 {
     // Switch to our draw state settings.
     (GetConfig().render.cull_backfaces ? glEnable : glDisable)(GL_CULL_FACE);
@@ -359,7 +359,7 @@ bool DrawState_Base::renderSetup()
 
 
 // Right after the render. Clean up after ourselves.
-bool DrawState_Base::renderTeardown()
+bool DrawState_Base::renderTeardown() const
 {
     for (const auto &iter : m_attrib_map) {
         glDisableVertexAttribArray(iter.second);

@@ -6,6 +6,9 @@
 
 class DrawTexture;
 class DrawCubemapTexture;
+class DrawState_P;
+class DrawState_PT;
+class DrawState_PNT;
 
 
 // Pool all our resources in one place (textures, shaders,
@@ -28,12 +31,18 @@ public:
 
     const DrawCubemapTexture &getSkyboxTexture() const { return *m_skybox_tex; }
 
+    const DrawState_PNT &getWavefrontDrawState() const { return *m_wavefront_draw_state; }
+    const DrawState_PNT &getLandscapeDrawState() const { return *m_landscape_draw_state; }
+    const DrawState_P   &getSkyboxDrawState()    const { return *m_skybox_draw_state; }
+    const DrawState_PT  &getHitTestDrawState()   const { return *m_hit_test_draw_state; }
+
 private:
     FORBID_COPYING(ResourcePool)
     FORBID_MOVING(ResourcePool)
 
     // Private methods.
     bool loadTextures();
+    bool loadShaders();
 
     // Private data.
     std::unique_ptr<DrawTexture> m_grass_tex;
@@ -44,10 +53,14 @@ private:
     std::unique_ptr<DrawTexture> m_hit_test_tex;
 
     std::unique_ptr<DrawCubemapTexture> m_skybox_tex;
+
+    std::unique_ptr<DrawState_PNT> m_wavefront_draw_state;
+    std::unique_ptr<DrawState_PNT> m_landscape_draw_state;
+    std::unique_ptr<DrawState_P>   m_skybox_draw_state;
+    std::unique_ptr<DrawState_PT>  m_hit_test_draw_state;
 };
 
 
-// Get at our one expedient global config object.
+// Get at our one expedient global resource pool.
 bool LoadResourcePool(); 
-
 const ResourcePool &GetResourcePool();

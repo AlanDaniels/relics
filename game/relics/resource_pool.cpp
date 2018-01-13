@@ -4,7 +4,11 @@
 
 #include "config.h"
 #include "draw_cubemap_texture.h"
+#include "draw_state_p.h"
+#include "draw_state_pt.h"
+#include "draw_state_pnt.h"
 #include "draw_texture.h"
+#include "common_util.h"
 
 
 // Our one expedient resource pool.
@@ -25,6 +29,10 @@ const ResourcePool &GetResourcePool() {
 bool ResourcePool::load()
 {
     if (!loadTextures()) {
+        return false;
+    }
+
+    if (!loadShaders()) {
         return false;
     }
 
@@ -73,3 +81,137 @@ bool ResourcePool::loadTextures()
         (m_skybox_tex   != nullptr));
     return result;
 }
+
+
+bool ResourcePool::loadShaders()
+{
+    // Clear out the old.
+    m_wavefront_draw_state = nullptr;
+    m_landscape_draw_state = nullptr;
+    m_skybox_draw_state    = nullptr;
+    m_hit_test_draw_state  = nullptr;
+
+    const ConfigRender &conf_render = GetConfig().render;
+
+    // Init our Wavefront draw state.
+    {
+        DrawStateSettings settings;
+        settings.title = "wavefront";
+        settings.enable_blending   = true;
+        settings.enable_depth_test = true;
+        settings.depth_func = GL_LEQUAL;
+        settings.draw_mode  = GL_TRIANGLES;
+        settings.vert_shader_fname = conf_render.landscape.vert_shader;
+        settings.frag_shader_fname = conf_render.landscape.frag_shader;
+
+        auto result = std::make_unique<DrawState_PNT>(1);
+
+        bool success = (
+            result->addUniformMatrix4by4("mat_frustum") &&
+            result->addUniformFloat("fade_distance") &&
+            result->addUniformFloat("draw_distance") &&
+            result->addUniformFloat("camera_yaw") &&
+            result->addUniformFloat("camera_pitch") &&
+            result->addUniformVec4("camera_pos") &&
+            result->create(settings));
+
+        if (!success) {
+            PrintDebug("Could not create the Wavefront draw state. Bye!\n");
+            return false;
+        }
+
+        m_wavefront_draw_state = std::move(result);
+    }
+
+    // Init our landscape draw state.
+    {
+        DrawStateSettings settings;
+        settings.title = "landscape";
+        settings.enable_blending   = true;
+        settings.enable_depth_test = true;
+        settings.depth_func = GL_LEQUAL;
+        settings.draw_mode  = GL_TRIANGLES;
+        settings.vert_shader_fname = conf_render.landscape.vert_shader;
+        settings.frag_shader_fname = conf_render.landscape.frag_shader;
+
+        auto result = std::make_unique<DrawState_PNT>(1);
+
+        bool success = (
+            result->addUniformMatrix4by4("mat_frustum") &&
+            result->addUniformFloat("fade_distance") &&
+            result->addUniformFloat("draw_distance") &&
+            result->addUniformFloat("camera_yaw") &&
+            result->addUniformFloat("camera_pitch") &&
+            result->addUniformVec4("camera_pos") &&
+            result->create(settings));
+
+        if (!success) {
+            PrintDebug("Could not create the landscape draw state. Bye!\n");
+            return false;
+        }
+
+        m_landscape_draw_state = std::move(result);
+    }
+
+    // Init our skybox draw state.
+    {
+        DrawStateSettings settings;
+        settings.title = "skybox";
+        settings.enable_blending   = false;
+        settings.enable_depth_test = false;
+        settings.depth_func = GL_ALWAYS;
+        settings.draw_mode  = GL_TRIANGLES;
+        settings.vert_shader_fname = conf_render.skybox.vert_shader;
+        settings.frag_shader_fname = conf_render.skybox.frag_shader;
+
+        auto result = std::make_unique<DrawState_P>(1);
+
+        bool success = (
+            result->addUniformMatrix4by4("mat_frustum") &&
+            result->addUniformMatrix4by4("mat_frustum_rotate") &&
+            result->create(settings));
+
+        if (!success) {
+            PrintDebug("Could not create the sky cube draw state. Bye!\n");
+            return false;
+        }
+
+        m_skybox_draw_state = std::move(result);
+    }
+
+    // Init our hit test draw state.
+    {
+        DrawStateSettings settings;
+        settings.title = "hit_test";
+        settings.enable_blending   = true;
+        settings.enable_depth_test = true;
+        settings.depth_func = GL_LEQUAL;
+        settings.draw_mode  = GL_TRIANGLES;
+        settings.vert_shader_fname = conf_render.hit_test.vert_shader;
+        settings.frag_shader_fname = conf_render.hit_test.frag_shader;
+
+        auto result = std::make_unique<DrawState_PT>(1);
+
+        bool success = (
+            result->addUniformMatrix4by4("mat_frustum") &&
+            result->addUniformFloat("fade_distance") &&
+            result->addUniformFloat("draw_distance") &&
+            result->addUniformFloat("camera_yaw") &&
+            result->addUniformFloat("camera_pitch") &&
+            result->addUniformVec4("camera_pos") &&
+            result->create(settings));
+
+        if (!success) {
+            PrintDebug("Could not create the draw state for hit tests. Bye!\n");
+            return false;
+        }
+
+        m_hit_test_draw_state = std::move(result);
+    }
+   
+    // All done.
+    return true;
+}
+
+
+

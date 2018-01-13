@@ -31,10 +31,11 @@ class DrawState_PNT : public DrawState_Base
 public:
     DrawState_PNT(int uniform_texture_count) :
         DrawState_Base(uniform_texture_count) {}
+
     virtual ~DrawState_PNT() {}
 
     bool create(const DrawStateSettings &settings);
-    bool render(const VertList_PNT &vert_list);
+    bool render(const VertList_PNT &vert_list) const;
 
 private:
     FORBID_DEFAULT_CTOR(DrawState_PNT)

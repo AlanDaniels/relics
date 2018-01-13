@@ -11,7 +11,7 @@ struct RenderStats;
 class HeadsUpDisplay
 {
 public:
-    HeadsUpDisplay::HeadsUpDisplay(sf::RenderWindow &window) :
+    HeadsUpDisplay(sf::RenderWindow &window) :
         m_window(window) {}
 
     ~HeadsUpDisplay() {}

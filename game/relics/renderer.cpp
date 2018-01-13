@@ -14,10 +14,6 @@
 bool Renderer::init()
 {
     buildSkyboxVertList();
-    if (!loadShaders()) {
-        return false;
-    }
-
     return true;
 }
 
@@ -103,117 +99,6 @@ void Renderer::buildSkyboxVertList()
     m_skybox_vert_list.addQuad(bottom_quad);
     m_skybox_vert_list.update();
 }
-
-
-bool Renderer::loadShaders()
-{
-    const ConfigRender &conf_render = GetConfig().render;
-
-    bool success;
-
-    // Init our Wavefront draw state.
-    DrawStateSettings wavefront_settings;
-    wavefront_settings.title = "wavefront";
-    wavefront_settings.enable_blending   = true;
-    wavefront_settings.enable_depth_test = true;
-    wavefront_settings.depth_func = GL_LEQUAL;
-    wavefront_settings.draw_mode  = GL_TRIANGLES;
-    wavefront_settings.vert_shader_fname = conf_render.landscape.vert_shader;
-    wavefront_settings.frag_shader_fname = conf_render.landscape.frag_shader;
-
-    m_wavefront_draw_state = std::make_unique<DrawState_PNT>(1);
-
-    success = (
-        m_wavefront_draw_state->addUniformMatrix4by4("mat_frustum") &&
-        m_wavefront_draw_state->addUniformFloat("fade_distance") &&
-        m_wavefront_draw_state->addUniformFloat("draw_distance") &&
-        m_wavefront_draw_state->addUniformFloat("camera_yaw") &&
-        m_wavefront_draw_state->addUniformFloat("camera_pitch") &&
-        m_wavefront_draw_state->addUniformVec4("camera_pos") &&
-        m_wavefront_draw_state->create(wavefront_settings));
-
-    if (!success) {
-        PrintDebug("Could not create the Wavefront draw state. Bye!\n");
-        return false;
-    }
-
-    // Init our landscape draw state.
-    DrawStateSettings landscape_settings;
-    landscape_settings.title = "landscape";
-    landscape_settings.enable_blending   = true;
-    landscape_settings.enable_depth_test = true;
-    landscape_settings.depth_func = GL_LEQUAL;
-    landscape_settings.draw_mode  = GL_TRIANGLES;
-    landscape_settings.vert_shader_fname = conf_render.landscape.vert_shader;
-    landscape_settings.frag_shader_fname = conf_render.landscape.frag_shader;
-
-    m_landscape_draw_state = std::make_unique<DrawState_PNT>(1);
-
-    success = (
-        m_landscape_draw_state->addUniformMatrix4by4("mat_frustum") &&
-        m_landscape_draw_state->addUniformFloat("fade_distance") &&
-        m_landscape_draw_state->addUniformFloat("draw_distance") &&
-        m_landscape_draw_state->addUniformFloat("camera_yaw")    &&
-        m_landscape_draw_state->addUniformFloat("camera_pitch")  &&
-        m_landscape_draw_state->addUniformVec4("camera_pos")     &&
-        m_landscape_draw_state->create(landscape_settings));
-
-    if (!success) {
-        PrintDebug("Could not create the landscape draw state. Bye!\n");
-        return false;
-    }
-
-    // Init our skybox draw state.
-    DrawStateSettings skybox_settings;
-    skybox_settings.title = "skybox";
-    skybox_settings.enable_blending   = false;
-    skybox_settings.enable_depth_test = false;
-    skybox_settings.depth_func = GL_ALWAYS;
-    skybox_settings.draw_mode  = GL_TRIANGLES;
-    skybox_settings.vert_shader_fname = conf_render.skybox.vert_shader;
-    skybox_settings.frag_shader_fname = conf_render.skybox.frag_shader;
-
-    m_skybox_draw_state = std::make_unique<DrawState_P>(1);
-
-    success = (
-        m_skybox_draw_state->addUniformMatrix4by4("mat_frustum") &&
-        m_skybox_draw_state->addUniformMatrix4by4("mat_frustum_rotate") &&
-        m_skybox_draw_state->create(skybox_settings));
-
-    if (!success) {
-        PrintDebug("Could not create the sky cube draw state. Bye!\n");
-        return false;
-    }
-
-    // Init our hit test draw state.
-    DrawStateSettings hit_test_settings;
-    hit_test_settings.title = "hit_test";
-    hit_test_settings.enable_blending   = true;
-    hit_test_settings.enable_depth_test = true;
-    hit_test_settings.depth_func = GL_LEQUAL;
-    hit_test_settings.draw_mode  = GL_TRIANGLES;
-    hit_test_settings.vert_shader_fname = conf_render.hit_test.vert_shader;
-    hit_test_settings.frag_shader_fname = conf_render.hit_test.frag_shader;
-
-    m_hit_test_draw_state = std::make_unique<DrawState_PT>(1);
-
-    success = (
-        m_hit_test_draw_state->addUniformMatrix4by4("mat_frustum") &&
-        m_hit_test_draw_state->addUniformFloat("fade_distance") &&
-        m_hit_test_draw_state->addUniformFloat("draw_distance") &&
-        m_hit_test_draw_state->addUniformFloat("camera_yaw")    &&
-        m_hit_test_draw_state->addUniformFloat("camera_pitch")  &&
-        m_hit_test_draw_state->addUniformVec4("camera_pos")     &&
-        m_hit_test_draw_state->create(hit_test_settings));
-
-    if (!success) {
-        PrintDebug("Could not create the draw state for hit tests. Bye!\n");
-        return false;
-    }
-   
-    return true;
-}
-
 
 
 // Get the list of all the chunks we want to render.
@@ -316,17 +201,16 @@ void Renderer::renderSkybox(RenderStats *pOut_stats)
 {
     const auto &pool = GetResourcePool();
     const auto &skybox_tex = pool.getSkyboxTexture();
+    const auto &skybox_ds  = pool.getSkyboxDrawState();
 
     // Pluck out what we need from the game world.
     GLfloat camera_yaw   = m_world.getCameraYaw();
     GLfloat camera_pitch = m_world.getCameraPitch();
 
-    m_skybox_draw_state->updateUniformMatrix4by4("mat_frustum", m_frustum_matrix);
-    m_skybox_draw_state->updateUniformMatrix4by4("mat_frustum_rotate", m_frustum_rotate_matrix);
-
-    m_skybox_draw_state->updateUniformCubemapTexture(0, skybox_tex);
-
-    m_skybox_draw_state->render(m_skybox_vert_list);
+    skybox_ds.updateUniformMatrix4by4("mat_frustum", m_frustum_matrix);
+    skybox_ds.updateUniformMatrix4by4("mat_frustum_rotate", m_frustum_rotate_matrix);
+    skybox_ds.updateUniformCubemapTexture(0, skybox_tex);
+    skybox_ds.render(m_skybox_vert_list);
 
     pOut_stats->state_changes++;
 }
@@ -357,21 +241,23 @@ void Renderer::renderLandscapeList(
     GLfloat camera_pitch = m_world.getCameraPitch();
     MyVec4  camera_pos   = m_world.getCameraPos();
 
-    m_landscape_draw_state->updateUniformMatrix4by4("mat_frustum", m_frustum_matrix);   
-    m_landscape_draw_state->updateUniformFloat("fade_distance", fade_distance_cm);
-    m_landscape_draw_state->updateUniformFloat("draw_distance", draw_distance_cm);
+    const auto &landscape_ds = GetResourcePool().getLandscapeDrawState();
 
-    m_landscape_draw_state->updateUniformFloat("camera_yaw",   camera_yaw);
-    m_landscape_draw_state->updateUniformFloat("camera_pitch", camera_pitch);
-    m_landscape_draw_state->updateUniformVec4("camera_pos",    camera_pos);
+    landscape_ds.updateUniformMatrix4by4("mat_frustum", m_frustum_matrix);   
+    landscape_ds.updateUniformFloat("fade_distance", fade_distance_cm);
+    landscape_ds.updateUniformFloat("draw_distance", draw_distance_cm);
 
-    m_landscape_draw_state->updateUniformTexture(0, tex);
+    landscape_ds.updateUniformFloat("camera_yaw",   camera_yaw);
+    landscape_ds.updateUniformFloat("camera_pitch", camera_pitch);
+    landscape_ds.updateUniformVec4("camera_pos",    camera_pos);
+
+    landscape_ds.updateUniformTexture(0, tex);
 
     for (auto iter : chunk_vec) {
         const VertList_PNT &vert_list = iter->getSurfaceList_RO(surf);
         int item_count = vert_list.getItemCount();
         if (item_count > 0) {
-            m_landscape_draw_state->render(vert_list);
+            landscape_ds.render(vert_list);
             pOut_stats->triangle_count += vert_list.getTriCount();
         }
     }
@@ -392,13 +278,15 @@ void Renderer::renderWFObjects(
     GLfloat camera_pitch = m_world.getCameraPitch();
     MyVec4  camera_pos   = m_world.getCameraPos();
 
-    m_wavefront_draw_state->updateUniformMatrix4by4("mat_frustum", m_frustum_matrix);
-    m_wavefront_draw_state->updateUniformFloat("fade_distance", fade_distance_cm);
-    m_wavefront_draw_state->updateUniformFloat("draw_distance", draw_distance_cm);
+    const auto &wavefront_ds = GetResourcePool().getWavefrontDrawState();
 
-    m_wavefront_draw_state->updateUniformFloat("camera_yaw",   camera_yaw);
-    m_wavefront_draw_state->updateUniformFloat("camera_pitch", camera_pitch);
-    m_wavefront_draw_state->updateUniformVec4 ("camera_pos",   camera_pos);
+    wavefront_ds.updateUniformMatrix4by4("mat_frustum", m_frustum_matrix);
+    wavefront_ds.updateUniformFloat("fade_distance", fade_distance_cm);
+    wavefront_ds.updateUniformFloat("draw_distance", draw_distance_cm);
+
+    wavefront_ds.updateUniformFloat("camera_yaw",   camera_yaw);
+    wavefront_ds.updateUniformFloat("camera_pitch", camera_pitch);
+    wavefront_ds.updateUniformVec4 ("camera_pos",   camera_pos);
 
     for (const auto &chunk_it : chunk_list) {
         for (const auto &thing_it : chunk_it->getWFObjects()) {
@@ -407,8 +295,8 @@ void Renderer::renderWFObjects(
                 const auto *draw_texture = face_group.getMaterial()->getDrawTexture();
                 const auto &vert_list    = face_group.getVertList();
 
-                m_wavefront_draw_state->updateUniformTexture(0, *draw_texture);
-                m_wavefront_draw_state->render(vert_list);
+                wavefront_ds.updateUniformTexture(0, *draw_texture);
+                wavefront_ds.render(vert_list);
             }
         }
     }
@@ -421,6 +309,7 @@ void Renderer::renderHitTest(RenderStats *pOut_stats)
 {
     const auto &pool = GetResourcePool();
     const auto &hit_test_tex = pool.getHitTestTexture();
+    const auto &hit_test_ds  = pool.getHitTestDrawState();
 
     GLfloat fade_distance_cm = GetConfig().render.getFadeDistanceCm();
     GLfloat draw_distance_cm = GetConfig().logic.getDrawDistanceCm();
@@ -432,17 +321,14 @@ void Renderer::renderHitTest(RenderStats *pOut_stats)
     const VertList_PT &vert_list = m_world.getHitTestVertList();
     int item_count = vert_list.getItemCount();
     if (item_count > 0) {
-        m_hit_test_draw_state->updateUniformMatrix4by4("mat_frustum", m_frustum_matrix);
-        m_hit_test_draw_state->updateUniformFloat("fade_distance", fade_distance_cm);
-        m_hit_test_draw_state->updateUniformFloat("draw_distance", draw_distance_cm);
-
-        m_hit_test_draw_state->updateUniformFloat("camera_yaw",   camera_yaw);
-        m_hit_test_draw_state->updateUniformFloat("camera_pitch", camera_pitch);
-        m_hit_test_draw_state->updateUniformVec4("camera_pos",    camera_pos);
-
-        m_hit_test_draw_state->updateUniformTexture(0, hit_test_tex);
-
-        m_hit_test_draw_state->render(vert_list);
+        hit_test_ds.updateUniformMatrix4by4("mat_frustum", m_frustum_matrix);
+        hit_test_ds.updateUniformFloat("fade_distance", fade_distance_cm);
+        hit_test_ds.updateUniformFloat("draw_distance", draw_distance_cm);
+        hit_test_ds.updateUniformFloat("camera_yaw",   camera_yaw);
+        hit_test_ds.updateUniformFloat("camera_pitch", camera_pitch);
+        hit_test_ds.updateUniformVec4("camera_pos",    camera_pos);
+        hit_test_ds.updateUniformTexture(0, hit_test_tex);
+        hit_test_ds.render(vert_list);
 
         pOut_stats->state_changes++;
         pOut_stats->triangle_count += vert_list.getTriCount();

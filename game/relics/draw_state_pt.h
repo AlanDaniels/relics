@@ -1,6 +1,7 @@
 #pragma once
 
 #include "stdafx.h"
+
 #include "draw_state_base.h"
 #include "my_math.h"
 #include "vert_list_base.h"
@@ -28,10 +29,11 @@ class DrawState_PT : public DrawState_Base
 public:
     DrawState_PT(int uniform_texture_count) :
         DrawState_Base(uniform_texture_count) {}
+
     virtual ~DrawState_PT() {}
 
     bool create(const DrawStateSettings &settings);
-    bool render(const VertList_PT &vert_list);
+    bool render(const VertList_PT &vert_list) const;
 
 private:
     FORBID_DEFAULT_CTOR(DrawState_PT)

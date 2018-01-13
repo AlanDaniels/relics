@@ -32,9 +32,12 @@ struct DrawStateSettings
 };
 
 
+// Throughout our draw states, we'll have plenty of methods that change OpenGL's'
+// actual state machine, but the internals of the object itself will be unchanged.'
+// For the sake of clean code, we'll mark all these methods as "const".
+// Also, I really doubt we'll ever need more than four textures.
 class DrawState_Base
 {
-    // I really doubt we'll ever need more than four textures.
     static const int MAX_TEXTURES = 4;
 
 public:
@@ -47,23 +50,22 @@ public:
         assert(m_uni_tex_count <= MAX_TEXTURES);
     }
 
-    // ...but when we delete, free everything up.
     virtual ~DrawState_Base();
 
     bool addUniformFloat(const std::string &name);
     bool addUniformVec4(const std::string &name);
     bool addUniformMatrix4by4(const std::string &name);
 
-    bool updateUniformFloat(const std::string &name, GLfloat val);
-    bool updateUniformVec4(const std::string &name, const MyVec4 &val);
-    bool updateUniformMatrix4by4(const std::string &name, const MyMatrix4by4 &val);
+    bool updateUniformFloat(const std::string &name, GLfloat val) const;
+    bool updateUniformVec4(const std::string &name, const MyVec4 &val) const;
+    bool updateUniformMatrix4by4(const std::string &name, const MyMatrix4by4 &val) const;
 
-    bool updateUniformTexture(int index, const DrawTexture &texture);
-    bool updateUniformCubemapTexture(int index, const DrawCubemapTexture &cubemap_texture);
+    bool updateUniformTexture(int index, const DrawTexture &texture) const;
+    bool updateUniformCubemapTexture(int index, const DrawCubemapTexture &cubemap_texture) const;
 
 protected:
-    bool  renderSetup();
-    bool  renderTeardown();
+    bool  renderSetup() const;
+    bool  renderTeardown() const;
     GLint getAttribute(const std::string &name) const;
 
     bool create(const std::vector<std::string> &attrib_names, const DrawStateSettings &settings);

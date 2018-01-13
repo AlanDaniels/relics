@@ -14,7 +14,7 @@ bool DrawState_P::create(const DrawStateSettings &settings)
 
 
 // This is where the rubber hits the road.
-bool DrawState_P::render(const VertList_P &vert_list)
+bool DrawState_P::render(const VertList_P &vert_list) const
 {
     assert(vert_list.isCurrent());
 

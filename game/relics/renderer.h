@@ -3,8 +3,6 @@
 #include "stdafx.h"
 #include "draw_cubemap_texture.h"
 #include "draw_state_p.h"
-#include "draw_state_pt.h"
-#include "draw_state_pnt.h"
 #include "draw_texture.h"
 #include "game_world.h"
 
@@ -43,7 +41,6 @@ private:
     // Private methods.
     void rebuildUniformMatrices();
     void buildSkyboxVertList();
-    bool loadShaders();
 
     std::vector<const Chunk *> getChunksToRender(RenderStats *pOut_stats);
 
@@ -65,11 +62,6 @@ private:
 
     MyMatrix4by4 m_frustum_matrix;
     MyMatrix4by4 m_frustum_rotate_matrix;
-
-    std::unique_ptr<DrawState_PNT> m_wavefront_draw_state;
-    std::unique_ptr<DrawState_PNT> m_landscape_draw_state;
-    std::unique_ptr<DrawState_P>   m_skybox_draw_state;
-    std::unique_ptr<DrawState_PT>  m_hit_test_draw_state;
 
     VertList_P m_skybox_vert_list;
 };

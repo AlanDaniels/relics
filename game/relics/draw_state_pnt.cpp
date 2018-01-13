@@ -14,7 +14,7 @@ bool DrawState_PNT::create(const DrawStateSettings &settings)
 
 
 // This is where the rubber hits the road.
-bool DrawState_PNT::render(const VertList_PNT &vert_list)
+bool DrawState_PNT::render(const VertList_PNT &vert_list) const
 {
     // Make sure the vert list is up to date.
     assert(vert_list.isCurrent());

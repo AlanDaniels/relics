@@ -27,7 +27,7 @@ public:
     virtual ~DrawState_P() {}
 
     bool create(const DrawStateSettings &settings);
-    bool render(const VertList_P &vert_list);
+    bool render(const VertList_P &vert_list) const;
 
 private:
     FORBID_DEFAULT_CTOR(DrawState_P)

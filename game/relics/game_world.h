@@ -2,9 +2,9 @@
 
 #include "stdafx.h"
 
-#include "my_math.h"
-#include "chunk_hit_test.h"
 #include "chunk_loader.h"
+#include "hit_test_result.h"
+#include "my_math.h"
 #include "wavefront_object.h"
 
 
@@ -25,24 +25,11 @@ public:
     sqlite3 *getDatabase() { return m_database; }
 
     void setPaused(bool paused) { m_paused = paused; }
-    bool isPaused() const { return m_paused; }
 
     void onGameTick(int elapsed_msec, const EventStateMsg &msg);
 
-    int     getTimeMsecs() const { return m_time_msec; }
-    GLfloat getTimeSecs()  const { return m_time_msec / 1000.0f; }
-
-    GLfloat getCameraPitch() const { return m_camera_pitch; }
-    GLfloat getCameraYaw()   const { return m_camera_yaw; }
-    const MyVec4 &getCameraPos() const { return m_camera_pos; }
-
     const Chunk *getRequiredChunk(const ChunkOrigin &origin) const;
     const Chunk *getOptionalChunk(const ChunkOrigin &origin) const;
-    int getChunksInMemoryCount() const { return m_chunk_map.size(); }
-
-    bool getHitTestSuccess() const { return m_hit_test_success; }
-    const ChunkHitTestDetail &getHitTestDetail() const { return m_hit_test_detail; }
-    const VertList_PT &getHitTestVertList() const { return m_hit_test_vert_list; }
 
     MyRay getCameraEyeRay() const;
 
@@ -52,8 +39,21 @@ public:
 
     void deleteBlockInFrontOfUs();
 
-    std::unique_ptr<WFObject> cloneWFObject(
-        const std::string &name, const MyVec4 &translate);
+    // Getters.
+    bool isPaused() const { return m_paused; }
+
+    int getChunksInMemoryCount() const { return m_chunk_map.size(); }
+
+    int     getTimeMsecs() const { return m_time_msec; }
+    GLfloat getTimeSecs()  const { return m_time_msec / 1000.0f; }
+
+    GLfloat getCameraPitch() const { return m_camera_pitch; }
+    GLfloat getCameraYaw()   const { return m_camera_yaw; }
+    const MyVec4 &getCameraPos() const { return m_camera_pos; }
+
+    bool getHitTestSuccess() const { return m_hit_test_success; }
+    const HitTestResult &getHitTestResult() const { return m_hit_test_result; }
+    const VertList_PT &getHitTestVertList() const { return m_hit_test_vert_list; }
 
 private:
     FORBID_DEFAULT_CTOR(GameWorld)
@@ -64,7 +64,6 @@ private:
     static const int WORKER_PACE_MSECS = 2000;
 
     MyVec4 getCameraStartPos() const;
-    bool loadWFObjects();
 
     void updateWorld();
     void clampRotations();
@@ -85,9 +84,7 @@ private:
 
     std::map<ChunkOrigin, std::unique_ptr<Chunk>> m_chunk_map;
 
-    std::map<std::string, std::unique_ptr<WFObject>> m_wfobj_map;
-
     bool m_hit_test_success;
-    ChunkHitTestDetail m_hit_test_detail;
+    HitTestResult m_hit_test_result;
     VertList_PT m_hit_test_vert_list;
 };

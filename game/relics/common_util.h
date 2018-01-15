@@ -3,19 +3,21 @@
 #include "stdafx.h"
 
 /**
- * Common data structures and utility methods. 
- *
- * The ONLY code that should ever go in here is truly common
- * code, independent of whatever wxWidgets, OpenGL, or SFML
- * thinks code should look like.
- *
- * Ideally we'd keep one copy of this code, but that messes with
- * the builds, so for now we'll just copy and paste it since it
- * doesn't change that often.
- *
- * This version last updated on Thu, Dec 28th, 2017.
- */
-
+* Common data structures and utility methods.
+*
+* The ONLY code that should ever go in here is truly common
+* code, independent of whatever wxWidgets, OpenGL, or SFML
+* thinks code should look like.
+*
+* Ideally we'd keep one copy of this code, but that messes with
+* the builds, so for now we'll just copy and paste it since it
+* doesn't change that often.
+*
+* I found the string trimming functions here:
+*     https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
+*
+* This version last updated on Jan 14th, 2018.
+*/
 
 enum class BlockType : unsigned char {
     AIR   = 0,
@@ -24,6 +26,11 @@ enum class BlockType : unsigned char {
     COAL  = 3
 };
 
+
+// String trimming.
+void LeftTrimInPlace(std::string *s);
+void RightTrimInPlace(std::string *s);
+void TrimInPlace(std::string *s);
 
 // Debug printing.
 std::string ReadableNumber(int val);

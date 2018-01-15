@@ -7,15 +7,15 @@
 
 
 // All the details about a hit test.
-class ChunkHitTestDetail
+class HitTestResult
 {
 public:
     // Default ctor. Set the distance to the worst possible value.
-    ChunkHitTestDetail() :
+    HitTestResult() :
         m_face(FaceType::NONE),
         m_dist(FLT_MAX) {}
         
-    ChunkHitTestDetail(
+    HitTestResult(
         const ChunkOrigin &origin,
         const GlobalGrid &coord,
         FaceType face, 
@@ -27,7 +27,7 @@ public:
         m_impact(impact),
         m_dist(dist) {}
 
-    DEFAULT_MOVING(ChunkHitTestDetail)
+    DEFAULT_MOVING(HitTestResult)
 
     const ChunkOrigin &getChunkOrigin() const { return m_chunk_origin; }
     const GlobalGrid  &getGlobalCoord() const { return m_global_coord; }
@@ -35,10 +35,10 @@ public:
     const MyVec4 &getImpact() const { return m_impact; }
     GLfloat getDist() const { return m_dist; }
 
-    std::string toDescr() const;
+    std::string toString() const;
 
 private:
-    FORBID_COPYING(ChunkHitTestDetail)
+    FORBID_COPYING(HitTestResult)
 
     // Private data
     ChunkOrigin m_chunk_origin;
@@ -50,5 +50,5 @@ private:
 
 
 // The two functions that do the work.
-bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail *pOut);
-void ChunkHitTestToQuad(const Chunk &chunk, const ChunkHitTestDetail &details, VertList_PT *pOut);
+bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, HitTestResult *pOut);
+void ChunkHitTestToQuad(const Chunk &chunk, const HitTestResult &details, VertList_PT *pOut);

@@ -58,11 +58,14 @@ bool EventHandler::onEvent(sf::Event event)
 
         // Use "F5" to reload our config and resources.
         // It's quite okay to catastrophically exit here.
+        // TODO: Tell the game world to dump all of its chunks
+        // and reload them from scratch.
         if (event.key.code == sf::Keyboard::F5) {
             if (!LoadConfig()) {
                 exit(1);
             }
 
+            ClearResourcePool();
             if (!LoadResourcePool()) {
                 exit(1);
             }

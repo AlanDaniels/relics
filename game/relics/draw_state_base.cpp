@@ -186,7 +186,6 @@ bool DrawState_Base::create(
         const std::string &name = iter.first;
         GLint location = glGetUniformLocation(m_program_ID, name.c_str());
         assert(location != -1);
-        // TODO: Does this work?
         m_uniform_float_map[name] = location;
     }
 

@@ -1,15 +1,15 @@
 
 #include "stdafx.h"
 #include "game_world.h"
-#include "common_util.h"
 
 #include "chunk.h"
-#include "chunk_hit_test.h"
 #include "chunk_loader.h"
+#include "common_util.h"
 #include "config.h"
 #include "event_handler.h"
 #include "draw_state_pct.h"
 #include "draw_state_pt.h"
+#include "hit_test_result.h"
 #include "my_math.h"
 #include "utils.h"
 
@@ -24,9 +24,6 @@ GameWorld::GameWorld(sqlite3 *db) :
     m_camera_pitch(0.0f),
     m_camera_yaw(0.0f)
 {
-    // Load all of our Wavefront objects.
-    loadWFObjects();
-
     // Figure out the size of our drawing region.
     // We load one border larger than what we will actually draw.
     int eval_blocks = GetConfig().logic.eval_blocks;
@@ -67,21 +64,6 @@ GameWorld::~GameWorld()
         ChunkOrigin origin = iter.first;
         m_chunk_map[origin] = nullptr;
     }
-}
-
-
-// For now, just hard-code the list.
-// Later we'll have this walk the directory.
-bool GameWorld::loadWFObjects()
-{
-    std::unique_ptr<WFObject> obj = WFObject::Create("objects\\capsule.obj");
-    if (obj == nullptr) {
-        return false;
-    }
-
-    const std::string &key = obj->getObjectName();
-    m_wfobj_map.emplace(key, std::move(obj));
-    return true;
 }
 
 
@@ -343,7 +325,7 @@ void GameWorld::calcHitTest()
 
     GLfloat best_distance = FLT_MAX;
     Chunk *best_chunk = nullptr;
-    ChunkHitTestDetail best_detail;
+    HitTestResult best_detail;
 
     GLfloat hit_test_distance = GetConfig().logic.getHitTestDistanceCm();
     int block_count = static_cast<int>((hit_test_distance / 100.0f) / CHUNK_WIDTH);
@@ -354,7 +336,7 @@ void GameWorld::calcHitTest()
             ChunkOrigin origin(x, z);
             Chunk *chunk = m_chunk_map[origin].get();
 
-            ChunkHitTestDetail detail;
+            HitTestResult detail;
             bool this_test = DoChunkHitTest(*chunk, eye_ray, &detail);
             if (this_test && (detail.getDist() < best_distance)) {
                 success       = true;
@@ -381,11 +363,11 @@ void GameWorld::calcHitTest()
 
     m_hit_test_success = success;
     if (success) {
-        m_hit_test_detail = std::move(best_detail);
+        m_hit_test_result = std::move(best_detail);
     }
     else {
-        ChunkHitTestDetail blank;
-        m_hit_test_detail = std::move(blank);
+        HitTestResult blank;
+        m_hit_test_result = std::move(blank);
     }
 }
 
@@ -395,8 +377,8 @@ void GameWorld::calcHitTest()
 void GameWorld::deleteBlockInFrontOfUs()
 {
     if (m_hit_test_success) {
-        const auto &origin       = m_hit_test_detail.getChunkOrigin();
-        const auto &global_coord = m_hit_test_detail.getGlobalCoord();
+        const auto &origin       = m_hit_test_result.getChunkOrigin();
+        const auto &global_coord = m_hit_test_result.getGlobalCoord();
         const auto &local_coord  = GlobalGridToLocal(global_coord, origin);
 
         const auto &iter = m_chunk_map.find(origin);
@@ -408,19 +390,4 @@ void GameWorld::deleteBlockInFrontOfUs()
         chunk->setBlockType(local_coord, BlockType::AIR);
         chunk->recalcAllExposures();
     }
-}
-
-
-// Clone an instance of a Wavefront object.
-std::unique_ptr<WFObject> 
-GameWorld::cloneWFObject(const std::string &name, const MyVec4 &translate)
-{
-    const auto &iter = m_wfobj_map.find(name);
-    if (iter == m_wfobj_map.end()) {
-        PrintDebug(fmt::format("Could not find Wavefront object {}!\n", name));
-        return nullptr;
-    }
-
-    auto result = iter->second->clone(translate);
-    return std::move(result);
 }

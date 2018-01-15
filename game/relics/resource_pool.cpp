@@ -2,17 +2,18 @@
 #include "stdafx.h"
 #include "resource_pool.h"
 
-#include "config.h"
-#include "draw_cubemap_texture.h"
-#include "draw_state_p.h"
-#include "draw_state_pt.h"
-#include "draw_state_pnt.h"
-#include "draw_texture.h"
 #include "common_util.h"
+#include "config.h"
+#include "format.h"
+#include "wavefront_object.h"
 
 
 // Our one expedient resource pool.
 static ResourcePool g_resource_pool;
+
+void ClearResourcePool() {
+    g_resource_pool.clear();
+}
 
 bool LoadResourcePool() {
     return g_resource_pool.load();
@@ -20,6 +21,26 @@ bool LoadResourcePool() {
 
 const ResourcePool &GetResourcePool() {
     return g_resource_pool;
+}
+
+
+// Clear everything out.
+void ResourcePool::clear()
+{
+    m_grass_tex    = nullptr;
+    m_dirt_tex     = nullptr;
+    m_stone_tex    = nullptr;
+    m_coal_tex     = nullptr;
+    m_bedrock_tex  = nullptr;
+    m_hit_test_tex = nullptr;
+    m_skybox_tex   = nullptr;
+
+    m_wavefront_draw_state = nullptr;
+    m_landscape_draw_state = nullptr;
+    m_skybox_draw_state    = nullptr;
+    m_hit_test_draw_state  = nullptr;
+
+    m_wfobject_map.clear();
 }
 
 
@@ -36,6 +57,10 @@ bool ResourcePool::load()
         return false;
     }
 
+    if (!loadWFObjects()) {
+        return false;
+    }
+
     return true;
 }
 
@@ -43,15 +68,6 @@ bool ResourcePool::load()
 // Reload all of our textures.
 bool ResourcePool::loadTextures()
 {
-    // Clear out any old textures.
-    m_grass_tex    = nullptr;
-    m_dirt_tex     = nullptr;
-    m_stone_tex    = nullptr;
-    m_coal_tex     = nullptr;
-    m_bedrock_tex  = nullptr;
-    m_hit_test_tex = nullptr;
-    m_skybox_tex   = nullptr;
-
     // Load our textures.
     const ConfigRender &conf_render = GetConfig().render;
 
@@ -85,12 +101,6 @@ bool ResourcePool::loadTextures()
 
 bool ResourcePool::loadShaders()
 {
-    // Clear out the old.
-    m_wavefront_draw_state = nullptr;
-    m_landscape_draw_state = nullptr;
-    m_skybox_draw_state    = nullptr;
-    m_hit_test_draw_state  = nullptr;
-
     const ConfigRender &conf_render = GetConfig().render;
 
     // Init our Wavefront draw state.
@@ -215,3 +225,30 @@ bool ResourcePool::loadShaders()
 
 
 
+// TODO: For now, just hard-code the list.
+// Later we'll have this walk the directory and look up all the files on the fly.
+bool ResourcePool::loadWFObjects()
+{
+    std::unique_ptr<WFObject> obj = WFObject::Create("objects\\capsule.obj");
+    if (obj == nullptr) {
+        return false;
+    }
+
+    const std::string &key = obj->getObjectName();
+    m_wfobject_map.emplace(key, std::move(obj));
+    return true;
+}
+
+
+// Clone an instance of a Wavefront object.
+std::unique_ptr<WFInstance> ResourcePool::cloneWFObject(const std::string &name, const MyVec4 &move) const
+{
+    const auto &iter = m_wfobject_map.find(name);
+    if (iter == m_wfobject_map.end()) {
+        PrintDebug(fmt::format("Could not find Wavefront object {}!\n", name));
+        return nullptr;
+    }
+
+    auto result = iter->second->clone(move);
+    return std::move(result);
+}

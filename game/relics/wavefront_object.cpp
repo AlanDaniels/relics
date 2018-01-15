@@ -9,32 +9,6 @@
 #include <boost/filesystem.hpp>
 
 
-/**
-* String trimming functions, found here:
-*     https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
-*/
-
-// Left trim, in place.
-static void left_trim_in_place(std::string &s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
-        return !std::isspace(ch);
-    }));
-}
-
-// Right trim, in place.
-static void right_trim_in_place(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
-        return !std::isspace(ch);
-    }).base(), s.end());
-}
-
-// Trim both sides, in place.
-static void trim_in_place(std::string &s) {
-    left_trim_in_place(s);
-    right_trim_in_place(s);
-}
-
-
 // Parsing errors.
 static const std::string PARSING_ERROR = "ERROR!";
 
@@ -67,7 +41,7 @@ std::unique_ptr<WFObject> WFObject::Create(const std::string &resource_path)
     int line_num = 1;
     std::string line;
     while (std::getline(infile, line)) {
-        trim_in_place(line);
+        TrimInPlace(&line);
 
         if (!result->parseObjectLine(line_num, line)) {
             return nullptr;
@@ -95,40 +69,11 @@ WFObject::WFObject(const std::string &path) :
 }
 
 
-// Now that we've loaded a Wavefront Object from a file, make a copy and 
-// move it around as needed. Don't carry along any data you don't need.
-// I'm nervous about C++ doing thing behind my back, so I'm doing the copying loops by hand.
-std::unique_ptr<WFObject> WFObject::clone(const MyVec4 &move)
+// Create an instance for this original object.
+std::unique_ptr<WFInstance> WFObject::clone(const MyVec4 &move)
 {
-    std::unique_ptr<WFObject> result(new WFObject(m_original_path));
-
-    result->m_object_name = m_object_name;
-
-    for (const auto &iter : m_mat_map) {
-        result->m_mat_map.emplace(iter.first, iter.second);
-    }
-
-    for (const auto &iter : m_group_names) {
-        result->m_group_names.emplace_back(iter);
-    }
-
-    for (const auto &iter : m_group_map) {
-        const auto &group_name = iter.first;
-        const auto &material   = iter.second->getMaterial();
-        const auto &vert_list  = iter.second->getVertList();
-
-        std::unique_ptr<WFGroup> new_group = std::make_unique<WFGroup>(group_name);
-        new_group->setMaterial(material);
-
-        for (const auto &vit : vert_list.getVerts()) {
-            new_group->add(vit);
-        }
-
-        result->m_group_map[group_name] = std::move(new_group);
-    }
-
-    result->conclude();
-    return std::move(result);
+    auto result = std::make_unique<WFInstance>(*this, move);
+    return result;
 }
 
 
@@ -435,7 +380,7 @@ bool WFObject::parseMtllibFile(const std::string &path)
     int line_num = 1;
     std::string line;
     while (std::getline(infile, line)) {
-        trim_in_place(line);
+        TrimInPlace(&line);
 
         // As we parse each line, look for the beginning of a new material name.
         // When we see that, save the current material and start a new one.

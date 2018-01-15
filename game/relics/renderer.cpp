@@ -289,9 +289,11 @@ void Renderer::renderWFObjects(
     wavefront_ds.updateUniformVec4 ("camera_pos",   camera_pos);
 
     for (const auto &chunk_it : chunk_list) {
-        for (const auto &thing_it : chunk_it->getWFObjects()) {
-            for (const std::string &group_name : thing_it->getGroupNames()) {
-                const auto &face_group   = thing_it->getGroup(group_name);
+        for (const auto &instance : chunk_it->getWFInstances()) {
+            const WFObject &original = instance->getOriginal();
+
+            for (const std::string &group_name : original.getGroupNames()) {
+                const auto &face_group   = original.getGroup(group_name);
                 const auto *draw_texture = face_group.getMaterial()->getDrawTexture();
                 const auto &vert_list    = face_group.getVertList();
 

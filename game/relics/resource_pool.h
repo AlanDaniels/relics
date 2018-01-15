@@ -2,24 +2,27 @@
 
 #include "stdafx.h"
 
-
-
-class DrawTexture;
-class DrawCubemapTexture;
-class DrawState_P;
-class DrawState_PT;
-class DrawState_PNT;
+#include "draw_cubemap_texture.h"
+#include "draw_state_p.h"
+#include "draw_state_pt.h"
+#include "draw_state_pnt.h"
+#include "draw_texture.h"
+#include "my_math.h"
+#include "wavefront_object.h"
 
 
 // Pool all our resources in one place (textures, shaders,
-// fonts), so that we can reload them at runtime, for debugging.
+// fonts, etc), so that we can reload them at runtime, for debugging.
 class ResourcePool
 {
 public:
     ResourcePool() {}
     ~ResourcePool() {}
 
+    void clear();
     bool load();
+
+    std::unique_ptr<WFInstance> cloneWFObject(const std::string &name, const MyVec4 &move) const;
 
     // A whole bunch of getters. Maybe we can optimize this later with enums.
     const DrawTexture &getGrassTexture()   const { return *m_grass_tex; }
@@ -43,6 +46,7 @@ private:
     // Private methods.
     bool loadTextures();
     bool loadShaders();
+    bool loadWFObjects();
 
     // Private data.
     std::unique_ptr<DrawTexture> m_grass_tex;
@@ -58,9 +62,12 @@ private:
     std::unique_ptr<DrawState_PNT> m_landscape_draw_state;
     std::unique_ptr<DrawState_P>   m_skybox_draw_state;
     std::unique_ptr<DrawState_PT>  m_hit_test_draw_state;
+
+    std::map<std::string, std::unique_ptr<WFObject>> m_wfobject_map;
 };
 
 
 // Get at our one expedient global resource pool.
+void ClearResourcePool();
 bool LoadResourcePool(); 
 const ResourcePool &GetResourcePool();

@@ -22,6 +22,9 @@ struct DrawStateSettings
 
     ~DrawStateSettings() {}
 
+    DEFAULT_COPYING(DrawStateSettings)
+    DEFAULT_MOVING(DrawStateSettings)
+
     std::string title;
     bool        enable_blending;
     bool        enable_depth_test;

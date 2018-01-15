@@ -1,6 +1,6 @@
 
 #include "stdafx.h"
-#include "chunk_hit_test.h"
+#include "hit_test_result.h"
 
 #include "add_face.h"
 #include "common_util.h"
@@ -9,7 +9,7 @@
 
 
 // Hit-test details to a description. Handy for debugging.
-std::string ChunkHitTestDetail::toDescr() const
+std::string HitTestResult::toString() const
 {
     std::string face_to_str;
     switch (m_face) {
@@ -246,7 +246,7 @@ static bool CheckBottomFaces(
 
 
 // The first call available outside this file.
-bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail *pOut)
+bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, HitTestResult *pOut)
 {
     // Test each of the six faces. The winner is whichever is closest.
     FaceType winner  = FaceType::NONE;
@@ -321,27 +321,27 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
         return false;
 
     case FaceType::SOUTH:
-        *pOut = ChunkHitTestDetail(origin, south_coord, FaceType::SOUTH, south_impact, south_dist);
+        *pOut = HitTestResult(origin, south_coord, FaceType::SOUTH, south_impact, south_dist);
         return true;
 
     case FaceType::NORTH:
-        *pOut = ChunkHitTestDetail(origin, north_coord, FaceType::NORTH, north_impact, north_dist);
+        *pOut = HitTestResult(origin, north_coord, FaceType::NORTH, north_impact, north_dist);
         return true;
 
     case FaceType::WEST:
-        *pOut = ChunkHitTestDetail(origin, west_coord, FaceType::WEST, west_impact, west_dist);
+        *pOut = HitTestResult(origin, west_coord, FaceType::WEST, west_impact, west_dist);
         return true;
 
     case FaceType::EAST:
-        *pOut = ChunkHitTestDetail(origin, east_coord, FaceType::EAST, east_impact, east_dist);
+        *pOut = HitTestResult(origin, east_coord, FaceType::EAST, east_impact, east_dist);
         return true;
 
     case FaceType::TOP:
-        *pOut = ChunkHitTestDetail(origin, top_coord, FaceType::TOP, top_impact, top_dist);
+        *pOut = HitTestResult(origin, top_coord, FaceType::TOP, top_impact, top_dist);
         return true;
 
     case FaceType::BOTTOM:
-        *pOut = ChunkHitTestDetail(origin, bottom_coord, FaceType::BOTTOM, bottom_impact, bottom_dist);
+        *pOut = HitTestResult(origin, bottom_coord, FaceType::BOTTOM, bottom_impact, bottom_dist);
         return true;
 
     default:
@@ -352,7 +352,7 @@ bool DoChunkHitTest(const Chunk &chunk, const MyRay &eye_ray, ChunkHitTestDetail
 
 
 // The second call available outside this file.
-void ChunkHitTestToQuad(const Chunk &chunk, const ChunkHitTestDetail &details, VertList_PT *pOut)
+void ChunkHitTestToQuad(const Chunk &chunk, const HitTestResult &details, VertList_PT *pOut)
 {
     GlobalGrid global_coord = details.getGlobalCoord();
     LocalGrid  local_coord  = GlobalGridToLocal(global_coord, chunk.getOrigin());

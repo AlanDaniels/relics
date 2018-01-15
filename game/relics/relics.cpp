@@ -1,17 +1,16 @@
 ﻿
 #include "stdafx.h"
-
 #include "relics.h"
-#include "common_util.h"
 
+#include "common_util.h"
 #include "config.h"
 #include "chunk.h"
-#include "chunk_hit_test.h"
 #include "chunk_loader.h"
 #include "draw_state_pct.h"
 #include "event_handler.h"
 #include "game_world.h"
 #include "heads_up_display.h"
+#include "hit_test_result.h"
 #include "renderer.h"
 #include "resource_pool.h"
 #include "utils.h"

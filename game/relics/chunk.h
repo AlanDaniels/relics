@@ -121,16 +121,16 @@ public:
     const Chunk *getNeighborEast()  const;
     const Chunk *getNeighborWest()  const;
 
-    void addWFObject(std::unique_ptr<WFObject> obj) {
-        m_wfobj_list.emplace_back(std::move(obj));
+    void addWFInstance(std::unique_ptr<WFInstance> obj) {
+        m_wfinstance_list.emplace_back(std::move(obj));
     }
 
     // These definitions are getting ridiculous.
-    const std::vector<std::unique_ptr<WFObject>> &getWFObjects() const {
-        return m_wfobj_list;
+    const std::vector<std::unique_ptr<WFInstance>> &getWFInstances() const {
+        return m_wfinstance_list;
     }
 
-    std::string toDescription() const;
+    std::string toString() const;
 
 private:
     FORBID_DEFAULT_CTOR(Chunk)
@@ -145,12 +145,11 @@ private:
     // Private data.
     const GameWorld &m_world;
     ChunkOrigin m_origin;
-
     bool m_up_to_date;
 
     std::array<std::unique_ptr<VertList_PNT>, SURFACE_TYPE_COUNT> m_vert_lists;
     
     std::array<ChunkStripe, CHUNK_WIDTH * CHUNK_HEIGHT> m_stripes;
 
-    std::vector<std::unique_ptr<WFObject>> m_wfobj_list;
+    std::vector<std::unique_ptr<WFInstance>> m_wfinstance_list;
 };

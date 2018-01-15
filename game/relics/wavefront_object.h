@@ -18,13 +18,8 @@ public:
 
     ~WFMaterial() {}
 
-    const std::string &getMaterialName() const { 
-        return m_mat_name; 
-    }
-
-    const DrawTexture *getDrawTexture() const { 
-        return m_draw_texture.get();
-    }
+    const std::string &getMaterialName() const { return m_mat_name; }
+    const DrawTexture *getDrawTexture()  const { return m_draw_texture.get(); }
 
     void setDrawTexture(std::unique_ptr<DrawTexture> draw_texture) {
         m_draw_texture = std::move(draw_texture);
@@ -98,12 +93,14 @@ private:
 // The parsed contents of a Wavefront ".OBJ" file.
 // Side note: I tried using Boost regex to deal with splitting file lines
 // by spaces, and parsing floats and ints, but it was unacceptably slow.
+class WFInstance;
+
 class WFObject
 {
 public:
     static std::unique_ptr<WFObject> Create(const std::string &resource_path);
 
-    std::unique_ptr<WFObject> clone(const MyVec4 &translate);
+    std::unique_ptr<WFInstance> clone(const MyVec4 &move);
 
     const std::string &getPath() const { 
         return m_original_path; 
@@ -160,10 +157,34 @@ private:
     std::vector<MyVec4> m_normals;
     std::vector<MyVec2> m_tex_coords;
 
-    // Keep our list of materials.
     std::map<std::string, std::shared_ptr<WFMaterial>> m_mat_map;
 
-    // Each group carries along its one material.
     std::vector<std::string> m_group_names;
     std::map<std::string, std::unique_ptr<WFGroup>> m_group_map;
+};
+
+
+// An instance of a Wavefront object.
+// TODO: Down the road, this will need its own geometry for
+// collision detection, but worry about that then.
+class WFInstance
+{
+public:
+    WFInstance(const WFObject &original, const MyVec4 &move) :
+        m_original(original), m_move(move) {}
+
+    ~WFInstance() {}
+
+    DEFAULT_MOVING(WFInstance)
+
+    const WFObject &getOriginal() const { return m_original; }
+    const MyVec4 &getMove() const { return m_move; }
+
+private:
+    FORBID_DEFAULT_CTOR(WFInstance)
+    FORBID_COPYING(WFInstance)
+
+    // Private data.
+    const WFObject &m_original;
+    MyVec4 m_move;
 };

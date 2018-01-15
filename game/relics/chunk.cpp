@@ -240,7 +240,7 @@ const Chunk *Chunk::getNeighborWest() const
 
 
 // For debugging, print out all the details about this chunk.
-std::string Chunk::toDescription() const
+std::string Chunk::toString() const
 {
     // Count our block types.
     int dirt_blocks  = 0;

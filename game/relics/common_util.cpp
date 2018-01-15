@@ -6,7 +6,6 @@
 #include "sqlite3.h"
 #include <psapi.h>
 
-
 /**
 * Common data structures and utility methods.
 *
@@ -18,8 +17,32 @@
 * the builds, so for now we'll just copy and paste it since it
 * doesn't change that often.
 *
-* This version last updated on Thu, Dec 28th, 2017.
+* I found the string trimming functions here:
+*     https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
+*
+* This version last updated on Jan 14th, 2018.
 */
+
+
+// Left trim, in place.
+void LeftTrimInPlace(std::string *s) {
+    s->erase(s->begin(), std::find_if(s->begin(), s->end(), [](int ch) {
+        return !std::isspace(ch);
+    }));
+}
+
+// Right trim, in place.
+void RightTrimInPlace(std::string *s) {
+    s->erase(std::find_if(s->rbegin(), s->rend(), [](int ch) {
+        return !std::isspace(ch);
+    }).base(), s->end());
+}
+
+// Trim both sides, in place.
+void TrimInPlace(std::string *s) {
+    LeftTrimInPlace(s);
+    RightTrimInPlace(s);
+}
 
 
 // Turn a number into a nice readable string.

@@ -6,8 +6,10 @@
 #include "block.h"
 #include "chunk.h"
 #include "game_world.h"
-#include "utils.h"
+#include "resource_pool.h"
 #include "wavefront_object.h"
+#include "utils.h"
+
 #include "sqlite3.h"
 
 
@@ -26,10 +28,9 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
     if (origin == ChunkOrigin(0, 0)) {
         MyVec4 move(0, 0, 0);
 
-        std::unique_ptr<WFObject> capsule =
-            world.cloneWFObject("capsule", move);
-
-        chunk->addWFObject(std::move(capsule));
+        const auto &pool = GetResourcePool();
+        std::unique_ptr<WFInstance> capsule = pool.cloneWFObject("capsule", move);
+        chunk->addWFInstance(std::move(capsule));
     }
 
     sqlite3 *db = world.getDatabase();

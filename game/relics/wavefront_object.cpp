@@ -117,7 +117,7 @@ std::vector<std::string> WFObject::splitStrBySlashes(const std::string &val)
             results.push_back(val.substr(pos, found - pos));
         }
         pos = found + 1;
-        found = val.find_first_of(' ', pos);
+        found = val.find_first_of('/', pos);
     }
 
     if ((pos < val.size()) && (val.at(pos) != ' ')) {
@@ -199,11 +199,11 @@ bool WFObject::parseObjectLine(int line_num, const std::string &line)
             createFaceGroup(line_num, name);
         }
 
-        // Add the faces.
+        // Add the faces. Note that these are counter-clockwise order.
         auto &face_group = m_group_map.at(name);
-        face_group->add(parseFaceToken(tokens[1]));
-        face_group->add(parseFaceToken(tokens[2]));
         face_group->add(parseFaceToken(tokens[3]));
+        face_group->add(parseFaceToken(tokens[2]));
+        face_group->add(parseFaceToken(tokens[1]));
         return true;
     }
 
@@ -359,7 +359,6 @@ Vertex_PNT WFObject::parseFaceToken(const std::string &token)
 
     return std::move(Vertex_PNT(position, normal, tex_coord));
 }
-
 
 
 // Parse the material file.
@@ -594,8 +593,8 @@ std::string WFObject::toDescr() const
         for (const auto &iter : m_group_map) {
             std::string group_name = iter.first;
             assert(iter.second->getMaterial() != nullptr);
-            const auto &mat_name   = iter.second->getMaterial()->getMaterialName();
-            const auto &vert_list  = iter.second->getVertList();
+            const auto &mat_name  = iter.second->getMaterial()->getMaterialName();
+            const auto &vert_list = iter.second->getVertList();
 
             if (group_name == "") {
                 group_name = "[BLANK]";

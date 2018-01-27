@@ -72,7 +72,7 @@ GameWorld::~GameWorld()
 // and one quarter of the way up.
 void GameWorld::setPlayerAtStart()
 {
-    MyVec4 start(0, 0, 0);
+    MyVec4 start = GetPlayerStartPos(m_db_fname);
     m_player->setPos(start);
     m_current_grid_coord   = WorldPosToGlobalGrid(start, NudgeType::NONE);
     m_current_chunk_origin = WorldToChunkOrigin(start);
@@ -193,7 +193,7 @@ void GameWorld::updateWorld()
         // If a chunk is outside or loading region,
         // save its contents and delete it.
         if (!load_region.contains(origin)) {
-            SaveChunk(std::move(it.second));
+            SaveChunk(*this, std::move(it.second));
         }
     }
 

@@ -20,7 +20,7 @@
 * I found the string trimming functions here:
 *     https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
 *
-* This version last updated on Jan 14th, 2018.
+* This version last updated on Jan 27th, 2018.
 */
 
 
@@ -124,7 +124,25 @@ sqlite3 *SQL_open(const std::string &fname)
     }
 }
 
-// Utility function for executing a SQLite statement.
+
+// Utility function for closing a SQLite database.
+bool SQL_close(sqlite3 *db)
+{
+    int ret_code = sqlite3_close(db);
+    if (ret_code == SQLITE_OK) {
+        return true;
+    }
+    else {
+        PrintDebug(fmt::format(
+            "Error closing SQLite database:\n"
+            "Code  = {0}",
+            SQL_code_to_str(ret_code)));
+        return false;
+    }
+}
+
+
+// Utility function for executing a SQLite statement all at once.
 bool SQL_exec(sqlite3 *db, const std::string &sql)
 {
     char *error_from_db = nullptr;
@@ -166,6 +184,25 @@ sqlite3_stmt *SQL_prepare(sqlite3 *db, const std::string &sql)
 
         sqlite3_close(db);
         return nullptr;
+    }
+}
+
+
+// Utility function for finalizing a prepared statement.
+bool SQL_finalize(sqlite3 *db, sqlite3_stmt *stmt)
+{
+    int ret_code = sqlite3_finalize(stmt);
+    if (ret_code == SQLITE_OK) {
+        return true;
+    }
+    else {
+        PrintDebug(fmt::format(
+            "Error finalizing prepared statement:\n"
+            "Code  = {0}\n",
+            SQL_code_to_str(ret_code)));
+
+        sqlite3_close(db);
+        return false;
     }
 }
 

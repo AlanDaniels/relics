@@ -16,7 +16,7 @@
 * I found the string trimming functions here:
 *     https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
 *
-* This version last updated on Jan 14th, 2018.
+* This version last updated on Jan 27th, 2018.
 */
 
 enum class BlockType : unsigned char {
@@ -45,6 +45,10 @@ struct sqlite3_stmt;
 
 // Utility functions for SQLite.
 sqlite3 *SQL_open(const std::string &fname);
+bool SQL_close(sqlite3 *db);
 bool SQL_exec(sqlite3 *db, const std::string &sql);
+
 sqlite3_stmt *SQL_prepare(sqlite3 *db, const std::string &sql);
+bool SQL_finalize(sqlite3 *db, sqlite3_stmt *stmt);
+
 std::string SQL_code_to_str(int code);

@@ -13,6 +13,16 @@ Player::Player() :
 }
 
 
+// Set the player's position.
+void Player::setPos(const MyVec4 &pos) 
+{
+    m_pos = pos;
+    
+    MyVec4 eye_offset(0, PLAYER_EYE_LEVEL, 0);
+    m_camera_pos = pos.plus(eye_offset);
+}
+
+
 // Get the camera's eye-ray. Eh, maybe we could cache this.
 MyRay Player::getCameraRay() const
 {

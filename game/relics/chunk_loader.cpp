@@ -17,6 +17,47 @@ static const std::string DIRT_TOP("dirt_top");
 static const std::string STONE_TOP("stone_top");
 
 
+// Get the player's start position.
+// TODO: For now, just place them at the dirt top of the block at X=0, Z=0.
+MyVec4 GetPlayerStartPos(const std::string &db_fname)
+{
+    MyVec4 never_mind(0, 0, 0);
+
+    sqlite3 *db = SQL_open(db_fname);
+    if (db == nullptr) {
+        PrintDebug(fmt::format("Could not open DB '{}'", db_fname));
+        return never_mind;
+    }
+
+    std::string buffer =
+        "SELECT y FROM blocks "
+        "WHERE x == 0 AND z == 0 AND block_type = 'dirt_top'";
+    sqlite3_stmt *stmt = SQL_prepare(db, buffer.c_str());
+    if (stmt == nullptr) {
+        assert(false);
+        return never_mind;
+    }
+
+    int y;
+    int ret_code = sqlite3_step(stmt);
+    if (ret_code == SQLITE_ROW) {
+        y = sqlite3_column_int(stmt, 0);
+    }
+    else {
+        y = 0;
+    }
+
+    // All done.
+    SQL_finalize(db, stmt);
+    SQL_close(db);
+
+    GLfloat half_x   = BLOCK_SCALE / 2;
+    GLfloat scaled_y = y * BLOCK_SCALE;
+    GLfloat half_z   = BLOCK_SCALE / 2;
+    return MyVec4(half_x, scaled_y, half_z);
+}
+
+
 // Load a chunk from our SQLite file.
 // This just deals with the block data. The landscape is are dealt with later.
 std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
@@ -24,7 +65,7 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
     // Our result.
     std::unique_ptr<Chunk> chunk = std::make_unique<Chunk>(world, origin);
 
-    // A simple test.
+    // TODO: A simple test of a Wavefront Object.
     if (origin == ChunkOrigin(0, 0)) {
         MyVec4 move(0, 0, 0);
 
@@ -89,6 +130,8 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
         ret_code = sqlite3_step(stmt);
     }
 
+    SQL_finalize(db, stmt);
+
     // Now, build the chunk.
     int dirt_top_count = 0;
 
@@ -132,14 +175,14 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
         "Loaded chunk [{0}, {1}] with {2} dirt tops.\n", 
         origin.debugX(), origin.debugZ(), dirt_top_count));
 
-    sqlite3_close(db);
+    SQL_close(db);
 
     return chunk;
 }
 
 
 // TODO: Figure this out later.
-void SaveChunk(std::unique_ptr<Chunk> chunk)
+void SaveChunk(GameWorld &world, std::unique_ptr<Chunk> chunk)
 {
     // All done. Bye bye.
     chunk = nullptr;

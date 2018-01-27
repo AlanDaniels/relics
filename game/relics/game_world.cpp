@@ -18,8 +18,8 @@
 
 
 // Our game world.
-GameWorld::GameWorld(sqlite3 *db) :
-    m_database(db),
+GameWorld::GameWorld(const std::string &db_fname) :
+    m_db_fname(db_fname),
     m_paused(false),
     m_time_msec(0),
     m_player(std::make_unique<Player>())
@@ -60,7 +60,6 @@ GameWorld::GameWorld(sqlite3 *db) :
 // Game world destructor.
 GameWorld::~GameWorld()
 {
-    sqlite3_close(m_database);
     for (auto &iter : m_chunk_map) {
         ChunkOrigin origin = iter.first;
         m_chunk_map[origin] = nullptr;

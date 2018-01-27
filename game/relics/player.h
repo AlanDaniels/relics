@@ -13,11 +13,11 @@ public:
 
     void onGameTick(int elapsed_msec, const EventStateMsg &msg);
 
-    void setPos(const MyVec4 &pos) { m_camera_pos = pos; }
-
+    void setPos(const MyVec4 &pos)   { m_camera_pos = pos; }
     void setCameraYaw(GLfloat val)   { m_camera_yaw = val;   clampRotations(); }
     void setCameraPitch(GLfloat val) { m_camera_pitch = val; clampRotations(); }
 
+    // Getters.
     MyRay getCameraRay() const;
 
     GLfloat getCameraPitch() const { return m_camera_pitch; }

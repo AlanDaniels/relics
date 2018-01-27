@@ -77,8 +77,8 @@ void APIENTRY MyOGLErrorCallback(
 }
 
 
-// Initialize the game world.
-sqlite3 *OpenDatabase()
+// Get the filename for the SQLite database.
+std::string GetDatabaseFilename()
 {
     std::string fname = GetConfig().world.file_name;
     std::string full_name = RESOURCE_PATH;
@@ -86,11 +86,10 @@ sqlite3 *OpenDatabase()
 
     if (!boost::filesystem::is_regular_file(full_name)) {
         PrintDebug(fmt::format("Database file {} does not exist.", full_name));
-        return nullptr;
+        return "";
     }
 
-    sqlite3 *database = SQL_open(full_name);
-    return database;
+    return full_name;
 }
 
 
@@ -250,14 +249,14 @@ int WINAPI wWinMain(
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
     // Open our database file.
-    sqlite3 *database = OpenDatabase();
-    if (database == nullptr) {
+    std::string db_fname = GetDatabaseFilename();
+    if (db_fname == "") {
         PrintDebug("Could not open database file!\n");
         return 1;
     }
 
     // The game world.
-    std::unique_ptr<GameWorld> game_world = std::make_unique<GameWorld>(database);
+    std::unique_ptr<GameWorld> game_world = std::make_unique<GameWorld>(db_fname);
     if (game_world == nullptr) {
         PrintDebug("Could not create the game world!\n");
         return 1;

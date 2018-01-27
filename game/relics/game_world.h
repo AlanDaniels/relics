@@ -20,10 +20,10 @@ class  Player;
 class GameWorld
 {
 public:
-    GameWorld(sqlite3 *db);
+    GameWorld(const std::string &db_fname);
     ~GameWorld();
 
-    sqlite3 *getDatabase() { return m_database; }
+    const std::string &getDatabaseFilename() { return m_db_fname; }
 
     const Player &getPlayer() const { return *m_player; }
 
@@ -61,7 +61,7 @@ private:
     void calcHitTest();
 
     // Private data
-    sqlite3 *m_database;
+    std::string m_db_fname;
     std::unique_ptr<Player> m_player;
 
     bool m_paused;

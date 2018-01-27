@@ -33,7 +33,13 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
         chunk->addWFInstance(std::move(capsule));
     }
 
-    sqlite3 *db = world.getDatabase();
+    std::string db_fname = world.getDatabaseFilename();
+
+    sqlite3 *db = SQL_open(db_fname);
+    if (db == nullptr) {
+        PrintDebug(fmt::format("Could not open DB '{}'", db_fname));
+        return nullptr;
+    }
 
     std::string buffer = fmt::format(
         "SELECT x, y, z, block_type FROM blocks "
@@ -125,6 +131,8 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
     PrintDebug(fmt::format(
         "Loaded chunk [{0}, {1}] with {2} dirt tops.\n", 
         origin.debugX(), origin.debugZ(), dirt_top_count));
+
+    sqlite3_close(db);
 
     return chunk;
 }

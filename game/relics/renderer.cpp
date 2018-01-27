@@ -8,6 +8,7 @@
 #include "draw_state_pnt.h"
 #include "draw_state_pt.h"
 #include "draw_texture.h"
+#include "player.h"
 #include "resource_pool.h"
 
 
@@ -36,8 +37,8 @@ void Renderer::rebuildUniformMatrices()
     m_frustum_matrix = MyMatrix4by4::Frustum(angle_of_view, aspect_ratio, near_plane_cm, far_plane_cm);
 
     // That, plus the rotations.
-    GLfloat camera_pitch = m_world.getCameraPitch();
-    GLfloat camera_yaw   = m_world.getCameraYaw();
+    GLfloat camera_pitch = m_world.getPlayer().getCameraPitch();
+    GLfloat camera_yaw   = m_world.getPlayer().getCameraYaw();
 
     MyMatrix4by4 rotate_x = MyMatrix4by4::RotateX(-camera_pitch);
     MyMatrix4by4 rotate_y = MyMatrix4by4::RotateY(camera_yaw);
@@ -110,10 +111,10 @@ std::vector<const Chunk *> Renderer::getChunksToRender(RenderStats *pOut_stats)
     int     eval_blocks   = GetConfig().logic.eval_blocks;
     GLfloat draw_distance = GetConfig().logic.getDrawDistanceCm();
 
-    const MyVec4 &camera_pos = m_world.getCameraPos();
-
-    GLfloat camera_pitch = m_world.getCameraPitch();
-    GLfloat camera_yaw   = m_world.getCameraYaw();
+    const Player &player = m_world.getPlayer();
+    MyVec4  camera_pos   = player.getCameraPos();
+    GLfloat camera_pitch = player.getCameraPitch();
+    GLfloat camea_yaw    = player.getCameraYaw();
     
     pOut_stats->chunks_considered = 0;
     pOut_stats->chunks_rendered   = 0;
@@ -123,12 +124,12 @@ std::vector<const Chunk *> Renderer::getChunksToRender(RenderStats *pOut_stats)
 
     GLfloat offset = field_of_view / 2.0f;
 
-    MyMatrix4by4 left_rotate = MyMatrix4by4::RotateY(camera_yaw - offset);
+    MyMatrix4by4 left_rotate = MyMatrix4by4::RotateY(camea_yaw - offset);
     MyVec4  left_dir_1 = left_rotate.times(VEC4_EASTWARD);
     MyVec4  left_dir_2 = pitch_rotate.times(left_dir_1);
     MyPlane left_clip_plane = MyRay(camera_pos, left_dir_2).toPlane();
 
-    MyMatrix4by4 right_rotate = MyMatrix4by4::RotateY(camera_yaw + offset);
+    MyMatrix4by4 right_rotate = MyMatrix4by4::RotateY(camea_yaw + offset);
     MyVec4  right_dir_1 = right_rotate.times(VEC4_WESTWARD);
     MyVec4  right_dir_2 = pitch_rotate.times(right_dir_1);
     MyPlane right_clip_plane = MyRay(camera_pos, right_dir_2).toPlane();
@@ -203,10 +204,6 @@ void Renderer::renderSkybox(RenderStats *pOut_stats)
     const auto &skybox_tex = pool.getSkyboxTexture();
     const auto &skybox_ds  = pool.getSkyboxDrawState();
 
-    // Pluck out what we need from the game world.
-    GLfloat camera_yaw   = m_world.getCameraYaw();
-    GLfloat camera_pitch = m_world.getCameraPitch();
-
     skybox_ds.updateUniformMatrix4by4("mat_frustum", m_frustum_matrix);
     skybox_ds.updateUniformMatrix4by4("mat_frustum_rotate", m_frustum_rotate_matrix);
     skybox_ds.updateUniformCubemapTexture(0, skybox_tex);
@@ -237,9 +234,10 @@ void Renderer::renderLandscapeList(
     GLfloat fade_distance_cm = GetConfig().render.getFadeDistanceCm();
     GLfloat draw_distance_cm = GetConfig().logic.getDrawDistanceCm();
 
-    GLfloat camera_yaw   = m_world.getCameraYaw();
-    GLfloat camera_pitch = m_world.getCameraPitch();
-    MyVec4  camera_pos   = m_world.getCameraPos();
+    const Player &player = m_world.getPlayer();
+    GLfloat camera_yaw   = player.getCameraYaw();
+    GLfloat camera_pitch = player.getCameraPitch();
+    MyVec4  camera_pos   = player.getCameraPos();
 
     const auto &landscape_ds = GetResourcePool().getLandscapeDrawState();
 
@@ -274,9 +272,10 @@ void Renderer::renderWFObjects(
     GLfloat fade_distance_cm = GetConfig().render.getFadeDistanceCm();
     GLfloat draw_distance_cm = GetConfig().logic.getDrawDistanceCm();
 
-    GLfloat camera_yaw   = m_world.getCameraYaw();
-    GLfloat camera_pitch = m_world.getCameraPitch();
-    MyVec4  camera_pos   = m_world.getCameraPos();
+    const Player &player = m_world.getPlayer();
+    GLfloat camera_yaw   = player.getCameraYaw();
+    GLfloat camera_pitch = player.getCameraPitch();
+    MyVec4  camera_pos   = player.getCameraPos();
 
     const auto &wavefront_ds = GetResourcePool().getWavefrontDrawState();
 
@@ -316,9 +315,10 @@ void Renderer::renderHitTest(RenderStats *pOut_stats)
     GLfloat fade_distance_cm = GetConfig().render.getFadeDistanceCm();
     GLfloat draw_distance_cm = GetConfig().logic.getDrawDistanceCm();
 
-    GLfloat camera_yaw   = m_world.getCameraYaw();
-    GLfloat camera_pitch = m_world.getCameraPitch();
-    MyVec4  camera_pos   = m_world.getCameraPos();
+    const Player &player = m_world.getPlayer();
+    MyVec4  camera_pos   = player.getCameraPos();
+    GLfloat camera_yaw   = player.getCameraYaw();
+    GLfloat camera_pitch = player.getCameraPitch();
 
     const VertList_PT &vert_list = m_world.getHitTestVertList();
     int item_count = vert_list.getItemCount();

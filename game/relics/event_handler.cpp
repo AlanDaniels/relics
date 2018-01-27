@@ -35,10 +35,6 @@ bool EventHandler::onEvent(sf::Event event)
         }
     }
 
-    // Everything from here on down is for normal un-paused behavior.
-    GLfloat old_yaw   = m_game_world.getCameraYaw();
-    GLfloat old_pitch = m_game_world.getCameraPitch();
-
     // If the window is resized, update the OpenGL viewport.
     if (event.type == sf::Event::Resized) {
         glViewport(0, 0, event.size.width, event.size.height);
@@ -90,9 +86,15 @@ bool EventHandler::onEvent(sf::Event event)
                 m_renderer.init();
             }
             else {
-                m_game_world.resetCamera();
+                m_game_world.setPlayerAtStart();
             }
         }
+
+#if 0
+        // TODO: There's got to be a better way to do this.
+        // Everything from here on down is for normal un-paused behavior.
+        GLfloat old_yaw = m_game_world.getCameraYaw();
+        GLfloat old_pitch = m_game_world.getCameraPitch();
 
         // Arrows, for exact rotations by degree. Useful for debugging.
         else if (event.key.code == sf::Keyboard::Left) {
@@ -108,6 +110,7 @@ bool EventHandler::onEvent(sf::Event event)
         else if (event.key.code == sf::Keyboard::Down) {
             m_game_world.setCameraPitch(floor(old_pitch - 1.0f));
         }
+#endif
     }
 
     // TEMP: Click to delete blocks!

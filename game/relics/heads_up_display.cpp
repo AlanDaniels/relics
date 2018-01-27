@@ -2,11 +2,11 @@
 #include "stdafx.h"
 #include "heads_up_display.h"
 
+#include "common_util.h"
 #include "config.h"
 #include "game_world.h"
+#include "player.h"
 #include "renderer.h"
-
-#include "common_util.h"
 #include "utils.h"
 
 
@@ -66,9 +66,10 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
 
     // Print the camera details.
     if (config.debug.hud_camera) {
-        MyVec4  camera_pos   = game_world.getCameraPos();
-        GLfloat camera_yaw   = game_world.getCameraYaw();
-        GLfloat camera_pitch = game_world.getCameraPitch();
+        const Player &player = game_world.getPlayer();
+        MyVec4  camera_pos   = player.getCameraPos();
+        GLfloat camera_yaw   = player.getCameraYaw();
+        GLfloat camera_pitch = player.getCameraPitch();
 
         std::string msg = fmt::format(
             "Pos = {0:.0f}, {1:.0f}, {2:.0f}, Yaw = {3:03.1f}, Pitch = {4:02.1f}",
@@ -145,7 +146,7 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
 
     // Print our eval region.
     if (config.debug.hud_eval_region) {
-        MyVec4  pos = game_world.getCameraPos();
+        MyVec4  pos = game_world.getPlayer().getCameraPos();
         int eval_blocks = config.logic.eval_blocks;
         EvalRegion region = WorldPosToEvalRegion(pos, eval_blocks);
 

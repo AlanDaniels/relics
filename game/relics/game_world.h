@@ -9,10 +9,11 @@
 
 
 struct sqlite3;
+class  ChunkOrigin;
 class  DrawState_PCT;
 class  DrawState_PT;
 class  EventStateMsg;
-class  ChunkOrigin;
+class  Player;
 
 
 // Our game state.
@@ -24,6 +25,8 @@ public:
 
     sqlite3 *getDatabase() { return m_database; }
 
+    const Player &getPlayer() const { return *m_player; }
+
     void setPaused(bool paused) { m_paused = paused; }
 
     void onGameTick(int elapsed_msec, const EventStateMsg &msg);
@@ -31,12 +34,7 @@ public:
     const Chunk *getRequiredChunk(const ChunkOrigin &origin) const;
     const Chunk *getOptionalChunk(const ChunkOrigin &origin) const;
 
-    MyRay getCameraEyeRay() const;
-
-    void resetCamera();
-    void setCameraYaw(GLfloat val)   { m_camera_yaw = val; clampRotations(); }
-    void setCameraPitch(GLfloat val) { m_camera_pitch = val; clampRotations(); }
-
+    void setPlayerAtStart();
     void deleteBlockInFrontOfUs();
 
     // Getters.
@@ -47,13 +45,9 @@ public:
     int     getTimeMsecs() const { return m_time_msec; }
     GLfloat getTimeSecs()  const { return m_time_msec / 1000.0f; }
 
-    GLfloat getCameraPitch() const { return m_camera_pitch; }
-    GLfloat getCameraYaw()   const { return m_camera_yaw; }
-    const MyVec4 &getCameraPos() const { return m_camera_pos; }
-
     bool getHitTestSuccess() const { return m_hit_test_success; }
-    const HitTestResult &getHitTestResult() const { return m_hit_test_result; }
-    const VertList_PT &getHitTestVertList() const { return m_hit_test_vert_list; }
+    const HitTestResult &getHitTestResult()   const { return m_hit_test_result; }
+    const VertList_PT   &getHitTestVertList() const { return m_hit_test_vert_list; }
 
 private:
     FORBID_DEFAULT_CTOR(GameWorld)
@@ -63,21 +57,15 @@ private:
     // Every couple of seconds, cash in a worker thread.
     static const int WORKER_PACE_MSECS = 2000;
 
-    MyVec4 getCameraStartPos() const;
-
     void updateWorld();
-    void clampRotations();
     void calcHitTest();
 
     // Private data
     sqlite3 *m_database;
+    std::unique_ptr<Player> m_player;
 
     bool m_paused;
     int  m_time_msec;
-
-    GLfloat  m_camera_pitch;
-    GLfloat  m_camera_yaw;
-    MyVec4   m_camera_pos;
 
     GlobalGrid  m_current_grid_coord;
     ChunkOrigin m_current_chunk_origin;

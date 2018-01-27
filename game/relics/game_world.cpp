@@ -10,6 +10,7 @@
 #include "draw_state_pct.h"
 #include "draw_state_pt.h"
 #include "hit_test_result.h"
+#include "player.h"
 #include "my_math.h"
 #include "utils.h"
 
@@ -21,14 +22,16 @@ GameWorld::GameWorld(sqlite3 *db) :
     m_database(db),
     m_paused(false),
     m_time_msec(0),
-    m_camera_pitch(0.0f),
-    m_camera_yaw(0.0f)
+    m_player(std::make_unique<Player>())
 {
+    setPlayerAtStart();
+
     // Figure out the size of our drawing region.
     // We load one border larger than what we will actually draw.
     int eval_blocks = GetConfig().logic.eval_blocks;
 
-    EvalRegion draw_region = WorldPosToEvalRegion(m_camera_pos, eval_blocks);
+    MyVec4 camera_pos = m_player->getCameraPos();
+    EvalRegion draw_region = WorldPosToEvalRegion(camera_pos, eval_blocks);
     EvalRegion load_region = draw_region.expand();
 
     // TODO: Forget threads for now. 
@@ -51,8 +54,6 @@ GameWorld::GameWorld(sqlite3 *db) :
             m_chunk_map[origin].get()->recalcAllExposures();
         }
     }
-
-    m_camera_pos = getCameraStartPos();
 }
 
 
@@ -67,30 +68,15 @@ GameWorld::~GameWorld()
 }
 
 
-// Figure out where the camera will start.
+// Figure out the starting position of the player.
 // For now, smack in the center of the starting chunk,
 // and one quarter of the way up.
-MyVec4 GameWorld::getCameraStartPos() const
+void GameWorld::setPlayerAtStart()
 {
-#if 0
-    GLfloat x = BLOCK_SCALE * CHUNK_WIDTH  * 0.5f;
-    GLfloat y = BLOCK_SCALE * CHUNK_HEIGHT * 0.1f;
-    GLfloat z = BLOCK_SCALE * CHUNK_WIDTH  * 0.5f;
-    return MyVec4(x, y, z);
-#endif
-
-    return MyVec4(0, 0, 0);
-}
-
-
-// Reset the camera.
-void GameWorld::resetCamera()
-{
-    m_camera_pitch = 0.0f;
-    m_camera_yaw   = 0.0f;
-    m_camera_pos   = getCameraStartPos();
-    m_current_grid_coord   = WorldPosToGlobalGrid(m_camera_pos, NudgeType::NONE);
-    m_current_chunk_origin = WorldToChunkOrigin(m_camera_pos);
+    MyVec4 start(0, 0, 0);
+    m_player->setPos(start);
+    m_current_grid_coord   = WorldPosToGlobalGrid(start, NudgeType::NONE);
+    m_current_chunk_origin = WorldToChunkOrigin(start);
 }
 
 
@@ -131,77 +117,15 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
         return;
     }
 
-    GLfloat degrees_per_pixel = GetConfig().window.mouse_degrees_per_pixel;
+    // Update everything in the world.
+    m_player->onGameTick(elapsed_msec, msg);
 
-    // Handle the mouse movement.
-    int mouse_diff_x = msg.getMouseDiffX();
-    int mouse_diff_y = msg.getMouseDiffY();
-    m_camera_yaw   += static_cast<GLfloat>(mouse_diff_x) * degrees_per_pixel;
-    m_camera_pitch -= static_cast<GLfloat>(mouse_diff_y) * degrees_per_pixel;
-    clampRotations();
-
-    // Then, handle the camera movement.
-    // TODO: The math here is tricky, and should we tie it to the elapsed time?
-    GLfloat meters_per_sec = GetConfig().debug.noclip_flight_speed;
-    GLfloat centimeters    = (meters_per_sec / 10.0f) * elapsed_msec;
-
-    MyMatrix4by4 roty = MyMatrix4by4::RotateY(m_camera_yaw);
-    MyMatrix4by4 rotx = MyMatrix4by4::RotateX(-m_camera_pitch);
-    MyMatrix4by4 rotator = roty.times(rotx);
-
-    GLfloat boost = msg.getSpeedBoost() ? 10.0f : 1.0f;
-
-    if (msg.getMoveFwd()) {
-        MyVec4 rotated = rotator.times(VEC4_NORTHWARD);
-        MyVec4 move    = rotated.times(centimeters * boost);
-
-        MyMatrix4by4 tr = MyMatrix4by4::Translate(move);
-        m_camera_pos = tr.times(m_camera_pos);
-    }
-
-    else if (msg.getMoveBkwd()) {
-        MyVec4 rotated = rotator.times(VEC4_NORTHWARD);
-        MyVec4 move    = rotated.times(-centimeters * boost);
-
-        MyMatrix4by4 tr = MyMatrix4by4::Translate(move);
-        m_camera_pos = tr.times(m_camera_pos);
-    }
-
-    if (msg.getMoveLeft()) {
-        MyVec4 rotated = rotator.times(VEC4_EASTWARD);
-        MyVec4 move    = rotated.times(-centimeters * boost);
-
-        MyMatrix4by4 tr = MyMatrix4by4::Translate(move);
-        m_camera_pos = tr.times(m_camera_pos);
-    }
-
-    else if (msg.getMoveRight()) {
-        MyVec4 rotated = rotator.times(VEC4_EASTWARD);
-        MyVec4 move    = rotated.times(centimeters * boost);
-
-        MyMatrix4by4 tr = MyMatrix4by4::Translate(move);
-        m_camera_pos = tr.times(m_camera_pos);
-    }
-
-    if (msg.getMoveUp()) {
-        MyVec4 move = VEC4_UPWARD.times(centimeters * boost);
-
-        MyMatrix4by4 tr = MyMatrix4by4::Translate(move);
-        m_camera_pos = tr.times(m_camera_pos);
-    }
-
-    else if (msg.getMoveDown()) {
-        MyVec4 move = VEC4_UPWARD.times(-centimeters * boost);
-
-        MyMatrix4by4 tr = MyMatrix4by4::Translate(move);
-        m_camera_pos = tr.times(m_camera_pos);
-    }
-
-    // Since our camera moved, see if we need to recalc any of the world.
-    GlobalGrid  new_location = WorldPosToGlobalGrid(m_camera_pos, NudgeType::NONE);
+    // Since the player moved, see if we need to recalc any of the world.
+    MyVec4 camera_pos = m_player->getCameraPos();
+    GlobalGrid  new_location = WorldPosToGlobalGrid(camera_pos, NudgeType::NONE);
 
     int eval_blocks = GetConfig().logic.eval_blocks;
-    ChunkOrigin new_chunk_origin = WorldToChunkOrigin(m_camera_pos);
+    ChunkOrigin new_chunk_origin = WorldToChunkOrigin(camera_pos);
     if (new_chunk_origin != m_current_chunk_origin) {
         updateWorld();
     }
@@ -215,23 +139,13 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
 }
 
 
-// Get the camera's eye-ray. Eh, maybe we could cache this.
-MyRay GameWorld::getCameraEyeRay() const
-{
-    MyMatrix4by4 roty = MyMatrix4by4::RotateY( m_camera_yaw);
-    MyMatrix4by4 rotx = MyMatrix4by4::RotateX(-m_camera_pitch);
-    MyMatrix4by4 rotator = roty.times(rotx);
-
-    MyVec4 eye_normal = rotator.times(VEC4_NORTHWARD);
-    return MyRay(m_camera_pos, eye_normal);
-}
-
-
 // Update the world. The logic here is tricky, and very thread heavy!
 void GameWorld::updateWorld()
 {
+    const MyVec4 &camera_pos = m_player->getCameraPos();
+
     int eval_blocks = GetConfig().logic.eval_blocks;
-    EvalRegion draw_region = WorldPosToEvalRegion(m_camera_pos, eval_blocks);
+    EvalRegion draw_region = WorldPosToEvalRegion(camera_pos, eval_blocks);
     EvalRegion load_region = draw_region.expand();
 
     // For any chunk at the "edge" of the load region, load it if we don't have it already.
@@ -298,30 +212,13 @@ void GameWorld::updateWorld()
 }
 
 
-// Clamp the camera rotations.
-void GameWorld::clampRotations()
-{
-    while (m_camera_yaw > 180.0) {
-        m_camera_yaw -= 360.0;
-    }
-    while (m_camera_yaw <= -180.0) {
-        m_camera_yaw += 360.0;
-    }
-
-    if (m_camera_pitch > 90.0) {
-        m_camera_pitch = 90.0;
-    }
-    else if (m_camera_pitch < -90.0) {
-        m_camera_pitch = -90.0;
-    }
-}
-
-
 // Calc our hit test, only in the eval region.
 void GameWorld::calcHitTest()
 {
     bool success = false;
-    MyRay eye_ray = getCameraEyeRay();
+
+    MyRay  camera_ray = m_player->getCameraRay();
+    MyVec4 camera_pos = m_player->getCameraPos();
 
     GLfloat best_distance = FLT_MAX;
     Chunk *best_chunk = nullptr;
@@ -329,7 +226,7 @@ void GameWorld::calcHitTest()
 
     GLfloat hit_test_distance = GetConfig().logic.getHitTestDistanceCm();
     int block_count = static_cast<int>((hit_test_distance / 100.0f) / CHUNK_WIDTH);
-    EvalRegion region = WorldPosToEvalRegion(m_camera_pos, block_count);
+    EvalRegion region = WorldPosToEvalRegion(camera_pos, block_count);
 
     for     (int x = region.west();  x <= region.east();  x += CHUNK_WIDTH) {
         for (int z = region.south(); z <= region.north(); z += CHUNK_WIDTH) {
@@ -337,7 +234,7 @@ void GameWorld::calcHitTest()
             Chunk *chunk = m_chunk_map[origin].get();
 
             HitTestResult detail;
-            bool this_test = DoChunkHitTest(*chunk, eye_ray, &detail);
+            bool this_test = DoChunkHitTest(*chunk, camera_ray, &detail);
             if (this_test && (detail.getDist() < best_distance)) {
                 success       = true;
                 best_distance = detail.getDist();

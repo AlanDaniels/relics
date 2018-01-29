@@ -212,6 +212,7 @@
     <ClCompile Include="draw_state_pt.cpp" />
     <ClCompile Include="heads_up_display.cpp" />
     <ClCompile Include="my_math.cpp" />
+    <ClCompile Include="physics.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="resource_pool.cpp" />
     <ClCompile Include="wavefront_object.cpp" />

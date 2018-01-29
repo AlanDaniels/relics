@@ -4,7 +4,7 @@
 
 -- The world itself.
 world = {
-    file_name = 'worlds/small_cube.world'
+    file_name = 'worlds/big_mess.world'
 }
 
 -- Debugging.
@@ -33,8 +33,8 @@ debug = {
 -- Window details.
 -- NOTE: This should not affect the game logic in any way.
 window = {
-    width  = 1024,
-    height = 768,
+    width  = 2000,
+    height = 1300,
     fullscreen = false,
     vertical_sync = true,
     mouse_degrees_per_pixel = 0.1

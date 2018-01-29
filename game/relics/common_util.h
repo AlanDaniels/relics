@@ -16,7 +16,7 @@
 * I found the string trimming functions here:
 *     https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
 *
-* This version last updated on Jan 27th, 2018.
+* This version last updated on Jan 28th, 2018.
 */
 
 enum class BlockType : unsigned char {
@@ -38,6 +38,10 @@ int GetMemoryUsage();
 
 void PrintDebug(const std::string &msg);
 void PrintTheImpossible(const std::string &fname, int line_num, int value);
+
+// Better rounding.
+int RoundUpInt(int val, int mult);
+int RoundDownInt(int val, int mult);
 
 // Including the SQLite header causes conflicts. Not worth it.
 struct sqlite3;

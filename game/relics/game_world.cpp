@@ -10,6 +10,7 @@
 #include "draw_state_pct.h"
 #include "draw_state_pt.h"
 #include "hit_test_result.h"
+#include "physics.h"
 #include "player.h"
 #include "my_math.h"
 #include "utils.h"
@@ -22,7 +23,7 @@ GameWorld::GameWorld(const std::string &db_fname) :
     m_db_fname(db_fname),
     m_paused(false),
     m_time_msec(0),
-    m_player(std::make_unique<Player>())
+    m_player(std::make_unique<Player>(*this))
 {
     setPlayerAtStart();
 
@@ -73,7 +74,7 @@ GameWorld::~GameWorld()
 void GameWorld::setPlayerAtStart()
 {
     MyVec4 start = GetPlayerStartPos(m_db_fname);
-    m_player->setPos(start);
+    m_player->setPlayerPos(start);
     m_current_grid_coord   = WorldPosToGlobalGrid(start, NudgeType::NONE);
     m_current_chunk_origin = WorldToChunkOrigin(start);
 }
@@ -118,6 +119,7 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
 
     // Update everything in the world.
     m_player->onGameTick(elapsed_msec, msg);
+    PlayerCollisionTest(*m_player);
 
     // Since the player moved, see if we need to recalc any of the world.
     MyVec4 camera_pos = m_player->getCameraPos();

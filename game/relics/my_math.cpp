@@ -307,6 +307,13 @@ HitTestType WorldHitTest(const MyRay &ray, const MyPlane &plane, MyVec4 *pOut_im
 }
 
 
+// Return true if a global grid coord has a valid Y-value.
+bool GlobalGrid::isValid() const {
+    return ((m_y >= 0) && (m_y < CHUNK_HEIGHT));
+}
+
+
+
 // We need "less than" since we use "Global Pillar" as a key in "std::map".
 bool operator<(const GlobalPillar &one, const GlobalPillar &two)
 {
@@ -341,7 +348,7 @@ LocalGrid::LocalGrid(int x, int y, int z) :
 }
 
 
-// Convert a world coord into a grid coord.
+// Convert a world position into a grid coord.
 // The nudge factor is so we can "burrow" into a block a bit, when we do a
 // hit-test against a block face, so that we don't hit strange edge cases in the math.
 GlobalGrid WorldPosToGlobalGrid(const MyVec4 &pos, NudgeType nudge)
@@ -366,6 +373,15 @@ GlobalGrid WorldPosToGlobalGrid(const MyVec4 &pos, NudgeType nudge)
     int y = static_cast<int>(floor(fixed_y / BLOCK_SCALE));
     int z = static_cast<int>(floor(fixed_z / BLOCK_SCALE));
     return GlobalGrid(x, y, z);
+}
+
+
+// Given a global grid coord, find the chunk origin where this coord would be found.
+ChunkOrigin GlobalGridToChunkOrigin(const GlobalGrid &coord)
+{
+    int x = RoundDownInt(coord.x(), CHUNK_WIDTH);
+    int z = RoundDownInt(coord.z(), CHUNK_WIDTH);
+    return ChunkOrigin(x, z);
 }
 
 

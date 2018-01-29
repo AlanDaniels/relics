@@ -85,6 +85,3 @@ bool IsResource(const std::string &fname);
 std::string ReadTextResource(const std::string &fname);
 bool ReadFontResource(sf::Font *pOut, const std::string &fname);
 bool ReadImageResource(sf::Image *pOut, const std::string &fname);
-
-int RoundUpInt(int val, int mult);
-int RoundDownInt(int val, int mult);

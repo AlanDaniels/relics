@@ -263,6 +263,54 @@ private:
 };
 
 
+// An oriented bounding box.
+// If we ever need a non-oriented one, we'll add that later.
+class MyBoundingBox
+{
+public:
+    MyBoundingBox() :
+        m_lower(0, 0, 0),
+        m_upper(0, 0, 0) {}
+
+    MyBoundingBox(const MyVec4 &lower, const MyVec4 &upper) {
+        GLfloat min_x = min(lower.x(), upper.x());
+        GLfloat min_y = min(lower.y(), upper.y());
+        GLfloat min_z = min(lower.z(), upper.z());
+
+        GLfloat max_x = max(lower.x(), upper.x());
+        GLfloat max_y = max(lower.y(), upper.y());
+        GLfloat max_z = max(lower.z(), upper.z());
+
+        m_lower = MyVec4(min_x, min_y, min_z);
+        m_upper = MyVec4(max_x, max_y, max_z);
+    }
+
+    MyBoundingBox translate(const MyVec4 &move) {
+        MyMatrix4by4 tr = MyMatrix4by4::Translate(move);
+        MyVec4 new_lower = tr.times(m_lower);
+        MyVec4 new_upper = tr.times(m_upper);
+        return MyBoundingBox(new_lower, new_upper);
+    }
+
+    DEFAULT_COPYING(MyBoundingBox)
+    DEFAULT_MOVING(MyBoundingBox)
+
+    const MyVec4 &getLower() const { return m_lower; }
+    const MyVec4 &getUpper() const { return m_upper; }
+
+    GLfloat minX() const { return m_lower.x(); }
+    GLfloat maxX() const { return m_upper.x(); }
+    GLfloat minY() const { return m_lower.y(); }
+    GLfloat maxY() const { return m_upper.y(); }
+    GLfloat minZ() const { return m_lower.z(); }
+    GLfloat maxZ() const { return m_upper.z(); }
+
+private:
+    MyVec4 m_lower;
+    MyVec4 m_upper;
+};
+
+
 // Results from a hit-test.
 enum class HitTestType
 {
@@ -343,6 +391,8 @@ public:
                 (m_z == that.m_z));
     }
 
+    bool isValid() const;
+
     inline int x() const { return m_x; }
     inline int y() const { return m_y; }
     inline int z() const { return m_z; }
@@ -413,6 +463,7 @@ private:
 
 
 GlobalGrid  WorldPosToGlobalGrid(const MyVec4 &pos, NudgeType nudge_type);
+ChunkOrigin GlobalGridToChunkOrigin(const GlobalGrid &coord);
 LocalGrid   GlobalGridToLocal(const GlobalGrid &coord, const ChunkOrigin &origin);
 LocalPillar GlobalPillarToLocal(const GlobalPillar &pillar, const ChunkOrigin &origin);
 

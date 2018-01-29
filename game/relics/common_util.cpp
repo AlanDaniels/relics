@@ -103,6 +103,46 @@ void PrintTheImpossible(const std::string &fname, int line_num, int value)
 }
 
 
+// Round an integer up to the nearest multiple.
+// We've had to roll our own here since negative numbers are tricky.
+int RoundUpInt(int val, int mult)
+{
+    assert(mult > 0);
+
+    int remainder = abs(val) % mult;
+    if (remainder == 0) {
+        return val;
+    }
+
+    if (val >= 0) {
+        return val + mult - remainder;
+    }
+    else {
+        return -(abs(val) - remainder);
+    }
+}
+
+
+// Round an integer down to the nearest multiple.
+// We've had to roll our own here since negative numbers are tricky.
+int RoundDownInt(int val, int mult)
+{
+    assert(mult > 0);
+
+    int remainder = abs(val) % mult;
+    if (remainder == 0) {
+        return val;
+    }
+
+    if (val >= 0) {
+        return val - remainder;
+    }
+    else {
+        return -(abs(val) + mult - remainder);
+    }
+}
+
+
 // Utility function for opening a SQLite database.
 sqlite3 *SQL_open(const std::string &fname)
 {

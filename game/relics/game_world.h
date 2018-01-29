@@ -25,7 +25,8 @@ public:
 
     const std::string &getDatabaseFilename() { return m_db_fname; }
 
-    const Player &getPlayer() const { return *m_player; }
+    // TODO: Clean up events and make this constant again.
+    Player &getPlayer() const { return *m_player; }
 
     void setPaused(bool paused) { m_paused = paused; }
 

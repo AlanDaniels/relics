@@ -5,23 +5,34 @@
 #include "event_handler.h"
 #include "my_math.h"
 
-// The player's dimensions in cm.
-constexpr int PLAYER_HEIGHT    = 190;
-constexpr int PLAYER_EYE_LEVEL = 160;
+class GameWorld;
 
 
 class Player
 {
 public:
-    Player();
+    Player(GameWorld &world);
 
     void onGameTick(int elapsed_msec, const EventStateMsg &msg);
 
-    void setPos(const MyVec4 &pos);
+    void toggleGravity() { 
+        m_apply_gravity = !m_apply_gravity; 
+        m_gravity_vec = MyVec4(0, 0, 0);
+    }
+
+    void resetGravityVec() {
+        m_gravity_vec = MyVec4(0, 0, 0);
+    }
+
+    void setPlayerPos(const MyVec4 &pos);
     void setCameraYaw(GLfloat val)   { m_camera_yaw = val;   clampRotations(); }
     void setCameraPitch(GLfloat val) { m_camera_pitch = val; clampRotations(); }
 
     // Getters.
+    const GameWorld &getGameWorld() const { return m_game_world; }
+    const MyVec4 &getPlayerPos() const { return m_player_pos; }
+
+    MyBoundingBox getBoundingBox() const;
     MyRay getCameraRay() const;
 
     GLfloat getCameraPitch()     const { return m_camera_pitch; }
@@ -29,6 +40,7 @@ public:
     const MyVec4 &getCameraPos() const { return m_camera_pos; }
 
 private:
+    FORBID_DEFAULT_CTOR(Player)
     FORBID_COPYING(Player)
     FORBID_MOVING(Player)
 
@@ -36,8 +48,13 @@ private:
     void clampRotations();
 
     // Private data.
-    MyVec4   m_pos;
-    GLfloat  m_camera_pitch;
-    GLfloat  m_camera_yaw;
-    MyVec4   m_camera_pos;
+    GameWorld &m_game_world;
+
+    bool   m_apply_gravity;
+    MyVec4 m_gravity_vec;
+
+    MyVec4  m_player_pos;
+    GLfloat m_camera_pitch;
+    GLfloat m_camera_yaw;
+    MyVec4  m_camera_pos;
 };

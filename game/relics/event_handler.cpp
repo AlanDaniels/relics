@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "game_world.h"
+#include "player.h"
 #include "renderer.h"
 #include "resource_pool.h"
 #include "utils.h"
@@ -88,6 +89,11 @@ bool EventHandler::onEvent(sf::Event event)
             else {
                 m_game_world.setPlayerAtStart();
             }
+        }
+
+        // TODO: Testing our gravity.
+        else if (event.key.code == sf::Keyboard::F12) {
+            m_game_world.getPlayer().toggleGravity();
         }
 
 #if 0

@@ -32,7 +32,7 @@ void PlayerCollisionTest(Player &player)
     for     (int x = SW.x(); x <= NE.x(); x++) {
         for (int z = SW.z(); z <= NE.z(); z++) {
             GlobalGrid here(x, grid_y, z);
-            if (here.isValid()) {
+            if (here.isWithinWorld()) {
                 ChunkOrigin origin = GlobalGridToChunkOrigin(here);
                 LocalGrid local_here = GlobalGridToLocal(here, origin);
 
@@ -46,8 +46,8 @@ void PlayerCollisionTest(Player &player)
     }
 
     // If we collided, plant the player at that spot.
+    player.setOnSolidGround(collision);
     if (collision) {
-        player.resetGravityVec();
         MyVec4  current_pos = player.getPlayerPos();
         GLfloat y_at_top_of_block = (grid_y + 1) * BLOCK_SCALE;
         MyVec4  new_pos(current_pos.x(), y_at_top_of_block, current_pos.z());

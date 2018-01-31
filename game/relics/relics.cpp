@@ -195,7 +195,7 @@ int WINAPI wWinMain(
     int screen_width  = config.window.width;
     int screen_height = config.window.height;
 	sf::RenderWindow window(sf::VideoMode(screen_width, screen_height), "Relics", style, settings_in);
-
+    
     // See what context settings we actually got.
     if (config.debug.print_window_context) {
         sf::ContextSettings settings_out = window.getSettings();
@@ -339,7 +339,7 @@ int WINAPI wWinMain(
         RenderStats stats = renderer.renderWorld();
 
         // Render the GUI overlay.
-        heads_up_display.render(*game_world, stats, fps_snapshot);
+        heads_up_display.render(*game_world, stats, elapsed, fps_snapshot);
 
         // All done. Flip to the new results.
         window.display();

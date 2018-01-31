@@ -22,6 +22,10 @@ const Config &GetConfig() {
     return g_config;
 }
 
+Config &GetConfigRW() {
+    return g_config;
+}
+
 
 // Read our default file.
 // For now, let's be insistent that the config file exists, and is correct.
@@ -80,33 +84,44 @@ bool Config::loadFromFile()
     lua_getglobal(L, "debug");
     if (lua_istable(L, -1)) {
         debug.opengl           = getBoolField(L, "opengl", false);
-        debug.check_for_leaks  = getBoolField(L, "check_for_leaks", false);
+        debug.noclip           = getBoolField(L, "noclip", false);
+        debug.check_for_leaks  = getBoolField(L, "check_for_leaks",  false);
         debug.draw_transitions = getBoolField(L, "draw_transitions", false);
 
-        debug.hud_camera     = getBoolField(L, "hud_camera", false);
-        debug.hud_framerate  = getBoolField(L, "hud_framerate", false);
+        debug.hud_framerate  = getBoolField(L, "hud_framerate",  false);
         debug.hud_game_clock = getBoolField(L, "hud_game_clock", false);
-        debug.hud_hit_test   = getBoolField(L, "hud_hit_test", false);
-        debug.hud_mouse_pos  = getBoolField(L, "hud_mouse_pos", false);
+        debug.hud_hit_test   = getBoolField(L, "hud_hit_test",   false);
+        debug.hud_mouse_pos  = getBoolField(L, "hud_mouse_pos",  false);
+        debug.hud_player_pos = getBoolField(L, "hud_player_pos", false);
+        debug.hud_blinker    = getBoolField(L, "hud_blinker",    false);
 
         debug.hud_memory_usage = getBoolField(L, "hud_memory_usage", false);
         debug.hud_render_stats = getBoolField(L, "hud_render_stats", false);
         debug.hud_eval_region  = getBoolField(L, "hud_eval_region",  false);
         debug.hud_chunk_stats  = getBoolField(L, "hud_chunk_stats",  false);
 
-        debug.print_draw_state     = getBoolField(L, "print_draw_state", false);
+        debug.print_draw_state     = getBoolField(L, "print_draw_state",     false);
         debug.print_window_context = getBoolField(L, "print_window_context", false);
-
-        lua_getfield(L, -1, "noclip_flight_speed");
-        if (lua_isnumber(L, -1)) {
-            debug.noclip_flight_speed = static_cast<GLfloat>(lua_tonumber(L, -1));
-        }
     }
     lua_pop(L, 1);
 
     // Read the "window" table.
     lua_getglobal(L, "window");
     if (lua_istable(L, -1)) {
+        lua_getfield(L, -1, "width");
+        if (lua_isinteger(L, -1)) {
+            int val = static_cast<int>(lua_tointeger(L, -1));
+            window.width = clampInt(val, 400, 5000);
+        }
+        lua_pop(L, 1);
+
+        lua_getfield(L, -1, "height");
+        if (lua_isinteger(L, -1)) {
+            int val = static_cast<int>(lua_tointeger(L, -1));
+            window.height = clampInt(val, 400, 5000);
+        }
+        lua_pop(L, 1);
+
         window.fullscreen    = getBoolField(L, "fullscreen", false);
         window.vertical_sync = getBoolField(L, "vertical_sync", true);
 
@@ -228,6 +243,27 @@ bool Config::loadFromFile()
         if (lua_isnumber(L, -1)) {
             GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
             logic.hit_test_distance_meters = clampFloat(val, 1.0f, 500.f);
+        }
+        lua_pop(L, 1);
+
+        lua_getfield(L, -1, "player_walk_speed");
+        if (lua_isnumber(L, -1)) {
+            GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
+            logic.player_walk_speed = clampFloat(val, 0.001f, 10.f);
+        }
+        lua_pop(L, 1);
+
+        lua_getfield(L, -1, "player_run_speed");
+        if (lua_isnumber(L, -1)) {
+            GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
+            logic.player_run_speed = clampFloat(val, 0.001f, 10.f);
+        }
+        lua_pop(L, 1);
+
+        lua_getfield(L, -1, "player_gravity");
+        if (lua_isnumber(L, -1)) {
+            GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
+            logic.player_gravity = clampFloat(val, 0.001f, 50.f);
         }
         lua_pop(L, 1);
     }

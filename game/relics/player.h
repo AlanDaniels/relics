@@ -15,15 +15,7 @@ public:
 
     void onGameTick(int elapsed_msec, const EventStateMsg &msg);
 
-    void toggleGravity() { 
-        m_apply_gravity = !m_apply_gravity; 
-        m_gravity_vec = MyVec4(0, 0, 0);
-    }
-
-    void resetGravityVec() {
-        m_gravity_vec = MyVec4(0, 0, 0);
-    }
-
+    void setOnSolidGround(bool val);
     void setPlayerPos(const MyVec4 &pos);
     void setCameraYaw(GLfloat val)   { m_camera_yaw = val;   clampRotations(); }
     void setCameraPitch(GLfloat val) { m_camera_pitch = val; clampRotations(); }
@@ -45,13 +37,18 @@ private:
     FORBID_MOVING(Player)
 
     // Private methods.
+    void calcNoclipMotion(int elapsed_msec, const EventStateMsg &msg);
+    void calcStandardMotion(int elapsed_msec, const EventStateMsg &msg);
+
+
     void clampRotations();
 
     // Private data.
     GameWorld &m_game_world;
 
-    bool   m_apply_gravity;
-    MyVec4 m_gravity_vec;
+    bool   m_on_solid_ground;
+    MyVec4 m_horizontal_vec;
+    MyVec4 m_vertical_vec;
 
     MyVec4  m_player_pos;
     GLfloat m_camera_pitch;

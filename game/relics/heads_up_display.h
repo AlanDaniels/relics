@@ -17,17 +17,22 @@ public:
     ~HeadsUpDisplay() {}
 
     bool init();
-    void render(const GameWorld &game_world, const RenderStats &stats, GLfloat fps);
+    void render(const GameWorld &game_world, const RenderStats &stats, int elapsed_msec, GLfloat fps);
 
 private:
     FORBID_DEFAULT_CTOR(HeadsUpDisplay)
     FORBID_COPYING(HeadsUpDisplay)
     FORBID_MOVING(HeadsUpDisplay)
 
+    // Private data.
     sf::RenderWindow &m_window;
 
     sf::RectangleShape m_crosshair_vert;
     sf::RectangleShape m_crosshair_horz;
+    sf::RectangleShape m_blinker_rect;
     sf::Font m_font;
     sf::Text m_text;
+
+    int m_blinker_msecs_left;
+    int m_blinker_state;
 };

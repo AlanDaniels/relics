@@ -4,20 +4,23 @@
 
 -- The world itself.
 world = {
-    file_name = 'worlds/big_mess.world'
+    file_name = 'worlds/junky.world'
 }
 
 -- Debugging.
 debug = {
     opengl = true,
     check_for_leaks = false,
+
+    noclip = true,
     draw_transitions = true,
 
-    hud_camera = false,
     hud_game_clock = false,
     hud_framerate = true,
     hud_hit_test = false,
     hud_mouse_pos = false,
+    hud_player_pos = true,
+    hud_blinker = true,
 
     hud_memory_usage = true,
     hud_render_stats = true,
@@ -25,16 +28,14 @@ debug = {
     hud_chunk_stats = false,
 
     print_draw_state = false,
-    print_window_context = false,
-    
-    noclip_flight_speed = 5.0
+    print_window_context = false
 }
 
 -- Window details.
 -- NOTE: This should not affect the game logic in any way.
 window = {
-    width  = 2000,
-    height = 1300,
+    width  = 1920,
+    height = 1080,
     fullscreen = false,
     vertical_sync = true,
     mouse_degrees_per_pixel = 0.1
@@ -90,7 +91,10 @@ render = {
 -- Game logic.
 -- Now, *this* will. Mess with at your own peril.
 logic = {
-    eval_blocks       = 3,
-    hit_test_distance = 25.0
+    eval_blocks = 3,
+    hit_test_distance = 25.0, -- Meters
+    player_walk_speed = 1.0,  -- Meters / secone
+    player_run_speed  = 2.0,  -- Meters / secone
+    player_gravity    = 9.8   -- Meters / second squared
 }
 

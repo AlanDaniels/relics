@@ -28,13 +28,16 @@ struct ConfigDebug
     ConfigDebug() :
         opengl(true),
         check_for_leaks(false),
+
+        noclip(false),
         draw_transitions(false),
 
-        hud_camera(false),
         hud_framerate(false),
         hud_game_clock(false),
         hud_hit_test(false),
         hud_mouse_pos(false),
+        hud_player_pos(false),
+        hud_blinker(false),
 
         hud_memory_usage(false),
         hud_render_stats(false),
@@ -42,8 +45,7 @@ struct ConfigDebug
         hud_chunk_stats(false),
 
         print_draw_state(false),
-        print_window_context(false),
-        noclip_flight_speed(1.0f) {}
+        print_window_context(false) {}
 
     ~ConfigDebug() {}
 
@@ -51,14 +53,17 @@ struct ConfigDebug
     DEFAULT_MOVING(ConfigDebug)
 
     bool opengl;
+    bool noclip;
+
     bool check_for_leaks;
     bool draw_transitions;
 
-    bool hud_camera;
     bool hud_framerate;
     bool hud_game_clock;
     bool hud_hit_test;
     bool hud_mouse_pos;
+    bool hud_player_pos;
+    bool hud_blinker;
 
     bool hud_memory_usage;
     bool hud_render_stats;
@@ -67,7 +72,6 @@ struct ConfigDebug
 
     bool print_draw_state;
     bool print_window_context;
-    GLfloat noclip_flight_speed;
 };
 
 
@@ -201,7 +205,10 @@ struct ConfigLogic
 {
     ConfigLogic() :
         eval_blocks(5),
-        hit_test_distance_meters(10.0f) {}
+        hit_test_distance_meters(10.0f),
+        player_walk_speed(1.0f),
+        player_run_speed(1.0f),
+        player_gravity(9.8f) {}
 
     ~ConfigLogic() {}
 
@@ -215,6 +222,9 @@ struct ConfigLogic
 
     int     eval_blocks;
     GLfloat hit_test_distance_meters;
+    GLfloat player_walk_speed;
+    GLfloat player_run_speed;
+    GLfloat player_gravity;
 };
 
 
@@ -252,3 +262,6 @@ private:
 // It gets loaded at the beginning, and then never changes.
 bool LoadConfig();
 const Config &GetConfig();
+
+// Well, maybe changes a little...
+Config &GetConfigRW();

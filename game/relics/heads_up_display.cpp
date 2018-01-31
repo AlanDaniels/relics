@@ -10,9 +10,18 @@
 #include "utils.h"
 
 
+// For the blinker rectangle.
+const int BLINKER_MSECS = 100;
+const int BLINKER_RECT_SIZE   = 50;
+const int BLINKER_RECT_OFFSET = 10;
+
+
 // Initialize our stuff.
 bool HeadsUpDisplay::init()
 {
+    m_blinker_msecs_left = BLINKER_MSECS;
+    m_blinker_state = 0;
+
     const GLfloat CH_THIN = 1.0f;
     const GLfloat CH_LONG = 50.0f;
 
@@ -37,6 +46,14 @@ bool HeadsUpDisplay::init()
         (screen_height / 2.0f) - (CH_THIN / 2.0f)));
     m_crosshair_horz.setFillColor(sf::Color::White);
 
+    m_blinker_rect.setSize(sf::Vector2f(BLINKER_RECT_SIZE, BLINKER_RECT_SIZE));
+    m_blinker_rect.setPosition(sf::Vector2f(
+        screen_width  - BLINKER_RECT_SIZE - BLINKER_RECT_OFFSET,
+        screen_height - BLINKER_RECT_SIZE - BLINKER_RECT_OFFSET));
+    m_blinker_rect.setOutlineColor(sf::Color::Yellow);
+    m_blinker_rect.setOutlineThickness(1.0f);
+    m_blinker_rect.setFillColor(sf::Color::Red);
+
     m_text.setFont(m_font);
     m_text.setCharacterSize(14);
     m_text.setStyle(sf::Text::Regular);
@@ -49,7 +66,7 @@ bool HeadsUpDisplay::init()
 
 // Render all the debugging stuff we might be interested in.
 // Note that we tend to print them from the longest strings to the shortest.
-void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stats, GLfloat fps)
+void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stats, int elapsed_msec, GLfloat fps)
 {
     // Set things back to where we can draw again.
     glDisable(GL_DEPTH_TEST);
@@ -63,23 +80,6 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
     m_window.pushGLStates();
 
     m_text.setPosition(10.0f, 0.0f);
-
-    // Print the camera details.
-    if (config.debug.hud_camera) {
-        const Player &player = game_world.getPlayer();
-        MyVec4  camera_pos   = player.getCameraPos();
-        GLfloat camera_yaw   = player.getCameraYaw();
-        GLfloat camera_pitch = player.getCameraPitch();
-
-        std::string msg = fmt::format(
-            "Pos = {0:.0f}, {1:.0f}, {2:.0f}, Yaw = {3:03.1f}, Pitch = {4:02.1f}",
-            camera_pos.x(), camera_pos.y(), camera_pos.z(),
-            camera_yaw, camera_pitch);
-        m_text.setString(msg);
-
-        m_window.draw(m_text);
-        m_text.move(0.0f, text_down);
-    }
 
     // Print our hit-test debugging info.
     if (config.debug.hud_hit_test) {
@@ -123,6 +123,23 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
     if (config.debug.hud_mouse_pos) {
         sf::Vector2i mouse_pos = sf::Mouse::getPosition(m_window);
         std::string msg = fmt::format("Mouse: {0:03d}, {1:03d}", mouse_pos.x, mouse_pos.y);
+        m_text.setString(msg);
+
+        m_window.draw(m_text);
+        m_text.move(0.0f, text_down);
+    }
+
+    // Print the player's positition.
+    if (config.debug.hud_player_pos) {
+        const Player &player = game_world.getPlayer();
+        MyVec4  camera_pos   = player.getCameraPos();
+        GLfloat camera_yaw   = player.getCameraYaw();
+        GLfloat camera_pitch = player.getCameraPitch();
+
+        std::string msg = fmt::format(
+            "Pos = {0:.0f}, {1:.0f}, {2:.0f}, Yaw = {3:03.1f}, Pitch = {4:02.1f}",
+            camera_pos.x(), camera_pos.y(), camera_pos.z(),
+            camera_yaw, camera_pitch);
         m_text.setString(msg);
 
         m_window.draw(m_text);
@@ -182,6 +199,28 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
 
         m_window.draw(m_text);
         m_text.move(0.0f, text_down);
+    }
+
+    // Draw our blinker.
+    if (config.debug.hud_blinker) {
+        m_blinker_msecs_left -= elapsed_msec;
+        if (m_blinker_msecs_left <= 0) {
+            m_blinker_msecs_left = BLINKER_MSECS;
+            m_blinker_state++;
+            if (m_blinker_state > 1) {
+                m_blinker_state = 0;
+            }
+        }
+
+        switch (m_blinker_state) {
+        case 0: m_blinker_rect.setFillColor(sf::Color::Red);  break;
+        case 1: m_blinker_rect.setFillColor(sf::Color::Blue); break;
+        default: 
+            PrintTheImpossible(__FILE__, __LINE__, m_blinker_state); 
+            break;
+        }
+
+        m_window.draw(m_blinker_rect);
     }
 
     // Draw the crosshairs, but only if the game is un-paused.

@@ -307,11 +307,11 @@ HitTestType WorldHitTest(const MyRay &ray, const MyPlane &plane, MyVec4 *pOut_im
 }
 
 
-// Return true if a global grid coord has a valid Y-value.
-bool GlobalGrid::isValid() const {
+// Return true if a global grid coord is within
+// the world. That is, it has a valid Y-value.
+bool GlobalGrid::isWithinWorld() const {
     return ((m_y >= 0) && (m_y < CHUNK_HEIGHT));
 }
-
 
 
 // We need "less than" since we use "Global Pillar" as a key in "std::map".

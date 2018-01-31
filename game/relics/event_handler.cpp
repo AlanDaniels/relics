@@ -91,9 +91,9 @@ bool EventHandler::onEvent(sf::Event event)
             }
         }
 
-        // TODO: Testing our gravity.
+        // "F12" is toggle "noclip" for now.
         else if (event.key.code == sf::Keyboard::F12) {
-            m_game_world.getPlayer().toggleGravity();
+            GetConfigRW().debug.noclip = !GetConfig().debug.noclip;
         }
 
 #if 0

@@ -122,6 +122,16 @@ public:
         return (abs(length() - 1.0f) < EPSILON);
     }
 
+    MyVec4 normalized() const {
+        GLfloat len = length();
+        if (len < EPSILON) {
+            return MyVec4(0, 0, 0, 1.0f);
+        }
+        else {
+            return MyVec4(m_x / len, m_y / len, m_z / len, 1.0f);
+        }
+    }
+
     MyVec4 times(GLfloat val) const {
         return MyVec4(m_x * val, m_y * val, m_z * val);
     }
@@ -391,7 +401,7 @@ public:
                 (m_z == that.m_z));
     }
 
-    bool isValid() const;
+    bool isWithinWorld() const;
 
     inline int x() const { return m_x; }
     inline int y() const { return m_y; }

@@ -3,6 +3,8 @@
 #include "player.h"
 
 #include "config.h"
+#include "format.h"
+#include "heads_up_display.h"
 
 
 // The player's dimensions, in centimeters.
@@ -177,27 +179,41 @@ void Player::calcNoclipMotion(int elapsed_msec, const EventStateMsg &msg)
     // We will always move around at run speed.
     GLfloat speed_m_per_sec = GetConfig().logic.player_run_speed;
     GLfloat speed_cm_p_msec = (speed_m_per_sec * BLOCK_SCALE) / 1000.0f;
-    GLfloat centimeters = speed_cm_p_msec * elapsed_msec;
+    GLfloat centimeters     = speed_cm_p_msec * elapsed_msec;
+
+    SetDebugLine(fmt::format("Speed: {0:.03f}, Centimeters: {1:.03f}", speed_cm_p_msec, centimeters));
 
     // Calc the vertical movement.
-    MyVec4 vert_vec(0, 0, 0);
+    MyVec4 vert_direction(0, 0, 0);
 
     if (msg.getMoveFwd()) {
-        vert_vec = vert_vec.plus(VEC4_NORTHWARD);
+        vert_direction = vert_direction.plus(VEC4_NORTHWARD);
     }
     else if (msg.getMoveBkwd()) {
-        vert_vec = vert_vec.plus(VEC4_SOUTHWARD);
+        vert_direction = vert_direction.plus(VEC4_SOUTHWARD);
     }
 
     if (msg.getMoveLeft()) {
-        vert_vec = vert_vec.plus(VEC4_WESTWARD);
+        vert_direction = vert_direction.plus(VEC4_WESTWARD);
     }
     else if (msg.getMoveRight()) {
-        vert_vec = vert_vec.plus(VEC4_EASTWARD);
+        vert_direction = vert_direction.plus(VEC4_EASTWARD);
     }
 
-    vert_vec = vert_vec.normalized();
+    vert_direction = vert_direction.normalized().times(centimeters);
 
+    // Rotation vectors.
+    MyMatrix4by4 roty = MyMatrix4by4::RotateY(m_camera_yaw);
+    MyMatrix4by4 rotx = MyMatrix4by4::RotateX(-m_camera_pitch);
+
+    // Apply the vertical movement.
+    MyMatrix4by4 vert_rotate = roty.times(rotx);
+    MyVec4 vert_move = vert_rotate.times(vert_direction);
+    m_player_pos = MyMatrix4by4::Translate(vert_move).times(m_player_pos);
+
+    // TODO: Apply Horz here.
+
+#if 0
     // Calc the horizontal movement.
     MyVec4 horz_vec(0, 0, 0);
 
@@ -209,19 +225,7 @@ void Player::calcNoclipMotion(int elapsed_msec, const EventStateMsg &msg)
     }
 
     horz_vec = horz_vec.normalized();
-
-    // Rotation vectors.
-    MyMatrix4by4 roty = MyMatrix4by4::RotateY(m_camera_yaw);
-    MyMatrix4by4 rotx = MyMatrix4by4::RotateX(-m_camera_pitch);
-
-    // Apply the vertical movement.
-    MyMatrix4by4 vert_rotator = roty.times(rotx);
-    MyVec4 vert_move = vert_rotator.times(vert_vec);
-    vert_move = vert_move.times(centimeters);
-    m_player_pos = MyMatrix4by4::Translate(vert_move).times(m_player_pos);
-
-    // TODO: Apply Horz here.
-
+#endif
 }
 
 

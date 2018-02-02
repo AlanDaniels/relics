@@ -10,21 +10,24 @@
 #include "utils.h"
 
 
+// A one-off expedient hack, to see what's going on.
+static std::string debug_line;
+void SetDebugLine(const std::string &line) {
+    debug_line = line;
+}
+
+
 // For the blinker rectangle.
-const int BLINKER_MSECS = 100;
-const int BLINKER_RECT_SIZE   = 50;
-const int BLINKER_RECT_OFFSET = 10;
+const GLfloat CROSSHAIR_THIN  = 1.0f;
+const GLfloat CHROSSHAIR_LONG = 50.0f;
+
+const GLfloat SECOND_CLOCK_RADIUS = 30.0f;
+const GLfloat SECOND_CLOCK_OFFSET = 10.0f;
 
 
 // Initialize our stuff.
 bool HeadsUpDisplay::init()
 {
-    m_blinker_msecs_left = BLINKER_MSECS;
-    m_blinker_state = 0;
-
-    const GLfloat CH_THIN = 1.0f;
-    const GLfloat CH_LONG = 50.0f;
-
     std::string font_name = GetConfig().render.hud_font;
     if (!ReadFontResource(&m_font, font_name)) {
         return false;
@@ -34,26 +37,33 @@ bool HeadsUpDisplay::init()
     int screen_width  = dims.x;
     int screen_height = dims.y;
 
-    m_crosshair_vert.setSize(sf::Vector2f(CH_THIN, CH_LONG));
+    m_crosshair_vert.setSize(sf::Vector2f(CROSSHAIR_THIN, CHROSSHAIR_LONG));
     m_crosshair_vert.setPosition(sf::Vector2f(
-        (screen_width  / 2.0f) - (CH_THIN / 2.0f),
-        (screen_height / 2.0f) - (CH_LONG / 2.0f)));
+        (screen_width  / 2.0f) - (CROSSHAIR_THIN / 2.0f),
+        (screen_height / 2.0f) - (CHROSSHAIR_LONG / 2.0f)));
     m_crosshair_vert.setFillColor(sf::Color::White);
 
-    m_crosshair_horz.setSize(sf::Vector2f(CH_LONG, CH_THIN));
+    m_crosshair_horz.setSize(sf::Vector2f(CHROSSHAIR_LONG, CROSSHAIR_THIN));
     m_crosshair_horz.setPosition(sf::Vector2f(
-        (screen_width  / 2.0f) - (CH_LONG / 2.0f),
-        (screen_height / 2.0f) - (CH_THIN / 2.0f)));
+        (screen_width  / 2.0f) - (CHROSSHAIR_LONG / 2.0f),
+        (screen_height / 2.0f) - (CROSSHAIR_THIN / 2.0f)));
     m_crosshair_horz.setFillColor(sf::Color::White);
 
-    m_blinker_rect.setSize(sf::Vector2f(BLINKER_RECT_SIZE, BLINKER_RECT_SIZE));
-    m_blinker_rect.setPosition(sf::Vector2f(
-        screen_width  - BLINKER_RECT_SIZE - BLINKER_RECT_OFFSET,
-        screen_height - BLINKER_RECT_SIZE - BLINKER_RECT_OFFSET));
-    m_blinker_rect.setOutlineColor(sf::Color::Yellow);
-    m_blinker_rect.setOutlineThickness(1.0f);
-    m_blinker_rect.setFillColor(sf::Color::Red);
+    // The per-second clock to show if the framerate is running smoothly.
+    m_second_clock.setRadius(SECOND_CLOCK_RADIUS);
+    m_second_clock.setPosition(sf::Vector2f(
+        screen_width  - (SECOND_CLOCK_RADIUS * 2) - SECOND_CLOCK_OFFSET,
+        screen_height - (SECOND_CLOCK_RADIUS * 2) - SECOND_CLOCK_OFFSET));
+    m_second_clock.setOutlineColor(sf::Color::Black);
+    m_second_clock.setOutlineThickness(1.0f);
+    m_second_clock.setFillColor(sf::Color::White);
 
+    m_second_hand.setSize(sf::Vector2f(3.0f, SECOND_CLOCK_RADIUS));
+    m_second_hand.setOutlineColor(sf::Color::Black);
+    m_second_hand.setOutlineThickness(0.0f);
+    m_second_hand.setFillColor(sf::Color::Black);
+
+    // The text for drawing debug messages.
     m_text.setFont(m_font);
     m_text.setCharacterSize(14);
     m_text.setStyle(sf::Text::Regular);
@@ -66,7 +76,7 @@ bool HeadsUpDisplay::init()
 
 // Render all the debugging stuff we might be interested in.
 // Note that we tend to print them from the longest strings to the shortest.
-void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stats, int elapsed_msec, GLfloat fps)
+void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stats, GLfloat fps)
 {
     // Set things back to where we can draw again.
     glDisable(GL_DEPTH_TEST);
@@ -80,6 +90,14 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
     m_window.pushGLStates();
 
     m_text.setPosition(10.0f, 0.0f);
+
+
+    // Print our one-off debug line (if any).
+    if (debug_line != "") {
+        m_text.setString(debug_line);
+        m_window.draw(m_text);
+        m_text.move(0.0f, text_down);
+    }
 
     // Print our hit-test debugging info.
     if (config.debug.hud_hit_test) {
@@ -201,26 +219,21 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
         m_text.move(0.0f, text_down);
     }
 
-    // Draw our blinker.
-    if (config.debug.hud_blinker) {
-        m_blinker_msecs_left -= elapsed_msec;
-        if (m_blinker_msecs_left <= 0) {
-            m_blinker_msecs_left = BLINKER_MSECS;
-            m_blinker_state++;
-            if (m_blinker_state > 1) {
-                m_blinker_state = 0;
-            }
-        }
+    // Draw our second clock.
+    if (config.debug.hud_second_clock) {
+        sf::Vector2u dims = m_window.getSize();
+        int screen_width  = dims.x;
+        int screen_height = dims.y;
 
-        switch (m_blinker_state) {
-        case 0: m_blinker_rect.setFillColor(sf::Color::Red);  break;
-        case 1: m_blinker_rect.setFillColor(sf::Color::Blue); break;
-        default: 
-            PrintTheImpossible(__FILE__, __LINE__, m_blinker_state); 
-            break;
-        }
+        m_second_hand.setPosition(sf::Vector2f(
+            screen_width  - SECOND_CLOCK_RADIUS - SECOND_CLOCK_OFFSET,
+            screen_height - SECOND_CLOCK_RADIUS - SECOND_CLOCK_OFFSET));
 
-        m_window.draw(m_blinker_rect);
+        int leftover_msecs = game_world.getTimeMsecs() % 1000;
+        m_second_hand.setRotation((leftover_msecs / 1000.0f) * 360.0f);
+
+        m_window.draw(m_second_clock);
+        m_window.draw(m_second_hand);
     }
 
     // Draw the crosshairs, but only if the game is un-paused.

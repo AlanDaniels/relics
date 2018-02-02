@@ -15,12 +15,12 @@ debug = {
     noclip = true,
     draw_transitions = true,
 
-    hud_game_clock = false,
+    hud_game_clock = true,
     hud_framerate = true,
     hud_hit_test = false,
     hud_mouse_pos = false,
     hud_player_pos = true,
-    hud_blinker = true,
+    hud_second_clock = true,
 
     hud_memory_usage = true,
     hud_render_stats = true,

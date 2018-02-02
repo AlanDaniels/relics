@@ -8,6 +8,9 @@ class  GameWorld;
 struct RenderStats;
 
 
+void SetDebugLine(const std::string &line);
+
+
 class HeadsUpDisplay
 {
 public:
@@ -17,7 +20,7 @@ public:
     ~HeadsUpDisplay() {}
 
     bool init();
-    void render(const GameWorld &game_world, const RenderStats &stats, int elapsed_msec, GLfloat fps);
+    void render(const GameWorld &game_world, const RenderStats &stats, GLfloat fps);
 
 private:
     FORBID_DEFAULT_CTOR(HeadsUpDisplay)
@@ -29,10 +32,8 @@ private:
 
     sf::RectangleShape m_crosshair_vert;
     sf::RectangleShape m_crosshair_horz;
-    sf::RectangleShape m_blinker_rect;
+    sf::CircleShape    m_second_clock;
+    sf::RectangleShape m_second_hand;
     sf::Font m_font;
     sf::Text m_text;
-
-    int m_blinker_msecs_left;
-    int m_blinker_state;
 };

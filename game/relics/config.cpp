@@ -88,12 +88,12 @@ bool Config::loadFromFile()
         debug.check_for_leaks  = getBoolField(L, "check_for_leaks",  false);
         debug.draw_transitions = getBoolField(L, "draw_transitions", false);
 
-        debug.hud_framerate  = getBoolField(L, "hud_framerate",  false);
-        debug.hud_game_clock = getBoolField(L, "hud_game_clock", false);
-        debug.hud_hit_test   = getBoolField(L, "hud_hit_test",   false);
-        debug.hud_mouse_pos  = getBoolField(L, "hud_mouse_pos",  false);
-        debug.hud_player_pos = getBoolField(L, "hud_player_pos", false);
-        debug.hud_blinker    = getBoolField(L, "hud_blinker",    false);
+        debug.hud_framerate    = getBoolField(L, "hud_framerate",    false);
+        debug.hud_game_clock   = getBoolField(L, "hud_game_clock",   false);
+        debug.hud_hit_test     = getBoolField(L, "hud_hit_test",     false);
+        debug.hud_mouse_pos    = getBoolField(L, "hud_mouse_pos",    false);
+        debug.hud_player_pos   = getBoolField(L, "hud_player_pos",   false);
+        debug.hud_second_clock = getBoolField(L, "hud_second_clock", false);
 
         debug.hud_memory_usage = getBoolField(L, "hud_memory_usage", false);
         debug.hud_render_stats = getBoolField(L, "hud_render_stats", false);

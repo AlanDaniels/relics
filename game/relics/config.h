@@ -37,7 +37,7 @@ struct ConfigDebug
         hud_hit_test(false),
         hud_mouse_pos(false),
         hud_player_pos(false),
-        hud_blinker(false),
+        hud_second_clock(false),
 
         hud_memory_usage(false),
         hud_render_stats(false),
@@ -63,7 +63,7 @@ struct ConfigDebug
     bool hud_hit_test;
     bool hud_mouse_pos;
     bool hud_player_pos;
-    bool hud_blinker;
+    bool hud_second_clock;
 
     bool hud_memory_usage;
     bool hud_render_stats;

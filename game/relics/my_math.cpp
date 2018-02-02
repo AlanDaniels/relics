@@ -110,7 +110,7 @@ MyVec4 MyVec4::lerp(const MyVec4 &that, float amount) const
 // Convert to a string.
 std::string MyVec4::toString() const
 {
-    return fmt::format("{0:.0f} {1:.0f} {2:.0f}", m_x, m_y, m_z);
+    return fmt::format("{0:.03f} {1:.03f} {2:.03f}", m_x, m_y, m_z);
 }
 
 

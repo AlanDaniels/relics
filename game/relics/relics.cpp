@@ -339,7 +339,7 @@ int WINAPI wWinMain(
         RenderStats stats = renderer.renderWorld();
 
         // Render the GUI overlay.
-        heads_up_display.render(*game_world, stats, elapsed, fps_snapshot);
+        heads_up_display.render(*game_world, stats, fps_snapshot);
 
         // All done. Flip to the new results.
         window.display();

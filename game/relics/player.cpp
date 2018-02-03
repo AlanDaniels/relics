@@ -16,7 +16,8 @@ const int PLAYER_EYE_LEVEL = 160;
 Player::Player(GameWorld &world) :
     m_game_world(world),
     m_on_solid_ground(false),
-    m_gravity_vec(0, 0, 0),
+    m_vert_motion(0, 0, 0),
+    m_horz_motion(0, 0, 0),
     m_camera_pitch(0.0f),
     m_camera_yaw(0.0f),
     m_camera_pos(0, 0, 0)
@@ -30,7 +31,7 @@ void Player::setOnSolidGround(bool val)
 {
     m_on_solid_ground = val;
     if (val) {
-        m_gravity_vec = MyVec4(0, 0, 0);
+        m_horz_motion = MyVec4(0, 0, 0);
     }
 }
 
@@ -84,10 +85,8 @@ void Player::onGameTick(int elapsed_msec, const EventStateMsg &msg)
 
     // Handle the mouse movement.
     // This is always instantaneous, and not tied to the elapsed time.
-    int mouse_diff_x = msg.getMouseDiffX();
-    int mouse_diff_y = msg.getMouseDiffY();
-    m_camera_yaw   += static_cast<GLfloat>(mouse_diff_x) * degrees_per_pixel;
-    m_camera_pitch -= static_cast<GLfloat>(mouse_diff_y) * degrees_per_pixel;
+    m_camera_yaw   += static_cast<GLfloat>(msg.mouse_diff_x) * degrees_per_pixel;
+    m_camera_pitch -= static_cast<GLfloat>(msg.mouse_diff_y) * degrees_per_pixel;
     clampRotations();
 
     // How to deal with movement depends on "noclip".
@@ -103,59 +102,60 @@ void Player::onGameTick(int elapsed_msec, const EventStateMsg &msg)
 // Calc the motion for "noclip" mode.
 void Player::calcNoclipMotion(int elapsed_msec, const EventStateMsg &msg)
 {
-    // For noclip, kill any gravity.
-    m_gravity_vec = MyVec4(0, 0, 0);
+    // For noclip, kill any gravity through a reset.
+    m_horz_motion = MyVec4(0, 0, 0);
 
-    // We will always move around at run speed.
-    GLfloat speed = GetConfig().logic.player_walk_speed;
-    if (msg.getSpeedBoost()) {
-        speed *= 10;
-    }
+    // Move around at run speed or flight speed.
+    GLfloat speed = msg.speed_boost ?
+        GetConfig().logic.player_flight_speed :
+        GetConfig().logic.player_walk_speed;
 
     // Convert speed from m/sec to cm/msec.
     GLfloat scaled_speed = (speed * BLOCK_SCALE) / 1000.0f;
-    GLfloat centimeters  = scaled_speed * elapsed_msec;
-
-    // Calc the vertical movement.
-    MyVec4 vert_move(0, 0, 0);
-    if (msg.getMoveFwd()) {
-        vert_move = VEC4_NORTHWARD;
-    }
-    else if (msg.getMoveBkwd()) {
-        vert_move = VEC4_SOUTHWARD;
-    }
-
-    if (msg.getMoveLeft()) {
-        vert_move = vert_move.plus(VEC4_WESTWARD);
-    }
-    else if (msg.getMoveRight()) {
-        vert_move = vert_move.plus(VEC4_EASTWARD);
-    }
-
-    vert_move = vert_move.normalized().times(centimeters);
-
-    // Calc the horizontal movement.
-    MyVec4 horz_move(0, 0, 0);
-    if (msg.getMoveUp()) {
-        horz_move = VEC4_UPWARD;
-    }
-    else if (msg.getMoveDown()) {
-        horz_move = VEC4_DOWNWARD;
-    }
-
-    horz_move = horz_move.normalized().times(centimeters);
 
     // Rotation vectors.
     MyMatrix4by4 roty = MyMatrix4by4::RotateY(m_camera_yaw);
     MyMatrix4by4 rotx = MyMatrix4by4::RotateX(-m_camera_pitch);
 
+    // Recalc and rotate the vertical motion. This is terms of cm/msec.
+    MyVec4 vert_move(0, 0, 0);
+    if (msg.move_fwd) {
+        vert_move = VEC4_NORTHWARD;
+    }
+    else if (msg.move_bkwd) {
+        vert_move = VEC4_SOUTHWARD;
+    }
+
+    if (msg.move_left) {
+        vert_move = vert_move.plus(VEC4_WESTWARD);
+    }
+    else if (msg.move_right) {
+        vert_move = vert_move.plus(VEC4_EASTWARD);
+    }
+
+    vert_move = vert_move.normalized().times(scaled_speed);
+    m_vert_motion = roty.times(rotx).times(vert_move);
+
+    // Recalc the horizontal motion. It doesn't get rotated. This in terms of cm/sec.
+    MyVec4 horz_move(0, 0, 0);
+    if (msg.move_up) {
+        horz_move = VEC4_UPWARD;
+    }
+    else if (msg.move_down) {
+        horz_move = VEC4_DOWNWARD;
+    }
+
+    m_horz_motion = horz_move.normalized().times(scaled_speed);
+
     // Apply the vertical and horizontal movement.
-    MyVec4 player_pos = m_player_pos;
+    MyVec4  player_pos = m_player_pos;
+    GLfloat elapsed_msec_f = static_cast<GLfloat>(elapsed_msec);
 
-    vert_move  = roty.times(rotx).times(vert_move);
-    player_pos = MyMatrix4by4::Translate(vert_move).times(player_pos);
+    MyVec4 vert_in_cm = m_vert_motion.times(elapsed_msec_f);
+    player_pos = MyMatrix4by4::Translate(vert_in_cm).times(player_pos);
 
-    player_pos = MyMatrix4by4::Translate(horz_move).times(player_pos);
+    MyVec4 horz_in_cm = m_horz_motion.times(elapsed_msec_f);
+    player_pos = MyMatrix4by4::Translate(horz_in_cm).times(player_pos);
 
     // Update both the player *and* camera positions.
     setPlayerPos(player_pos);
@@ -165,66 +165,53 @@ void Player::calcNoclipMotion(int elapsed_msec, const EventStateMsg &msg)
 void Player::calcStandardMotion(int elapsed_msec, const EventStateMsg &msg)
 {
     // Move around at walk speed.
-    GLfloat speed = GetConfig().logic.player_walk_speed;
-    if (msg.getSpeedBoost()) {
-        speed = GetConfig().logic.player_run_speed;
-    }
+    GLfloat speed = msg.speed_boost ?
+        GetConfig().logic.player_run_speed :
+        GetConfig().logic.player_walk_speed;
 
     // Convert speed from m/sec to cm/msec.
     GLfloat scaled_speed = (speed * BLOCK_SCALE) / 1000.0f;
-    GLfloat centimeters  = scaled_speed * elapsed_msec;
-
-    // Calc the vertical movement.
-    MyVec4 vert_move(0, 0, 0);
-    if (msg.getMoveFwd()) {
-        vert_move = VEC4_NORTHWARD;
-    }
-    else if (msg.getMoveBkwd()) {
-        vert_move = VEC4_SOUTHWARD;
-    }
-
-    if (msg.getMoveLeft()) {
-        vert_move = vert_move.plus(VEC4_WESTWARD);
-    }
-    else if (msg.getMoveRight()) {
-        vert_move = vert_move.plus(VEC4_EASTWARD);
-    }
-
-    vert_move = vert_move.normalized().times(centimeters);
-
-    // Calc the horizontal movement.
-    MyVec4 horz_move(0, 0, 0);
-    if (msg.getMoveUp()) {
-        horz_move = VEC4_UPWARD;
-    }
-    else if (msg.getMoveDown()) {
-        horz_move = VEC4_DOWNWARD;
-    }
-
-    horz_move = horz_move.normalized().times(centimeters);
 
     // Rotation vectors.
     MyMatrix4by4 roty = MyMatrix4by4::RotateY(m_camera_yaw);
     MyMatrix4by4 rotx = MyMatrix4by4::RotateX(-m_camera_pitch);
 
-    // Apply the vertical and horizontal movement.
-    MyVec4 player_pos = m_player_pos;
+    // Recalc and rotate the vertical motion. This is terms of cm/msec.
+    // For standard motion, there's only vertical movement, no horizontal.
+    MyVec4 vert_move(0, 0, 0);
+    if (msg.move_fwd) {
+        vert_move = VEC4_NORTHWARD;
+    }
+    else if (msg.move_bkwd) {
+        vert_move = VEC4_SOUTHWARD;
+    }
 
-    vert_move = roty.times(rotx).times(vert_move);
-    player_pos = MyMatrix4by4::Translate(vert_move).times(player_pos);
+    if (msg.move_left) {
+        vert_move = vert_move.plus(VEC4_WESTWARD);
+    }
+    else if (msg.move_right) {
+        vert_move = vert_move.plus(VEC4_EASTWARD);
+    }
 
-    player_pos = MyMatrix4by4::Translate(horz_move).times(player_pos);
+    vert_move = vert_move.normalized().times(scaled_speed);
+    m_vert_motion = roty.times(rotx).times(vert_move);
 
-    // Add new gravity. Convert from m/sec2 to cm/msec2.
+    // Add new gravity to the horizontal motion. Convert from m/sec2 to cm/msec2.
     GLfloat gravity = GetConfig().logic.player_gravity;
     GLfloat scaled_gravity = (gravity * BLOCK_SCALE) / (1000.0f * 1000.0f);
     MyVec4  add_to_gravity = VEC4_DOWNWARD.times(scaled_gravity * elapsed_msec);
 
-    m_gravity_vec = m_gravity_vec.plus(add_to_gravity);
-    SetDebugLine(fmt::format("Gravity: {0:.03f}, Centimeters: {1:.03f}", scaled_speed, centimeters));
+    m_horz_motion = m_horz_motion.plus(add_to_gravity);
 
-    MyVec4 applied = m_gravity_vec.times(elapsed_msec);
-    player_pos = MyMatrix4by4::Translate(applied).times(player_pos);
+    // Apply the vertical and horizontal movement.
+    MyVec4  player_pos = m_player_pos;
+    GLfloat elapsed_msec_f = static_cast<GLfloat>(elapsed_msec);
+
+    MyVec4 vert_in_cm = m_vert_motion.times(elapsed_msec_f);
+    player_pos = MyMatrix4by4::Translate(vert_in_cm).times(player_pos);
+
+    MyVec4 horz_in_cm = m_horz_motion.times(elapsed_msec_f);
+    player_pos = MyMatrix4by4::Translate(horz_in_cm).times(player_pos);
 
     // Update both the player *and* camera positions.
     setPlayerPos(player_pos);

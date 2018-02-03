@@ -208,6 +208,8 @@ struct ConfigLogic
         hit_test_distance_meters(10.0f),
         player_walk_speed(1.0f),
         player_run_speed(1.0f),
+        player_flight_speed(1.0f),
+        player_jump_speed(1.0f),
         player_gravity(9.8f) {}
 
     ~ConfigLogic() {}
@@ -224,6 +226,8 @@ struct ConfigLogic
     GLfloat hit_test_distance_meters;
     GLfloat player_walk_speed;
     GLfloat player_run_speed;
+    GLfloat player_flight_speed;
+    GLfloat player_jump_speed;
     GLfloat player_gravity;
 };
 

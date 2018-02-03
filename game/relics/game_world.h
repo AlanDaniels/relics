@@ -12,7 +12,7 @@ struct sqlite3;
 class  ChunkOrigin;
 class  DrawState_PCT;
 class  DrawState_PT;
-class  EventStateMsg;
+struct EventStateMsg;
 class  Player;
 
 

@@ -19,6 +19,11 @@ void PlayerCollisionTest(Player &player)
         return;
     }
 
+    // If the player doesn't have any downward motion, don't bother.
+    if (player.getHorzMotion().y() >= 0) {
+        return;
+    }
+
     const GameWorld &world = player.getGameWorld();
 
     const auto &bbox = player.getBoundingBox();

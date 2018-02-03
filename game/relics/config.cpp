@@ -27,6 +27,20 @@ Config &GetConfigRW() {
 }
 
 
+// Let's write a validator!
+struct FieldCheck {
+    std::string field_name;
+    enum class field_type: unsigned short{ Integer, Float, String, Table };
+};
+
+
+bool CheckTable(const std::string table_name, const std::vector<FieldCheck> &checks)
+{
+    // TODO: CONTINUE HERE.
+    return true;
+}
+
+
 // Read our default file.
 // For now, let's be insistent that the config file exists, and is correct.
 bool Config::loadFromFile()
@@ -257,6 +271,20 @@ bool Config::loadFromFile()
         if (lua_isnumber(L, -1)) {
             GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
             logic.player_run_speed = clampFloat(val, 0.001f, 10.f);
+        }
+        lua_pop(L, 1);
+
+        lua_getfield(L, -1, "player_flight_speed");
+        if (lua_isnumber(L, -1)) {
+            GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
+            logic.player_flight_speed = clampFloat(val, 0.001f, 50.f);
+        }
+        lua_pop(L, 1);
+
+        lua_getfield(L, -1, "player_jump_speed");
+        if (lua_isnumber(L, -1)) {
+            GLfloat val = static_cast<GLfloat>(lua_tonumber(L, -1));
+            logic.player_jump_speed = clampFloat(val, 0.001f, 10.f);
         }
         lua_pop(L, 1);
 

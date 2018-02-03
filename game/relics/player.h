@@ -31,6 +31,9 @@ public:
     GLfloat getCameraYaw()       const { return m_camera_yaw; }
     const MyVec4 &getCameraPos() const { return m_camera_pos; }
 
+    const MyVec4 &getVertMotion() const { return m_vert_motion; }
+    const MyVec4 &getHorzMotion() const { return m_horz_motion; }
+
 private:
     FORBID_DEFAULT_CTOR(Player)
     FORBID_COPYING(Player)
@@ -47,7 +50,8 @@ private:
     GameWorld &m_game_world;
 
     bool   m_on_solid_ground;
-    MyVec4 m_gravity_vec;
+    MyVec4 m_vert_motion;
+    MyVec4 m_horz_motion;
 
     MyVec4  m_player_pos;
     GLfloat m_camera_pitch;

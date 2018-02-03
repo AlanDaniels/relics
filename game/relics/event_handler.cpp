@@ -10,6 +10,21 @@
 #include "utils.h"
 
 
+// Event state ctor.
+EventStateMsg::EventStateMsg() :
+    move_fwd(false),
+    move_bkwd(false),
+    move_left(false),
+    move_right(false),
+    move_up(false),
+    move_down(false),
+    speed_boost(false),
+    mouse_diff_x(0),
+    mouse_diff_y(0) 
+{
+}
+
+
 void EventHandler::centerMouse()
 {
     sf::Vector2u dimensions = m_window.getSize();
@@ -148,24 +163,17 @@ void EventHandler::onGameTick(int elapsed)
     int diff_y = pos.y - center_y;
 
     // Different keys correspond to movement.
-    bool key_W      = sf::Keyboard::isKeyPressed(sf::Keyboard::W);
-    bool key_S      = sf::Keyboard::isKeyPressed(sf::Keyboard::S);
-    bool key_A      = sf::Keyboard::isKeyPressed(sf::Keyboard::A);
-    bool key_D      = sf::Keyboard::isKeyPressed(sf::Keyboard::D);
-    bool key_F      = sf::Keyboard::isKeyPressed(sf::Keyboard::F);
-    bool key_V      = sf::Keyboard::isKeyPressed(sf::Keyboard::V);
-    bool key_LShift = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
+    EventStateMsg msg;
+    msg.mouse_diff_x = diff_x;
+    msg.mouse_diff_y = diff_y;
 
-    EventStateMsg msg(
-        key_W,      // Fwd
-        key_S,      // Bkwd
-        key_A,      // Left
-        key_D,      // Right
-        key_F,      // Up
-        key_V,      // Down
-        key_LShift, // Boost
-        diff_x,     // Mouse diff X
-        diff_y);    // Mouse diff Y
+    msg.move_fwd    = sf::Keyboard::isKeyPressed(sf::Keyboard::W);
+    msg.move_bkwd   = sf::Keyboard::isKeyPressed(sf::Keyboard::S);
+    msg.move_left   = sf::Keyboard::isKeyPressed(sf::Keyboard::A);
+    msg.move_right  = sf::Keyboard::isKeyPressed(sf::Keyboard::D);
+    msg.move_up     = sf::Keyboard::isKeyPressed(sf::Keyboard::F);
+    msg.move_down   = sf::Keyboard::isKeyPressed(sf::Keyboard::V);
+    msg.speed_boost = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
 
     // Once the keys are processed, tick the game.
     m_game_world.onGameTick(elapsed, msg);

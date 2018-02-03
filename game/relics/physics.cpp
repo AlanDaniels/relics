@@ -11,7 +11,6 @@
 // This will probably be the most difficult thing to write so farr.
 // To start, just work on keeping the player from falling through
 // the floor, using nothing but simple plane tests.
-// TODO: Definitely work on this more later.
 void PlayerCollisionTest(Player &player)
 {
     // If "noclip" is on, don't bother.

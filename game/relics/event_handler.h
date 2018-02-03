@@ -19,7 +19,10 @@ public:
     bool move_right;
     bool move_up;
     bool move_down;
+
+    bool jump;
     bool speed_boost;
+
     int  mouse_diff_x;
     int  mouse_diff_y;
 

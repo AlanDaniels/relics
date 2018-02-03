@@ -164,6 +164,16 @@ void Player::calcNoclipMotion(int elapsed_msec, const EventStateMsg &msg)
 
 void Player::calcStandardMotion(int elapsed_msec, const EventStateMsg &msg)
 {
+    // If the player is jumping, add upward motion, then they're not on solid ground anymore.
+    if (msg.jump && m_on_solid_ground) {
+        GLfloat jump_speed = GetConfig().logic.player_jump_speed;
+        GLfloat scaled_jump_speed = (jump_speed * BLOCK_SCALE) / 1000.0f;
+
+        MyVec4 upward(0, scaled_jump_speed, 0);
+        m_horz_motion = m_horz_motion.plus(upward);
+        m_on_solid_ground = false;
+    }
+
     // Move around at walk speed.
     GLfloat speed = msg.speed_boost ?
         GetConfig().logic.player_run_speed :

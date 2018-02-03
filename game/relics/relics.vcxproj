@@ -163,7 +163,7 @@
     <ClInclude Include="add_face.h" />
     <ClInclude Include="chunk.h" />
     <ClInclude Include="hit_test_result.h" />
-    <ClInclude Include="chunk_loader.h" />
+    <ClInclude Include="chunk_io.h" />
     <ClInclude Include="chunk_stripe.h" />
     <ClInclude Include="common_util.h" />
     <ClInclude Include="config.h" />
@@ -197,7 +197,7 @@
     <ClCompile Include="add_face.cpp" />
     <ClCompile Include="hit_test_result.cpp" />
     <ClCompile Include="chunk.cpp" />
-    <ClCompile Include="chunk_loader.cpp" />
+    <ClCompile Include="chunk_io.cpp" />
     <ClCompile Include="chunk_stripe.cpp" />
     <ClCompile Include="common_util.cpp" />
     <ClCompile Include="config.cpp" />

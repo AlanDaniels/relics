@@ -2,7 +2,7 @@
 
 #include "stdafx.h"
 
-#include "chunk_loader.h"
+#include "chunk_io.h"
 #include "hit_test_result.h"
 #include "my_math.h"
 #include "wavefront_object.h"

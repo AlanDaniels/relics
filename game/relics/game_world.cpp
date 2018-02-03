@@ -3,7 +3,7 @@
 #include "game_world.h"
 
 #include "chunk.h"
-#include "chunk_loader.h"
+#include "chunk_io.h"
 #include "common_util.h"
 #include "config.h"
 #include "event_handler.h"
@@ -16,6 +16,10 @@
 #include "utils.h"
 
 #include "sqlite3.h"
+
+
+// We'll be using threads to load and unload chunks from the database.
+typedef std::future<std::unique_ptr<Chunk>> ChunkFuture;
 
 
 // Our game world.
@@ -35,7 +39,14 @@ GameWorld::GameWorld(const std::string &db_fname) :
     EvalRegion draw_region = WorldPosToEvalRegion(camera_pos, eval_blocks);
     EvalRegion load_region = draw_region.expand();
 
-    // TODO: Forget threads for now. 
+#if 0
+    // Fire off a thread for aech chunk we want to load. 
+    std::vector<ChunkFuture> future_vec;
+
+    ChunkFuture blerm = std::async(LoadChunk, *this, ChunkOrigin(0, 0));
+    @@@
+#endif
+
     int count = 0;
     for     (int x = load_region.west();  x <= load_region.east();  x += CHUNK_WIDTH) {
         for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {

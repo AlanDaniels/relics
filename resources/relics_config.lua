@@ -93,8 +93,8 @@ render = {
 logic = {
     eval_blocks = 3,
     hit_test_distance = 25.0, -- Meters
-    player_walk_speed = 1.0,  -- Meters / secone
-    player_run_speed  = 2.0,  -- Meters / secone
+    player_walk_speed = 2.0,  -- Meters / secone
+    player_run_speed  = 5.0,  -- Meters / secone
     player_gravity    = 9.8   -- Meters / second squared
 }
 

@@ -1,6 +1,6 @@
 
 #include "stdafx.h"
-#include "chunk_loader.h"
+#include "chunk_io.h"
 #include "common_util.h"
 
 #include "block.h"

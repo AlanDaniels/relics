@@ -5,7 +5,7 @@
 #include "common_util.h"
 #include "config.h"
 #include "chunk.h"
-#include "chunk_loader.h"
+#include "chunk_io.h"
 #include "draw_state_pct.h"
 #include "event_handler.h"
 #include "game_world.h"

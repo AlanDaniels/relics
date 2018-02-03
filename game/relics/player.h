@@ -47,8 +47,7 @@ private:
     GameWorld &m_game_world;
 
     bool   m_on_solid_ground;
-    MyVec4 m_horizontal_vec;
-    MyVec4 m_vertical_vec;
+    MyVec4 m_gravity_vec;
 
     MyVec4  m_player_pos;
     GLfloat m_camera_pitch;

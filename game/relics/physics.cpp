@@ -3,6 +3,7 @@
 #include "physics.h"
 
 #include "chunk.h"
+#include "config.h"
 #include "game_world.h"
 #include "player.h"
 
@@ -13,6 +14,11 @@
 // TODO: Definitely work on this more later.
 void PlayerCollisionTest(Player &player)
 {
+    // If "noclip" is on, don't bother.
+    if (GetConfig().debug.noclip) {
+        return;
+    }
+
     const GameWorld &world = player.getGameWorld();
 
     const auto &bbox = player.getBoundingBox();

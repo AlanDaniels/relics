@@ -308,12 +308,16 @@ public:
     const MyVec4 &getLower() const { return m_lower; }
     const MyVec4 &getUpper() const { return m_upper; }
 
-    GLfloat minX() const { return m_lower.x(); }
-    GLfloat maxX() const { return m_upper.x(); }
-    GLfloat minY() const { return m_lower.y(); }
-    GLfloat maxY() const { return m_upper.y(); }
-    GLfloat minZ() const { return m_lower.z(); }
-    GLfloat maxZ() const { return m_upper.z(); }
+    GLfloat getHeight() const { return m_upper.y() - m_lower.y(); }
+    GLfloat getWidth()  const { return m_upper.x() - m_lower.x(); }
+    GLfloat getDepth()  const { return m_upper.z() - m_lower.z(); }
+
+    inline GLfloat minX() const { return m_lower.x(); }
+    inline GLfloat maxX() const { return m_upper.x(); }
+    inline GLfloat minY() const { return m_lower.y(); }
+    inline GLfloat maxY() const { return m_upper.y(); }
+    inline GLfloat minZ() const { return m_lower.z(); }
+    inline GLfloat maxZ() const { return m_upper.z(); }
 
 private:
     MyVec4 m_lower;

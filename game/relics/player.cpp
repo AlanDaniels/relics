@@ -36,7 +36,7 @@ void Player::setOnSolidGround(bool val)
 }
 
 
-// Set the player's position.
+// Update the player's position and bounding box.
 void Player::setPlayerPos(const MyVec4 &pos) 
 {
     m_player_pos = pos;
@@ -44,22 +44,17 @@ void Player::setPlayerPos(const MyVec4 &pos)
     GLfloat eye_level = static_cast<GLfloat>(PLAYER_EYE_LEVEL);
     MyVec4 eye_offset(0, eye_level, 0);
     m_camera_pos = pos.plus(eye_offset);
-}
 
-
-// Get the player's bounding box.
-MyBoundingBox Player::getBoundingBox() const
-{
-    GLfloat min_x = m_player_pos.x() - (PLAYER_WIDTH / 2);
-    GLfloat max_x = m_player_pos.x() + (PLAYER_WIDTH / 2);
-    GLfloat min_y = m_player_pos.y();
-    GLfloat max_y = m_player_pos.y() + PLAYER_HEIGHT;
-    GLfloat min_z = m_player_pos.z() - (PLAYER_WIDTH / 2);
-    GLfloat max_z = m_player_pos.z() + (PLAYER_WIDTH / 2);
+    GLfloat min_x = pos.x() - (PLAYER_WIDTH / 2);
+    GLfloat max_x = pos.x() + (PLAYER_WIDTH / 2);
+    GLfloat min_y = pos.y();
+    GLfloat max_y = pos.y() + PLAYER_HEIGHT;
+    GLfloat min_z = pos.z() - (PLAYER_WIDTH / 2);
+    GLfloat max_z = pos.z() + (PLAYER_WIDTH / 2);
 
     MyVec4 lower(min_x, min_y, min_z);
     MyVec4 upper(max_x, max_y, max_z);
-    return MyBoundingBox(lower, upper);
+    m_bounding_box = MyBoundingBox(lower, upper);
 }
 
 

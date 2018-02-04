@@ -86,6 +86,8 @@ void GameWorld::setPlayerAtStart()
 {
     MyVec4 start = GetPlayerStartPos(m_db_fname);
     m_player->setPlayerPos(start);
+    m_player->setCameraPitch(0.0f);
+    m_player->setCameraYaw(0.0f);
     m_current_grid_coord   = WorldPosToGlobalGrid(start, NudgeType::NONE);
     m_current_chunk_origin = WorldToChunkOrigin(start);
 }

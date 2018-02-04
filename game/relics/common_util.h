@@ -16,7 +16,7 @@
 * I found the string trimming functions here:
 *     https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
 *
-* This version last updated on Jan 28th, 2018.
+* This version last updated on Feb 3rd, 2018.
 */
 
 enum class BlockType : unsigned char {

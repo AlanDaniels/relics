@@ -47,6 +47,9 @@ MyVec4 GetPlayerStartPos(const std::string &db_fname)
         y = 0;
     }
 
+    // Add one, since we're on top of the block.
+    y++;
+
     // All done.
     SQL_finalize(db, stmt);
     SQL_close(db);

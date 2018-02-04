@@ -4,7 +4,7 @@
 
 -- The world itself.
 world = {
-    file_name = 'worlds/junky.world'
+    file_name = 'worlds/collision_pit.world'
 }
 
 -- Debugging.
@@ -12,7 +12,7 @@ debug = {
     opengl = true,
     check_for_leaks = false,
 
-    noclip = true,
+    noclip = false,
     draw_transitions = true,
 
     hud_game_clock = true,

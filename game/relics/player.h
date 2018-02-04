@@ -23,8 +23,8 @@ public:
     // Getters.
     const GameWorld &getGameWorld() const { return m_game_world; }
     const MyVec4 &getPlayerPos() const { return m_player_pos; }
+    MyBoundingBox getBoundingBox() const { return m_bounding_box; }
 
-    MyBoundingBox getBoundingBox() const;
     MyRay getCameraRay() const;
 
     GLfloat getCameraPitch()     const { return m_camera_pitch; }
@@ -54,6 +54,7 @@ private:
     MyVec4 m_horz_motion;
 
     MyVec4  m_player_pos;
+    MyBoundingBox m_bounding_box;
     GLfloat m_camera_pitch;
     GLfloat m_camera_yaw;
     MyVec4  m_camera_pos;

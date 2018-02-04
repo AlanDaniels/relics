@@ -67,14 +67,14 @@ MyVec2 FourWayLerp2(
 
 
 
-// Handy unit vectors. Note that I'm using a left-handed coordinate system.
-const MyVec4 VEC4_EASTWARD(1.0f, 0.0f, 0.0f);
+// Handy unit vectors. Note that I'm using a left-handed coordinate system (+Z is forward).
+const MyVec4 VEC4_EASTWARD( 1.0f, 0.0f, 0.0f);
 const MyVec4 VEC4_WESTWARD(-1.0f, 0.0f, 0.0f);
 
-const MyVec4 VEC4_UPWARD(0.0f, 1.0f, 0.0f);
+const MyVec4 VEC4_UPWARD  (0.0f,  1.0f, 0.0f);
 const MyVec4 VEC4_DOWNWARD(0.0f, -1.0f, 0.0f);
 
-const MyVec4 VEC4_NORTHWARD(0.0f, 0.0f, 1.0f);
+const MyVec4 VEC4_NORTHWARD(0.0f, 0.0f,  1.0f);
 const MyVec4 VEC4_SOUTHWARD(0.0f, 0.0f, -1.0f);
 
 

@@ -16,11 +16,12 @@ int  CeilToBlock(GLfloat val);
 
 bool CollisionCheckDown(Player &player);
 bool CollisionCheckNorth(Player &player);
+bool CollisionCheckSouth(Player &player);
+bool CollisionCheckEast(Player &player);
+bool CollisionCheckWest(Player &player);
 
 
-// This will probably be the most difficult thing to write so farr.
-// To start, just work on keeping the player from falling through
-// the floor, using nothing but simple plane tests.
+// Run collision tests in all six directions.
 void PlayerCollisionTest(Player &player)
 {
     // If "noclip" is on, don't bother.
@@ -30,6 +31,9 @@ void PlayerCollisionTest(Player &player)
 
     CollisionCheckDown(player);
     CollisionCheckNorth(player);
+    CollisionCheckSouth(player);
+    CollisionCheckEast(player);
+    CollisionCheckWest(player);
 }
 
 
@@ -87,7 +91,7 @@ bool CollisionCheckDown(Player &player)
     // so that we don't "stick" to walls and be able to climb them.
     // This area needs to be smaller than the walls of the bounding
     // box in order for this to work.
-    GLfloat shrink = 2.0f;
+    GLfloat shrink = 5.0f;
 
     // Establish the boundaries of blocks to look at.
     int min_x = FloorToBlock(bbox.minX() + shrink);
@@ -110,9 +114,10 @@ bool CollisionCheckDown(Player &player)
     // If we collided, plant the player at that spot.
     player.setOnSolidGround(collision);
     if (collision) {
-        MyVec4  current_pos = player.getPlayerPos();
+        MyVec4  pos = player.getPlayerPos();
         GLfloat y_wall = (y + 1) * BLOCK_SCALE;
-        MyVec4  new_pos(current_pos.x(), y_wall, current_pos.z());
+
+        MyVec4  new_pos(pos.x(), y_wall, pos.z());
         player.setPlayerPos(new_pos);
         return true;
     }
@@ -126,7 +131,6 @@ bool CollisionCheckNorth(Player &player)
 {
     // If the player doesn't have any +Z motion, don't bother.
     if (player.getVertMotion().z() <= 0) {
-        SetDebugLine("");
         return false;
     }
 
@@ -157,12 +161,156 @@ bool CollisionCheckNorth(Player &player)
     // If we collided, prevent the player from moving further in the +Z direction.
     // Add an extra "kick" outward to avoid edge cases.
     if (collision) {
-        SetDebugLine("*** NORTH COLLISION ***");
-        MyVec4  current_pos = player.getPlayerPos();
-        GLfloat z_wall   = z * BLOCK_SCALE;
-        GLfloat z_offset = (bbox.getDepth() / 2.0f) + shrink;
-        MyVec4  new_pos(current_pos.x(), current_pos.y(), z_wall - z_offset);
+        MyVec4  pos    = player.getPlayerPos();
+        GLfloat wall   = z * BLOCK_SCALE;
+        GLfloat offset = (bbox.getDepth() / 2.0f) + shrink;
 
+        MyVec4 new_pos(pos.x(), pos.y(), wall - offset);
+        player.setPlayerPos(new_pos);
+        return true;
+    }
+
+    return false;
+}
+
+
+// Check a collisioin against what's in the -Z direction.
+bool CollisionCheckSouth(Player &player)
+{
+    // If the player doesn't have any -Z motion, don't bother.
+    if (player.getVertMotion().z() >= 0) {
+        return false;
+    }
+
+    const GameWorld     &world = player.getGameWorld();
+    const MyBoundingBox &bbox  = player.getBoundingBox();
+
+    // Shrink the bounding box a bit to avoid edge cases.
+    GLfloat shrink = 1.0f;
+
+    // Establish the boundaries of blocks to look at.
+    int min_x = FloorToBlock(bbox.minX() + shrink);
+    int max_x = CeilToBlock (bbox.maxX() - shrink);
+    int min_y = FloorToBlock(bbox.minY() + shrink);
+    int max_y = CeilToBlock (bbox.maxY() - shrink);
+
+    int z = FloorToBlock(bbox.minZ());
+
+    bool collision = false;
+    for     (int x = min_x; x < max_x; x++) {
+        for (int y = min_y; y < max_y; y++) {
+            GlobalGrid coord(x, y, z);
+            if (IsWorldBlockFilled(world, coord)) {
+                collision = true;
+            }
+        }
+    }
+
+    // If we collided, prevent the player from moving further in the -Z direction.
+    // Add an extra "kick" outward to avoid edge cases.
+    if (collision) {
+        MyVec4  pos    = player.getPlayerPos();
+        GLfloat wall   = (z + 1) * BLOCK_SCALE;
+        GLfloat offset = (bbox.getDepth() / 2.0f) + shrink;
+
+        MyVec4  new_pos(pos.x(), pos.y(), wall + offset);
+        player.setPlayerPos(new_pos);
+        return true;
+    }
+
+    return false;
+}
+
+
+// Check a collisioin against what's in the +X direction.
+bool CollisionCheckEast(Player &player)
+{
+    // If the player doesn't have any +X motion, don't bother.
+    if (player.getVertMotion().x() <= 0) {
+        return false;
+    }
+
+    const GameWorld     &world = player.getGameWorld();
+    const MyBoundingBox &bbox  = player.getBoundingBox();
+
+    // Shrink the bounding box a bit to avoid edge cases.
+    GLfloat shrink = 1.0f;
+
+    // Establish the boundaries of blocks to look at.
+    int min_y = FloorToBlock(bbox.minY() + shrink);
+    int max_y = CeilToBlock (bbox.maxY() - shrink);
+    int min_z = FloorToBlock(bbox.minZ() + shrink);
+    int max_z = CeilToBlock (bbox.maxZ() - shrink);
+
+    int x = FloorToBlock(bbox.maxX());
+
+    bool collision = false;
+    for     (int y = min_y; y < max_y; y++) {
+        for (int z = min_z; z < max_z; z++) {
+            GlobalGrid coord(x, y, z);
+            if (IsWorldBlockFilled(world, coord)) {
+                collision = true;
+            }
+        }
+    }
+
+    // If we collided, prevent the player from moving further in the +X direction.
+    // Add an extra "kick" outward to avoid edge cases.
+    if (collision) {
+        MyVec4  pos    = player.getPlayerPos();
+        GLfloat wall   = x * BLOCK_SCALE;
+        GLfloat offset = (bbox.getWidth() / 2.0f) + shrink;
+
+        MyVec4 new_pos(wall - offset, pos.y(), pos.z());
+        player.setPlayerPos(new_pos);
+        return true;
+    }
+
+    SetDebugLine("");
+    return false;
+}
+
+
+// Check a collisioin against what's in the -X direction.
+bool CollisionCheckWest(Player &player)
+{
+    // If the player doesn't have any -X motion, don't bother.
+    if (player.getVertMotion().x() >= 0) {
+        return false;
+    }
+
+    const GameWorld     &world = player.getGameWorld();
+    const MyBoundingBox &bbox  = player.getBoundingBox();
+
+    // Shrink the bounding box a bit to avoid edge cases.
+    GLfloat shrink = 1.0f;
+
+    // Establish the boundaries of blocks to look at.
+    int min_y = FloorToBlock(bbox.minY() + shrink);
+    int max_y = CeilToBlock (bbox.maxY() - shrink);
+    int min_z = FloorToBlock(bbox.minZ() + shrink);
+    int max_z = CeilToBlock (bbox.maxZ() - shrink);
+
+    int x = FloorToBlock(bbox.minX());
+
+    bool collision = false;
+    for     (int y = min_y; y < max_y; y++) {
+        for (int z = min_z; z < max_z; z++) {
+            GlobalGrid coord(x, y, z);
+            if (IsWorldBlockFilled(world, coord)) {
+                collision = true;
+            }
+        }
+    }
+
+    // If we collided, prevent the player from moving further in the -X direction.
+    // Add an extra "kick" outward to avoid edge cases.
+    if (collision) {
+        MyVec4  pos    = player.getPlayerPos();
+        GLfloat wall   = (x + 1) * BLOCK_SCALE;
+        GLfloat offset = (bbox.getWidth() / 2.0f) + shrink;
+
+        MyVec4 new_pos(wall + offset, pos.y(), pos.z());
         player.setPlayerPos(new_pos);
         return true;
     }

@@ -132,7 +132,7 @@ void GameWorld::onGameTick(int elapsed_msec, const EventStateMsg &msg)
 
     // Update everything in the world.
     m_player->onGameTick(elapsed_msec, msg);
-    PlayerCollisionTest(*m_player);
+    PlayerCollisionTest(*m_player, elapsed_msec);
 
     // Since the player moved, see if we need to recalc any of the world.
     MyVec4 camera_pos = m_player->getCameraPos();

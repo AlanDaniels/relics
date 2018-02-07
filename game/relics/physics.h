@@ -4,4 +4,4 @@
 
 class Player;
 
-void PlayerCollisionTest(Player &player);
+void PlayerCollisionTest(Player &player, int msec);

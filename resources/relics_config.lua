@@ -20,6 +20,7 @@ debug = {
     hud_hit_test = false,
     hud_mouse_pos = false,
     hud_player_pos = true,
+    hud_collision = false,
     hud_second_clock = true,
 
     hud_memory_usage = true,

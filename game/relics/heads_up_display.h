@@ -8,7 +8,8 @@ class  GameWorld;
 struct RenderStats;
 
 
-void SetDebugLine(const std::string &line);
+void SetHudCollisionLine(const std::string &line);
+void SetHudDebugLine(const std::string &line);
 
 
 class HeadsUpDisplay

@@ -10,9 +10,16 @@
 #include "utils.h"
 
 
+// Show our collision data. Meh, maybe this needs to be an object one day.
+static std::string collision_line;
+void SetHudCollisionLine(const std::string &line) {
+    collision_line = line;
+}
+
+
 // A one-off expedient hack, to see what's going on.
 static std::string debug_line;
-void SetDebugLine(const std::string &line) {
+void SetHudDebugLine(const std::string &line) {
     debug_line = line;
 }
 
@@ -91,7 +98,6 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
 
     m_text.setPosition(10.0f, 0.0f);
 
-
     // Print our one-off debug line (if any).
     if (debug_line != "") {
         m_text.setString(debug_line);
@@ -158,6 +164,15 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
             "Pos = {0:.0f}, {1:.0f}, {2:.0f}, Yaw = {3:03.1f}, Pitch = {4:02.1f}",
             camera_pos.x(), camera_pos.y(), camera_pos.z(),
             camera_yaw, camera_pitch);
+        m_text.setString(msg);
+
+        m_window.draw(m_text);
+        m_text.move(0.0f, text_down);
+    }
+
+    // Print the player's collision details.
+    if (config.debug.hud_collision) {
+        std::string msg = fmt::format("Collision: {}", collision_line);
         m_text.setString(msg);
 
         m_window.draw(m_text);

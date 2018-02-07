@@ -16,6 +16,8 @@ public:
     void onGameTick(int elapsed_msec, const EventStateMsg &msg);
 
     void setOnSolidGround(bool val);
+    void bounceOffCeiling();
+
     void setPlayerPos(const MyVec4 &pos);
     void setCameraYaw(GLfloat val)   { m_camera_yaw = val;   clampRotations(); }
     void setCameraPitch(GLfloat val) { m_camera_pitch = val; clampRotations(); }

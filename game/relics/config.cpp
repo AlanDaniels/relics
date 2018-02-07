@@ -107,6 +107,7 @@ bool Config::loadFromFile()
         debug.hud_hit_test     = getBoolField(L, "hud_hit_test",     false);
         debug.hud_mouse_pos    = getBoolField(L, "hud_mouse_pos",    false);
         debug.hud_player_pos   = getBoolField(L, "hud_player_pos",   false);
+        debug.hud_collision    = getBoolField(L, "hud_collision",    false);
         debug.hud_second_clock = getBoolField(L, "hud_second_clock", false);
 
         debug.hud_memory_usage = getBoolField(L, "hud_memory_usage", false);

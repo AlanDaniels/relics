@@ -206,10 +206,11 @@ int WINAPI wWinMain(
         PrintDebug(fmt::format("    Version: {0}.{1}\n", settings_out.majorVersion, settings_out.minorVersion));
     }
 
-    // Set some window stuff.
+    // Set some more window stuff.
     bool vertical_sync = config.window.vertical_sync;
     window.setVerticalSyncEnabled(vertical_sync);
 
+    window.setKeyRepeatEnabled(false);
     window.setMouseCursorVisible(false);
     window.setActive(true);
 

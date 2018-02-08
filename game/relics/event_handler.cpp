@@ -18,8 +18,8 @@ EventStateMsg::EventStateMsg() :
     move_right(false),
     move_up(false),
     move_down(false),
-    jump(false),
     speed_boost(false),
+    jump(false),
     mouse_diff_x(0),
     mouse_diff_y(0) 
 {
@@ -64,6 +64,11 @@ bool EventHandler::onEvent(sf::Event event)
     }
 
     else if (event.type == sf::Event::KeyPressed) {
+        // Space will trigger a jump on the next frame.
+        if (event.key.code == sf::Keyboard::Space) {
+            m_jump_key = true;
+        }
+
         // For now, use "F4" to exit. Bye!
         if (event.key.code == sf::Keyboard::F4) {
             return false;
@@ -174,8 +179,11 @@ void EventHandler::onGameTick(int elapsed)
     msg.move_right  = sf::Keyboard::isKeyPressed(sf::Keyboard::D);
     msg.move_up     = sf::Keyboard::isKeyPressed(sf::Keyboard::F);
     msg.move_down   = sf::Keyboard::isKeyPressed(sf::Keyboard::V);
-    msg.jump        = sf::Keyboard::isKeyPressed(sf::Keyboard::Space);
     msg.speed_boost = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
+    msg.jump        = m_jump_key;
+
+    // Reset any one-shot keys.
+    m_jump_key = false;
 
     // Once the keys are processed, tick the game.
     m_game_world.onGameTick(elapsed, msg);

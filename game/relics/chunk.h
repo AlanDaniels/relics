@@ -96,20 +96,19 @@ class Chunk
 {
 public:
     Chunk(const GameWorld &world, const ChunkOrigin &origin);
-    ~Chunk();
-
-    bool IsGlobalGridWithin(const GlobalGrid &coord) const;
+    ~Chunk() {}
 
     BlockType getBlockType(const LocalGrid &coord) const;
     void setBlockType(const LocalGrid &coord, BlockType block_type);
 
+    bool   IsGlobalGridWithin(const GlobalGrid &coord) const;
     MyVec4 localGridToWorldPos(int local_x, int local_y, int local_z) const;
 
     int getCountForSurface(SurfaceType surf) const;
     const VertList_PNT &getSurfaceList_RO(SurfaceType surf) const;
     VertList_PNT &getSurfaceListForWriting(SurfaceType surf);
 
-    void recalcAllExposures();
+    void rebuildSurfaceLists();
 
     bool isAbovePlane(const MyPlane &plane) const;
     const ChunkOrigin getOrigin() const { return m_origin; }
@@ -142,6 +141,9 @@ private:
         return x + (CHUNK_WIDTH * y); 
     }
 
+    void rebuildInnerExposedBlockSet(SurfaceTotals *pOutTotals);
+    void rebuildEdgeExposedBlockSet(SurfaceTotals *pOutTotals);
+
     // Private data.
     const GameWorld &m_world;
     ChunkOrigin m_origin;
@@ -150,6 +152,9 @@ private:
     std::array<std::unique_ptr<VertList_PNT>, SURFACE_TYPE_COUNT> m_vert_lists;
     
     std::array<ChunkStripe, CHUNK_WIDTH * CHUNK_HEIGHT> m_stripes;
+
+    std::set<LocalGrid> m_inner_exposed_block_set;
+    std::set<LocalGrid> m_edge_exposed_block_set;
 
     std::vector<std::unique_ptr<WFInstance>> m_wfinstance_list;
 };

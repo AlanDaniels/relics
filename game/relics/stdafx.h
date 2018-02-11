@@ -23,6 +23,7 @@
 #include <fstream>
 #include <iterator>
 #include <memory>
+#include <set>
 #include <sstream>
 
 #include <future>

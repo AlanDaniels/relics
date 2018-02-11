@@ -348,6 +348,22 @@ LocalGrid::LocalGrid(int x, int y, int z) :
 }
 
 
+// Local grid comparator.
+bool operator<(const LocalGrid &one, const LocalGrid &two)
+{
+    if      (one.x() < two.x()) { return true;  }
+    else if (one.x() > two.x()) { return false; }
+    else if (one.y() < two.y()) { return true;  }
+    else if (one.y() > two.y()) { return false; }
+    else if (one.z() < two.z()) { return true;  }
+    else if (one.z() > two.z()) { return false; }
+    // Must be equal.
+    else {
+        return false;
+    }
+}
+
+
 // Convert a world position into a grid coord.
 // The nudge factor is so we can "burrow" into a block a bit, when we do a
 // hit-test against a block face, so that we don't hit strange edge cases in the math.

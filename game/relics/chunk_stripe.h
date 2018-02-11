@@ -18,9 +18,10 @@ public:
     int  get(SurfaceType surf) const;
     int  getGrandTotal() const;
 
+    DEFAULT_MOVING(SurfaceTotals)
+
 private:
     FORBID_COPYING(SurfaceTotals)
-    FORBID_MOVING(SurfaceTotals)
 
     std::array<int, SURFACE_TYPE_COUNT> m_counts;
 };
@@ -38,16 +39,12 @@ public:
     BlockType getBlockType(int local_z) const;
     void setBlockType(int local_z, BlockType block_type);
 
-    void recalcAllExposures(const Chunk &owner, int local_x, int local_y, SurfaceTotals *pOut);
-    void addToSurfaceLists(Chunk &owner, int local_x, int local_y);
+    bool recalcExposuresForBlock(const Chunk &chunk, const LocalGrid &local_coord, SurfaceTotals *pOut);
+    void addToSurfaceLists(Chunk &owner, const LocalGrid &local_coord);
 
 private:
     FORBID_COPYING(ChunkStripe)
     FORBID_MOVING(ChunkStripe)
-
-    // Private methods.
-    bool recalcExposureForBlock(const Chunk &chunk, const LocalGrid local_coord, SurfaceTotals *pOut);
-    void addVertsForBlock(Chunk &owner, const LocalGrid &local_coord);
 
     // Private data.
     bool m_has_exposures;

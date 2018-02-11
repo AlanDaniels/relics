@@ -476,6 +476,9 @@ private:
 };
 
 
+bool operator<(const LocalGrid &one, const LocalGrid &two);
+
+
 GlobalGrid  WorldPosToGlobalGrid(const MyVec4 &pos, NudgeType nudge_type);
 ChunkOrigin GlobalGridToChunkOrigin(const GlobalGrid &coord);
 LocalGrid   GlobalGridToLocal(const GlobalGrid &coord, const ChunkOrigin &origin);

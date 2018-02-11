@@ -63,7 +63,7 @@ GameWorld::GameWorld(const std::string &db_fname) :
     for     (int x = load_region.west();  x <= load_region.east();  x += CHUNK_WIDTH) {
         for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
-            m_chunk_map[origin].get()->recalcAllExposures();
+            m_chunk_map[origin].get()->rebuildSurfaceLists();
         }
     }
 }
@@ -170,7 +170,7 @@ void GameWorld::updateWorld()
             if (!draw_region.contains(origin)) {
                 if (m_chunk_map.find(origin) == m_chunk_map.end()) {
                     m_chunk_map[origin] = LoadChunk(*this, origin);
-                    m_chunk_map[origin]->recalcAllExposures();
+                    m_chunk_map[origin]->rebuildSurfaceLists();
                 }
             }
         }
@@ -187,7 +187,7 @@ void GameWorld::updateWorld()
             Chunk &chunk = *iter->second;
 
             if (!chunk.isUpToDate()) {
-                chunk.recalcAllExposures();
+                chunk.rebuildSurfaceLists();
             }
         }
     }
@@ -299,6 +299,6 @@ void GameWorld::deleteBlockInFrontOfUs()
         assert(chunk->IsGlobalGridWithin(global_coord));
 
         chunk->setBlockType(local_coord, BlockType::AIR);
-        chunk->recalcAllExposures();
+        chunk->rebuildSurfaceLists();
     }
 }

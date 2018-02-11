@@ -64,42 +64,11 @@ void ChunkStripe::setBlockType(int z, BlockType block_type)
 }
 
 
-// Recalc the exposed faces for one stripe.
-// Return true if any of the blocks changed.
-void ChunkStripe::recalcAllExposures(const Chunk &owner, int local_x, int local_y, SurfaceTotals *pOut)
-{
-    bool anything = false;
-
-    for (int z = 0; z < CHUNK_WIDTH; z++) {
-        LocalGrid local_coord(local_x, local_y, z);
-        if (recalcExposureForBlock(owner, local_coord, pOut)) {
-            anything = true;
-        }
-    }
-
-    m_has_exposures = anything;
-}
-
-
-// Rebuild the vertex list for one stripe.
-// If we don't have any exposed faces, we can skip this step.
-void ChunkStripe::addToSurfaceLists(Chunk &owner, int local_x, int local_y)
-{
-    if (!m_has_exposures) {
-        return;
-    }
-
-    for (int z = 0; z < CHUNK_WIDTH; z++) {
-        LocalGrid local_coord(local_x, local_y, z);
-        addVertsForBlock(owner, local_coord);
-    }
-}
-
-
 // Figure out which faces of a block are exposed.
-// Return a surface totals object, showing what we added.
-bool ChunkStripe::recalcExposureForBlock(
-    const Chunk &owner, const LocalGrid local_coord, SurfaceTotals *pOut)
+// Populate a surface totals object, showing what we added.
+// Return if this block has any exposures at all.
+bool ChunkStripe::recalcExposuresForBlock(
+    const Chunk &chunk, const LocalGrid &local_coord, SurfaceTotals *pOut)
 {
     Block &current = m_blocks.at(local_coord.z());
 
@@ -128,7 +97,7 @@ bool ChunkStripe::recalcExposureForBlock(
     // Get our six neigbors, straddling across chunk boundaries if necessary.
     BlockType west_block_type = BlockType::AIR;
     if (west_edge) {
-        const Chunk *neighbor = owner.getNeighborWest();
+        const Chunk *neighbor = chunk.getNeighborWest();
         if (neighbor != nullptr) {
             LocalGrid coord(CHUNK_WIDTH - 1, y, z);
             west_block_type = neighbor->getBlockType(coord);
@@ -136,12 +105,12 @@ bool ChunkStripe::recalcExposureForBlock(
     }
     else {
         LocalGrid coord(x - 1, y, z);
-        west_block_type = owner.getBlockType(coord);
+        west_block_type = chunk.getBlockType(coord);
     }
 
     BlockType east_block_type = BlockType::AIR;
     if (east_edge) {
-        const Chunk *neighbor = owner.getNeighborEast();
+        const Chunk *neighbor = chunk.getNeighborEast();
         if (neighbor != nullptr) {
             LocalGrid coord(0, y, z);
             east_block_type = neighbor->getBlockType(coord);
@@ -149,12 +118,12 @@ bool ChunkStripe::recalcExposureForBlock(
     }
     else {
         LocalGrid coord(x + 1, y, z);
-        east_block_type = owner.getBlockType(coord);
+        east_block_type = chunk.getBlockType(coord);
     }
 
     BlockType south_block_type = BlockType::AIR;
     if (south_edge) {
-        const Chunk *neighbor = owner.getNeighborSouth();
+        const Chunk *neighbor = chunk.getNeighborSouth();
         if (neighbor != nullptr) {
             LocalGrid coord(x, y, CHUNK_WIDTH - 1);
             south_block_type = neighbor->getBlockType(coord);
@@ -162,12 +131,12 @@ bool ChunkStripe::recalcExposureForBlock(
     }
     else {
         LocalGrid coord(x, y, z - 1);
-        south_block_type = owner.getBlockType(coord);
+        south_block_type = chunk.getBlockType(coord);
     }
 
     BlockType north_block_type = BlockType::AIR;
     if (north_edge) {
-        const Chunk *neighbor = owner.getNeighborNorth();
+        const Chunk *neighbor = chunk.getNeighborNorth();
         if (neighbor != nullptr) {
             LocalGrid coord(x, y, 0);
             north_block_type = neighbor->getBlockType(coord);
@@ -175,19 +144,19 @@ bool ChunkStripe::recalcExposureForBlock(
     }
     else {
         LocalGrid coord(x, y, z + 1);
-        north_block_type = owner.getBlockType(coord);
+        north_block_type = chunk.getBlockType(coord);
     }
 
     BlockType top_block_type = BlockType::AIR;
     if (!top_edge) {
         LocalGrid coord(x, y + 1, z);
-        top_block_type = owner.getBlockType(coord);
+        top_block_type = chunk.getBlockType(coord);
     }
 
     BlockType bottom_block_type = BlockType::AIR;
     if (!bottom_edge) {
         LocalGrid coord(x, y - 1, z);
-        bottom_block_type = owner.getBlockType(coord);
+        bottom_block_type = chunk.getBlockType(coord);
     }
 
     // Check each of the faces.
@@ -226,7 +195,7 @@ bool ChunkStripe::recalcExposureForBlock(
 
 
 // Add the quads for a block.
-void ChunkStripe::addVertsForBlock(Chunk &owner, const LocalGrid &local_coord)
+void ChunkStripe::addToSurfaceLists(Chunk &owner, const LocalGrid &local_coord)
 {
     const Block &current = m_blocks.at(local_coord.z());
 

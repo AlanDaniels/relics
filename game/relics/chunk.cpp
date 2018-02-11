@@ -24,12 +24,6 @@ Chunk::Chunk(const GameWorld &world, const ChunkOrigin &origin) :
 }
 
 
-// Destructor.
-Chunk::~Chunk()
-{
-}
-
-
 // Return a surface vert list, read-only.
 const VertList_PNT &Chunk::getSurfaceList_RO(SurfaceType surf) const 
 {
@@ -102,33 +96,31 @@ int Chunk::getCountForSurface(SurfaceType surf) const
 }
 
 
-// Recalc the entire chunk from scratch.
-void Chunk::recalcAllExposures()
+// Rebuild our surface lists.
+void Chunk::rebuildSurfaceLists()
 {
-    // Recalc our exposures.
+    // Recalc our exposures, both inner and along edges.
     SurfaceTotals totals;
+    rebuildInnerExposedBlockSet(&totals);
+    rebuildEdgeExposedBlockSet(&totals);
 
-    for (int x = 0; x < CHUNK_WIDTH; x++) {
-        for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            int index = offset(x, y);
-            m_stripes.at(index).recalcAllExposures(*this, x, y, &totals);
-        }
-    }
-
-    // Clear out the surface lists.
+    // Clear out our surface lists.
     for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
         m_vert_lists.at(i)->reset();
     }
 
     // Populate those surface lists.
-    for (int x = 0; x < CHUNK_WIDTH; x++) {
-        for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            int index = offset(x, y);
-            m_stripes.at(index).addToSurfaceLists(*this, x, y);
-        }
+    for (LocalGrid coord : m_inner_exposed_block_set) {
+        int index = offset(coord.x(), coord.y());
+        m_stripes.at(index).addToSurfaceLists(*this, coord);
     }
 
-    // Update the surface lists.
+    for (LocalGrid coord : m_edge_exposed_block_set) {
+        int index = offset(coord.x(), coord.y());
+        m_stripes.at(index).addToSurfaceLists(*this, coord);
+    }
+
+    // All done.
     for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
         m_vert_lists.at(i)->update();
     }
@@ -239,6 +231,80 @@ const Chunk *Chunk::getNeighborWest() const
 }
 
 
+// Rebuild our set of inner blocks that generate surfaces.
+// We do this as a separate step since it doesn't involve other chunks.
+void Chunk::rebuildInnerExposedBlockSet(SurfaceTotals *pOutTotals)
+{
+    m_inner_exposed_block_set.clear();
+
+    for     (int x = 1; x < CHUNK_WIDTH - 1; x++) {
+        for (int y = 0; y < CHUNK_HEIGHT; y++) {
+            int index = offset(x, y);
+            for (int z = 1; z < CHUNK_WIDTH - 1; z++) {
+                LocalGrid coord(x, y, z);
+                bool exposed = m_stripes.at(index).recalcExposuresForBlock(*this, coord, pOutTotals);
+                if (exposed) {
+                    m_inner_exposed_block_set.insert(coord);
+                }
+            }
+        }
+    }
+}
+
+
+// Rebuild our set of blocks along our edge that generate surfaces.
+// Note that *all* the blocks involves here involve other chunks.
+void Chunk::rebuildEdgeExposedBlockSet(SurfaceTotals *pOutTotals)
+{
+    m_edge_exposed_block_set.clear();
+
+    // The western-most stripes.
+    const int west_x = 0;
+    for (int y = 0; y < CHUNK_HEIGHT; y++) {
+        int index = offset(west_x, y);
+        for (int z = 0; z < CHUNK_WIDTH; z++) {
+            LocalGrid coord(west_x, y, z);
+            bool exposed = m_stripes.at(index).recalcExposuresForBlock(*this, coord, pOutTotals);
+            if (exposed) {
+                m_edge_exposed_block_set.insert(coord);
+            }
+        }
+    }
+
+    // The middle stripes. Just check the southern-most and northern-most blocks.
+    for (int x = 1; x < CHUNK_WIDTH - 1; x++) {
+        for (int y = 0; y < CHUNK_HEIGHT; y++) {
+            int index = offset(x, y);
+
+            LocalGrid south_coord(x, y, 0);
+            bool south_exposed = m_stripes.at(index).recalcExposuresForBlock(*this, south_coord, pOutTotals);
+            if (south_exposed) {
+                m_edge_exposed_block_set.insert(south_coord);
+            }
+
+            LocalGrid north_coord(x, y, CHUNK_WIDTH - 1);
+            bool north_exposed = m_stripes.at(index).recalcExposuresForBlock(*this, north_coord, pOutTotals);
+            if (north_exposed) {
+                m_edge_exposed_block_set.insert(north_coord);
+            }
+        }
+    }
+
+    // Finally, the eastern-most stripes.
+    const int east_x = CHUNK_WIDTH - 1;
+    for (int y = 0; y < CHUNK_HEIGHT; y++) {
+        int index = offset(east_x, y);
+        for (int z = 0; z < CHUNK_WIDTH; z++) {
+            LocalGrid coord(east_x, y, z);
+            bool exposed = m_stripes.at(index).recalcExposuresForBlock(*this, coord, pOutTotals);
+            if (exposed) {
+                m_edge_exposed_block_set.insert(coord);
+            }
+        }
+    }
+}
+
+
 // For debugging, print out all the details about this chunk.
 std::string Chunk::toString() const
 {
@@ -247,16 +313,16 @@ std::string Chunk::toString() const
     int stone_blocks = 0;
     int coal_blocks  = 0;
 
-    for (int x = 0; x < CHUNK_WIDTH; x++) {
-        for (int z = 0; z < CHUNK_WIDTH; z++) {
+    for         (int x = 0; x < CHUNK_WIDTH;  x++) {
+        for     (int z = 0; z < CHUNK_WIDTH;  z++) {
             for (int y = 0; y < CHUNK_HEIGHT; y++) {
                 LocalGrid coord(x, y, z);
                 BlockType block_type = getBlockType(coord);
 
                 switch (block_type) {
-                case BlockType::DIRT:  dirt_blocks++; break;
+                case BlockType::DIRT:  dirt_blocks++;  break;
                 case BlockType::STONE: stone_blocks++; break;
-                case BlockType::COAL:  coal_blocks++; break;
+                case BlockType::COAL:  coal_blocks++;  break;
                 default: break;
                 }
             }

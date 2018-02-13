@@ -32,8 +32,7 @@ public:
 
     void onGameTick(int elapsed_msec, const EventStateMsg &msg);
 
-    const Chunk *getRequiredChunk(const ChunkOrigin &origin) const;
-    const Chunk *getOptionalChunk(const ChunkOrigin &origin) const;
+    const Chunk *getChunk(const ChunkOrigin &origin) const;
 
     void setPlayerAtStart();
     void deleteBlockInFrontOfUs();

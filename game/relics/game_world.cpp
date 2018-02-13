@@ -35,36 +35,36 @@ GameWorld::GameWorld(const std::string &db_fname) :
     // We load one border larger than what we will actually draw.
     int eval_blocks = GetConfig().logic.eval_blocks;
 
-    MyVec4 camera_pos = m_player->getCameraPos();
-    EvalRegion draw_region = WorldPosToEvalRegion(camera_pos, eval_blocks);
-    EvalRegion load_region = draw_region.expand();
+    auto player_pos  = m_player->getPlayerPos();
+    auto draw_region = WorldPosToEvalRegion(player_pos, eval_blocks);
+    auto load_region = draw_region.expand();
 
-#if 0
-    // Fire off a thread for aech chunk we want to load. 
+    // Fire off a thread for each chunk we want to load. 
     std::vector<ChunkFuture> future_vec;
-
-    ChunkFuture blerm = std::async(LoadChunk, *this, ChunkOrigin(0, 0));
-    @@@
-#endif
-
     int count = 0;
     for     (int x = load_region.west();  x <= load_region.east();  x += CHUNK_WIDTH) {
         for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {
             ChunkOrigin origin(x, z);
-            m_chunk_map[origin] = LoadChunk(*this, origin);
+            future_vec.emplace_back(std::async(std::launch::async, LoadChunk, m_db_fname, this, origin));
             count++;
         }
     }
 
-    PrintDebug(fmt::format("Created {} chunks.\n", count));
+    PrintDebug(fmt::format("Spawned {} threads to load chunks. Waiting for them to complete...\n", count));
 
-    // Recalc and realize every chunk that we've loaded.
-    // This leaves a ring of unrealized chunks around us, and that's okay.
-    for     (int x = load_region.west();  x <= load_region.east();  x += CHUNK_WIDTH) {
-        for (int z = load_region.south(); z <= load_region.north(); z += CHUNK_WIDTH) {
-            ChunkOrigin origin(x, z);
-            m_chunk_map[origin].get()->rebuildSurfaceLists();
-        }
+    // Wait for each thread to complete.
+    for (auto &future : future_vec) {
+        std::unique_ptr<Chunk> chunk = future.get();
+        const ChunkOrigin &origin = chunk->getOrigin();
+        m_chunk_map[origin] = std::move(chunk);
+    }
+
+    PrintDebug("Threads are completed.\n");
+
+    // Finish up the calculating of each chunk.
+    for (auto &iter : m_chunk_map) {
+        Chunk *chunk = iter.second.get();
+        chunk->rebuildSurfaceLists();
     }
 }
 
@@ -93,21 +93,9 @@ void GameWorld::setPlayerAtStart()
 }
 
 
-// Look up a chunk that absolutely must have been loaded already,
-// such as the player position, or the current drawing area.
-const Chunk *GameWorld::getRequiredChunk(const ChunkOrigin &origin) const
-{
-    auto iter = m_chunk_map.find(origin);
-    assert(iter != m_chunk_map.end());
-
-    const Chunk *result = iter->second.get();
-    assert(result != nullptr);
-    return result;
-}
-
-
-// Look up a chunk that may not necessarily be loaded yet.
-const Chunk *GameWorld::getOptionalChunk(const ChunkOrigin &origin) const
+// Look up a chunk in our world.
+// It's possible that this hasn't been loaded yet.
+const Chunk *GameWorld::getChunk(const ChunkOrigin &origin) const
 {
     auto iter = m_chunk_map.find(origin);
     if (iter == m_chunk_map.end()) {
@@ -169,7 +157,7 @@ void GameWorld::updateWorld()
 
             if (!draw_region.contains(origin)) {
                 if (m_chunk_map.find(origin) == m_chunk_map.end()) {
-                    m_chunk_map[origin] = LoadChunk(*this, origin);
+                    m_chunk_map[origin] = LoadChunk(m_db_fname, this, origin);
                     m_chunk_map[origin]->rebuildSurfaceLists();
                 }
             }
@@ -186,7 +174,7 @@ void GameWorld::updateWorld()
             assert(iter != m_chunk_map.end());
             Chunk &chunk = *iter->second;
 
-            if (!chunk.isUpToDate()) {
+            if (chunk.getStatus() != ChunkStatus::VERT_LISTS) {
                 chunk.rebuildSurfaceLists();
             }
         }

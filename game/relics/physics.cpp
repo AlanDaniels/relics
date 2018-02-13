@@ -100,10 +100,15 @@ bool IsWorldBlockFilled(const GameWorld &world, const GlobalGrid &coord)
     ChunkOrigin origin = GlobalGridToChunkOrigin(coord);
     LocalGrid local_coord = GlobalGridToLocal(coord, origin);
 
-    const Chunk *chunk = world.getRequiredChunk(origin);
-    BlockType bt = chunk->getBlockType(local_coord);
-    bool result = IsBlockTypeFilled(bt);
-    return result;
+    const Chunk *chunk = world.getChunk(origin);
+    if (chunk == nullptr) {
+        return false;
+    }
+    else {
+        BlockType bt = chunk->getBlockType(local_coord);
+        bool result = IsBlockTypeFilled(bt);
+        return result;
+    }
 }
 
 

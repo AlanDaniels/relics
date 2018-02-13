@@ -92,10 +92,25 @@ private:
 ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos);
 
 
+// For a chunk, what's been calculated so far? 
+enum class ChunkStatus : unsigned char {
+    NOTHING    = 0,
+    INNER      = 1,
+    EDGES      = 2,
+    VERT_LISTS = 3
+};
+
+
+// The chunk itself.
+// TODO: Let's see if we can decompose the internals later.
 class Chunk
 {
 public:
-    Chunk(const GameWorld &world, const ChunkOrigin &origin);
+    Chunk(const GameWorld &world, const ChunkOrigin &origin) :
+        m_world(world),
+        m_origin(origin),
+        m_status(ChunkStatus::NOTHING) {}
+
     ~Chunk() {}
 
     BlockType getBlockType(const LocalGrid &coord) const;
@@ -104,16 +119,10 @@ public:
     bool   IsGlobalGridWithin(const GlobalGrid &coord) const;
     MyVec4 localGridToWorldPos(int local_x, int local_y, int local_z) const;
 
-    int getCountForSurface(SurfaceType surf) const;
-    const VertList_PNT &getSurfaceList_RO(SurfaceType surf) const;
-    VertList_PNT &getSurfaceListForWriting(SurfaceType surf);
-
-    void rebuildSurfaceLists();
-
     bool isAbovePlane(const MyPlane &plane) const;
-    const ChunkOrigin getOrigin() const { return m_origin; }
+    const ChunkOrigin &getOrigin() const { return m_origin; }
 
-    bool isUpToDate() const { return m_up_to_date; }
+    ChunkStatus getStatus() const { return m_status; }
 
     const Chunk *getNeighborNorth() const;
     const Chunk *getNeighborSouth() const;
@@ -131,23 +140,31 @@ public:
 
     std::string toString() const;
 
+    // Everything dealing with Surface Lists must only be called
+    // from the main thread, since they involve OpenGL buffers.
+    int getCountForSurface(SurfaceType surf) const;
+    const VertList_PNT *getSurfaceList_RO(SurfaceType surf) const;
+    VertList_PNT &getSurfaceList_RW(SurfaceType surf);
+    void rebuildSurfaceLists();
+
+
 private:
     FORBID_DEFAULT_CTOR(Chunk)
     FORBID_COPYING(Chunk)
     FORBID_MOVING(Chunk)
 
     // Private methods.
-    int offset(int x, int y) const { 
-        return x + (CHUNK_WIDTH * y); 
-    }
-
     void rebuildInnerExposedBlockSet(SurfaceTotals *pOutTotals);
     void rebuildEdgeExposedBlockSet(SurfaceTotals *pOutTotals);
+
+    int offset(int x, int y) const {
+        return x + (CHUNK_WIDTH * y); 
+    }
 
     // Private data.
     const GameWorld &m_world;
     ChunkOrigin m_origin;
-    bool m_up_to_date;
+    ChunkStatus m_status;
 
     std::array<std::unique_ptr<VertList_PNT>, SURFACE_TYPE_COUNT> m_vert_lists;
     

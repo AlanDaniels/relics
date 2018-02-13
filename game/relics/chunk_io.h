@@ -14,7 +14,7 @@ class ChunkOrigin;
 MyVec4 GetPlayerStartPos(const std::string &db_fname);
 
 // Load a chunk.
-std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin);
+std::unique_ptr<Chunk> LoadChunk(const std::string &db_fname, GameWorld *world, const ChunkOrigin &origin);
 
 // Save a chunk.
 void SaveChunk(GameWorld &world, std::unique_ptr<Chunk> chunk);

@@ -17,6 +17,12 @@ static const std::string DIRT_TOP("dirt_top");
 static const std::string STONE_TOP("stone_top");
 
 
+// TEMP: C++ is fucking impossible at times.
+std::unique_ptr<Chunk> FuckYou(const std::string &blah, GameWorld *world) {
+    return nullptr;
+}
+
+
 // Get the player's start position.
 // TODO: For now, just place them at the dirt top of the block at X=0, Z=0.
 MyVec4 GetPlayerStartPos(const std::string &db_fname)
@@ -63,10 +69,11 @@ MyVec4 GetPlayerStartPos(const std::string &db_fname)
 
 // Load a chunk from our SQLite file.
 // This just deals with the block data. The landscape is are dealt with later.
-std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
+// For the world, don't touch the reference, just save it.
+std::unique_ptr<Chunk> LoadChunk(const std::string &db_fname, GameWorld *world, const ChunkOrigin &origin)
 {
     // Our result.
-    std::unique_ptr<Chunk> chunk = std::make_unique<Chunk>(world, origin);
+    std::unique_ptr<Chunk> chunk = std::make_unique<Chunk>(*world, origin);
 
     // TODO: A simple test of a Wavefront Object.
     if (origin == ChunkOrigin(0, 0)) {
@@ -76,8 +83,6 @@ std::unique_ptr<Chunk> LoadChunk(GameWorld &world, const ChunkOrigin &origin)
         std::unique_ptr<WFInstance> capsule = pool.cloneWFObject("capsule", move);
         chunk->addWFInstance(std::move(capsule));
     }
-
-    std::string db_fname = world.getDatabaseFilename();
 
     sqlite3 *db = SQL_open(db_fname);
     if (db == nullptr) {

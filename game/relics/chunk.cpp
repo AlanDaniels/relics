@@ -11,31 +11,24 @@
 #include "utils.h"
 
 
-// Ctor from values.
-Chunk::Chunk(const GameWorld &world, const ChunkOrigin &origin) :
-    m_world(world),
-    m_origin(origin),
-    m_up_to_date(false)
-{
-    // We only use pointers to our vert lists due to not having a default ctor.
-    for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
-        m_vert_lists[i] = std::make_unique<VertList_PNT>();
-    }
-}
-
-
 // Return a surface vert list, read-only.
-const VertList_PNT &Chunk::getSurfaceList_RO(SurfaceType surf) const 
+// This can return a null.
+const VertList_PNT *Chunk::getSurfaceList_RO(SurfaceType surf) const 
 {
     int index = static_cast<int>(surf);
-    return *m_vert_lists.at(index);
+    return m_vert_lists.at(index).get();
 }
 
 
 // Return a surface vert list, for writing.
-VertList_PNT &Chunk::getSurfaceListForWriting(SurfaceType surf)
+// If it doesn't exist, create it.
+VertList_PNT &Chunk::getSurfaceList_RW(SurfaceType surf)
 {
     int index = static_cast<int>(surf);
+    if (m_vert_lists.at(index) == nullptr) {
+        int i = static_cast<int>(surf);
+        m_vert_lists[i] = std::make_unique<VertList_PNT>();
+    }
     return *m_vert_lists.at(index);
 }
 
@@ -91,8 +84,13 @@ void Chunk::setBlockType(const LocalGrid &coord, BlockType block_type)
 int Chunk::getCountForSurface(SurfaceType surf) const
 {
     int index  = static_cast<int>(surf);
-    int result = m_vert_lists.at(index)->getByteCount();
-    return result;
+    if (m_vert_lists.at(index) == nullptr) {
+        return 0;
+    }
+    else {
+        int result = m_vert_lists.at(index)->getByteCount();
+        return result;
+    }
 }
 
 
@@ -106,7 +104,9 @@ void Chunk::rebuildSurfaceLists()
 
     // Clear out our surface lists.
     for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
-        m_vert_lists.at(i)->reset();
+        if (m_vert_lists.at(i) != nullptr) {
+            m_vert_lists.at(i)->reset();
+        }
     }
 
     // Populate those surface lists.
@@ -122,10 +122,12 @@ void Chunk::rebuildSurfaceLists()
 
     // All done.
     for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
-        m_vert_lists.at(i)->update();
+        if (m_vert_lists.at(i) != nullptr) {
+            m_vert_lists.at(i)->update();
+        }
     }
 
-    m_up_to_date = true;
+    m_status = ChunkStatus::VERT_LISTS;
 
     int grand_total = totals.getGrandTotal();
     if (grand_total == 0) {
@@ -197,7 +199,7 @@ const Chunk *Chunk::getNeighborNorth() const
 {
     int x = m_origin.x();
     int z = m_origin.z() + CHUNK_WIDTH;
-    return m_world.getOptionalChunk(ChunkOrigin(x, z));
+    return m_world.getChunk(ChunkOrigin(x, z));
 }
 
 
@@ -207,7 +209,7 @@ const Chunk *Chunk::getNeighborSouth() const
 {
     int x = m_origin.x();
     int z = m_origin.z() - CHUNK_WIDTH;
-    return m_world.getOptionalChunk(ChunkOrigin(x, z));
+    return m_world.getChunk(ChunkOrigin(x, z));
 }
 
 
@@ -217,7 +219,7 @@ const Chunk *Chunk::getNeighborEast() const
 {
     int x = m_origin.x() + CHUNK_WIDTH;
     int z = m_origin.z();
-    return m_world.getOptionalChunk(ChunkOrigin(x, z));
+    return m_world.getChunk(ChunkOrigin(x, z));
 }
 
 
@@ -227,7 +229,7 @@ const Chunk *Chunk::getNeighborWest() const
 {
     int x = m_origin.x() - CHUNK_WIDTH;
     int z = m_origin.z();
-    return m_world.getOptionalChunk(ChunkOrigin(x, z));
+    return m_world.getChunk(ChunkOrigin(x, z));
 }
 
 
@@ -249,6 +251,8 @@ void Chunk::rebuildInnerExposedBlockSet(SurfaceTotals *pOutTotals)
             }
         }
     }
+
+    m_status = ChunkStatus::INNER;
 }
 
 
@@ -256,6 +260,8 @@ void Chunk::rebuildInnerExposedBlockSet(SurfaceTotals *pOutTotals)
 // Note that *all* the blocks involves here involve other chunks.
 void Chunk::rebuildEdgeExposedBlockSet(SurfaceTotals *pOutTotals)
 {
+    assert(m_status == ChunkStatus::INNER);
+
     m_edge_exposed_block_set.clear();
 
     // The western-most stripes.
@@ -302,6 +308,8 @@ void Chunk::rebuildEdgeExposedBlockSet(SurfaceTotals *pOutTotals)
             }
         }
     }
+
+    m_status = ChunkStatus::EDGES;
 }
 
 
@@ -336,7 +344,7 @@ std::string Chunk::toString() const
     int coal_surfaces  = getCountForSurface(SurfaceType::COAL);
 
     // Print the results.
-    std::string up_to_date = isUpToDate() ? "true" : "false";
+    std::string up_to_date = (getStatus() == ChunkStatus::VERT_LISTS) ? "true" : "false";
 
     std::string result =
         fmt::format("Chunk at [{0}, {1}]\n", m_origin.x(), m_origin.z()) +

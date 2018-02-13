@@ -142,14 +142,16 @@ std::vector<const Chunk *> Renderer::getChunksToRender(RenderStats *pOut_stats)
             pOut_stats->chunks_considered++;
 
             ChunkOrigin origin(x, z);
-            const Chunk *chunk = m_world.getRequiredChunk(origin);
+            const Chunk *chunk = m_world.getChunk(origin);
 
             // Only keep the chunks within the view frustum.
-            bool keep = chunk->isAbovePlane(left_clip_plane) &&
-                        chunk->isAbovePlane(right_clip_plane);
-            if (keep) {
-                results.emplace_back(chunk);
-                pOut_stats->chunks_rendered++;
+            if (chunk != nullptr) {
+                bool keep = chunk->isAbovePlane(left_clip_plane) &&
+                    chunk->isAbovePlane(right_clip_plane);
+                if (keep) {
+                    results.emplace_back(chunk);
+                    pOut_stats->chunks_rendered++;
+                }
             }
         }
     }
@@ -252,11 +254,13 @@ void Renderer::renderLandscapeList(
     landscape_ds.updateUniformTexture(0, tex);
 
     for (auto iter : chunk_vec) {
-        const VertList_PNT &vert_list = iter->getSurfaceList_RO(surf);
-        int item_count = vert_list.getItemCount();
-        if (item_count > 0) {
-            landscape_ds.render(vert_list);
-            pOut_stats->triangle_count += vert_list.getTriCount();
+        const VertList_PNT *vert_list = iter->getSurfaceList_RO(surf);
+        if (vert_list != nullptr) {
+            int item_count = vert_list->getItemCount();
+            if (item_count > 0) {
+                landscape_ds.render(*vert_list);
+                pOut_stats->triangle_count += vert_list->getTriCount();
+            }
         }
     }
 

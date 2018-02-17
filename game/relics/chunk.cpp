@@ -11,28 +11,6 @@
 #include "utils.h"
 
 
-// Return a surface vert list, read-only.
-// This can return a null.
-const VertList_PNT *Chunk::getSurfaceList_RO(SurfaceType surf) const 
-{
-    int index = static_cast<int>(surf);
-    return m_vert_lists.at(index).get();
-}
-
-
-// Return a surface vert list, for writing.
-// If it doesn't exist, create it.
-VertList_PNT &Chunk::getSurfaceList_RW(SurfaceType surf)
-{
-    int index = static_cast<int>(surf);
-    if (m_vert_lists.at(index) == nullptr) {
-        int i = static_cast<int>(surf);
-        m_vert_lists[i] = std::make_unique<VertList_PNT>();
-    }
-    return *m_vert_lists.at(index);
-}
-
-
 // Turn a world coord into a chunk origin.
 ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos)
 {
@@ -77,69 +55,6 @@ void Chunk::setBlockType(const LocalGrid &coord, BlockType block_type)
     int index = offset(coord.x(), coord.y());
     ChunkStripe &stripe = m_stripes.at(index);
     stripe.setBlockType(coord.z(), block_type);
-}
-
-
-// Return the count for a particular surface type.
-int Chunk::getCountForSurface(SurfaceType surf) const
-{
-    int index  = static_cast<int>(surf);
-    if (m_vert_lists.at(index) == nullptr) {
-        return 0;
-    }
-    else {
-        int result = m_vert_lists.at(index)->getByteCount();
-        return result;
-    }
-}
-
-
-// Rebuild our surface lists.
-void Chunk::rebuildSurfaceLists()
-{
-    // Recalc our exposures, both inner and along edges.
-    SurfaceTotals totals;
-    rebuildInnerExposedBlockSet(&totals);
-    rebuildEdgeExposedBlockSet(&totals);
-
-    // Clear out our surface lists.
-    for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
-        if (m_vert_lists.at(i) != nullptr) {
-            m_vert_lists.at(i)->reset();
-        }
-    }
-
-    // Populate those surface lists.
-    for (LocalGrid coord : m_inner_exposed_block_set) {
-        int index = offset(coord.x(), coord.y());
-        m_stripes.at(index).addToSurfaceLists(*this, coord);
-    }
-
-    for (LocalGrid coord : m_edge_exposed_block_set) {
-        int index = offset(coord.x(), coord.y());
-        m_stripes.at(index).addToSurfaceLists(*this, coord);
-    }
-
-    // All done.
-    for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
-        if (m_vert_lists.at(i) != nullptr) {
-            m_vert_lists.at(i)->update();
-        }
-    }
-
-    m_status = ChunkStatus::VERT_LISTS;
-
-    int grand_total = totals.getGrandTotal();
-    if (grand_total == 0) {
-        PrintDebug(fmt::format(
-            "Recalculated all exposures for [{0}, {1}].\n",
-            m_origin.debugX(), m_origin.debugZ()));
-    }
-    else {
-        PrintDebug(fmt::format(
-            "Recalculated all exposures for [{0}, {1}]. Found {2} surfaces total.\n",
-            m_origin.debugX(), m_origin.debugZ(), grand_total));
-    }
 }
 
 
@@ -313,6 +228,28 @@ void Chunk::rebuildEdgeExposedBlockSet(SurfaceTotals *pOutTotals)
 }
 
 
+// Get a vector of the exposed blocks.
+std::vector<LocalGrid> Chunk::getExposedBlockList()
+{
+    int count = m_inner_exposed_block_set.size() + m_edge_exposed_block_set.size();
+
+    std::vector<LocalGrid> results(count);
+    results.insert(results.end(), m_inner_exposed_block_set.begin(), m_inner_exposed_block_set.end());
+    results.insert(results.end(), m_edge_exposed_block_set.begin(),  m_edge_exposed_block_set.end());
+    std::sort(results.begin(), results.end());
+    
+    return std::move(results);
+}
+
+
+// Add to surface lists.
+void Chunk::addToSurfaceLists(const LocalGrid &coord)
+{
+    int index = offset(coord.x(), coord.y());
+    m_stripes.at(index).addToSurfaceLists(*this, coord);
+}
+
+
 // For debugging, print out all the details about this chunk.
 std::string Chunk::toString() const
 {
@@ -338,13 +275,13 @@ std::string Chunk::toString() const
     }
 
     // Count our surfaces.
-    int grass_surfaces = getCountForSurface(SurfaceType::GRASS_TOP);
-    int dirt_surfaces  = getCountForSurface(SurfaceType::DIRT);
-    int stone_surfaces = getCountForSurface(SurfaceType::STONE);
-    int coal_surfaces  = getCountForSurface(SurfaceType::COAL);
+    int grass_surfaces = landscape.getCountForSurface(SurfaceType::GRASS_TOP);
+    int dirt_surfaces  = landscape.getCountForSurface(SurfaceType::DIRT);
+    int stone_surfaces = landscape.getCountForSurface(SurfaceType::STONE);
+    int coal_surfaces  = landscape.getCountForSurface(SurfaceType::COAL);
 
     // Print the results.
-    std::string up_to_date = (getStatus() == ChunkStatus::VERT_LISTS) ? "true" : "false";
+    std::string up_to_date = (getStatus() == ChunkStatus::LANDSCAPE) ? "true" : "false";
 
     std::string result =
         fmt::format("Chunk at [{0}, {1}]\n", m_origin.x(), m_origin.z()) +

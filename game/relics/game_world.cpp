@@ -64,7 +64,11 @@ GameWorld::GameWorld(const std::string &db_fname) :
     // Finish up the calculating of each chunk.
     for (auto &iter : m_chunk_map) {
         Chunk *chunk = iter.second.get();
-        chunk->rebuildSurfaceLists();
+
+        SurfaceTotals totals;
+        chunk->rebuildInnerExposedBlockSet(&totals);
+        chunk->rebuildEdgeExposedBlockSet(&totals);
+        chunk->landscape.rebuildSurfaceLists();
     }
 }
 
@@ -158,7 +162,7 @@ void GameWorld::updateWorld()
             if (!draw_region.contains(origin)) {
                 if (m_chunk_map.find(origin) == m_chunk_map.end()) {
                     m_chunk_map[origin] = LoadChunk(m_db_fname, this, origin);
-                    m_chunk_map[origin]->rebuildSurfaceLists();
+                    m_chunk_map[origin]->landscape.rebuildSurfaceLists();
                 }
             }
         }
@@ -174,8 +178,8 @@ void GameWorld::updateWorld()
             assert(iter != m_chunk_map.end());
             Chunk &chunk = *iter->second;
 
-            if (chunk.getStatus() != ChunkStatus::VERT_LISTS) {
-                chunk.rebuildSurfaceLists();
+            if (chunk.getStatus() != ChunkStatus::LANDSCAPE) {
+                chunk.landscape.rebuildSurfaceLists();
             }
         }
     }
@@ -287,6 +291,11 @@ void GameWorld::deleteBlockInFrontOfUs()
         assert(chunk->IsGlobalGridWithin(global_coord));
 
         chunk->setBlockType(local_coord, BlockType::AIR);
-        chunk->rebuildSurfaceLists();
+
+        SurfaceTotals totals;
+        chunk->rebuildInnerExposedBlockSet(&totals);
+        chunk->rebuildEdgeExposedBlockSet(&totals);
+
+        chunk->landscape.rebuildSurfaceLists();
     }
 }

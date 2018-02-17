@@ -5,7 +5,7 @@
 #include "block.h"
 #include "chunk_stripe.h"
 #include "format.h"
-#include "draw_state_pnt.h"
+#include "landscape.h"
 #include "wavefront_object.h"
 
 
@@ -94,19 +94,19 @@ ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos);
 
 // For a chunk, what's been calculated so far? 
 enum class ChunkStatus : unsigned char {
-    NOTHING    = 0,
-    INNER      = 1,
-    EDGES      = 2,
-    VERT_LISTS = 3
+    NOTHING   = 0,
+    INNER     = 1,
+    EDGES     = 2,
+    LANDSCAPE = 3
 };
 
 
 // The chunk itself.
-// TODO: Let's see if we can decompose the internals later.
 class Chunk
 {
 public:
     Chunk(const GameWorld &world, const ChunkOrigin &origin) :
+        landscape(*this),
         m_world(world),
         m_origin(origin),
         m_status(ChunkStatus::NOTHING) {}
@@ -140,13 +140,15 @@ public:
 
     std::string toString() const;
 
-    // Everything dealing with Surface Lists must only be called
-    // from the main thread, since they involve OpenGL buffers.
-    int getCountForSurface(SurfaceType surf) const;
-    const VertList_PNT *getSurfaceList_RO(SurfaceType surf) const;
-    VertList_PNT &getSurfaceList_RW(SurfaceType surf);
-    void rebuildSurfaceLists();
+    // Methods needed by the specialty objects.
+    void rebuildInnerExposedBlockSet(SurfaceTotals *pOutTotals);
+    void rebuildEdgeExposedBlockSet(SurfaceTotals *pOutTotals);
 
+    std::vector<LocalGrid> getExposedBlockList();
+    void addToSurfaceLists(const LocalGrid &coord);
+
+    // Specialty objects.
+    Landscape landscape;
 
 private:
     FORBID_DEFAULT_CTOR(Chunk)
@@ -154,9 +156,6 @@ private:
     FORBID_MOVING(Chunk)
 
     // Private methods.
-    void rebuildInnerExposedBlockSet(SurfaceTotals *pOutTotals);
-    void rebuildEdgeExposedBlockSet(SurfaceTotals *pOutTotals);
-
     int offset(int x, int y) const {
         return x + (CHUNK_WIDTH * y); 
     }
@@ -166,8 +165,6 @@ private:
     ChunkOrigin m_origin;
     ChunkStatus m_status;
 
-    std::array<std::unique_ptr<VertList_PNT>, SURFACE_TYPE_COUNT> m_vert_lists;
-    
     std::array<ChunkStripe, CHUNK_WIDTH * CHUNK_HEIGHT> m_stripes;
 
     std::set<LocalGrid> m_inner_exposed_block_set;

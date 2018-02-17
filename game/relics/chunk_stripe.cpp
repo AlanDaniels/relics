@@ -1,11 +1,13 @@
 
 #include "stdafx.h"
 #include "chunk_stripe.h"
-#include "common_util.h"
 
 #include "add_face.h"
 #include "block.h"
 #include "chunk.h"
+#include "common_util.h"
+#include "landscape.h"
+
 
 // Surface totals ctor.
 SurfaceTotals::SurfaceTotals()
@@ -195,7 +197,7 @@ bool ChunkStripe::recalcExposuresForBlock(
 
 
 // Add the quads for a block.
-void ChunkStripe::addToSurfaceLists(Chunk &owner, const LocalGrid &local_coord)
+void ChunkStripe::addToSurfaceLists(Chunk &chunk, const LocalGrid &local_coord)
 {
     const Block &current = m_blocks.at(local_coord.z());
 
@@ -211,48 +213,48 @@ void ChunkStripe::addToSurfaceLists(Chunk &owner, const LocalGrid &local_coord)
     // Top face.
     SurfaceType top_surf = current.getSurface(FaceType::TOP);
     if (top_surf != SurfaceType::NOTHING) {
-        VertList_PNT &list = owner.getSurfaceList_RW(top_surf);
-        auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::TOP);
+        VertList_PNT &list = chunk.landscape.getSurfaceList_RW(top_surf);
+        auto tris = GetLandscapePatch_PNT(chunk, local_coord, FaceType::TOP);
         list.add(tris.data(), tris.size());
     }
 
     // Bottom face.
     SurfaceType bottom_surf = current.getSurface(FaceType::BOTTOM);
     if (bottom_surf != SurfaceType::NOTHING) {
-        VertList_PNT &list = owner.getSurfaceList_RW(bottom_surf);
-        auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::BOTTOM);
+        VertList_PNT &list = chunk.landscape.getSurfaceList_RW(bottom_surf);
+        auto tris = GetLandscapePatch_PNT(chunk, local_coord, FaceType::BOTTOM);
         list.add(tris.data(), tris.size());
     }
 
     // Southern face.
     SurfaceType south_surf = current.getSurface(FaceType::SOUTH);
     if (south_surf != SurfaceType::NOTHING) {
-        VertList_PNT &list = owner.getSurfaceList_RW(south_surf);
-        auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::SOUTH);
+        VertList_PNT &list = chunk.landscape.getSurfaceList_RW(south_surf);
+        auto tris = GetLandscapePatch_PNT(chunk, local_coord, FaceType::SOUTH);
         list.add(tris.data(), tris.size());
     }
 
     // Northern face.
     SurfaceType north_surf = current.getSurface(FaceType::NORTH);
     if (north_surf != SurfaceType::NOTHING) {
-        VertList_PNT &list = owner.getSurfaceList_RW(north_surf);
-        auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::NORTH);
+        VertList_PNT &list = chunk.landscape.getSurfaceList_RW(north_surf);
+        auto tris = GetLandscapePatch_PNT(chunk, local_coord, FaceType::NORTH);
         list.add(tris.data(), tris.size());
     }
 
     // Eastern face.
     SurfaceType east_surf = current.getSurface(FaceType::EAST);
     if (east_surf != SurfaceType::NOTHING) {
-        VertList_PNT &list = owner.getSurfaceList_RW(east_surf);
-        auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::EAST);
+        VertList_PNT &list = chunk.landscape.getSurfaceList_RW(east_surf);
+        auto tris = GetLandscapePatch_PNT(chunk, local_coord, FaceType::EAST);
         list.add(tris.data(), tris.size());
     }
 
     // Western face.
     SurfaceType west_surf = current.getSurface(FaceType::WEST);
     if (west_surf != SurfaceType::NOTHING) {
-        VertList_PNT &list = owner.getSurfaceList_RW(west_surf);
-        auto tris = GetLandscapePatch_PNT(owner, local_coord, FaceType::WEST);
+        VertList_PNT &list = chunk.landscape.getSurfaceList_RW(west_surf);
+        auto tris = GetLandscapePatch_PNT(chunk, local_coord, FaceType::WEST);
         list.add(tris.data(), tris.size());
     }
 }

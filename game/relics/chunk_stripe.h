@@ -8,6 +8,8 @@
 
 class Chunk;
 class ChunkVertLists;
+class Landscape;
+
 
 // As we recalc exposures, keep track of how many surfaces we discover.
 class SurfaceTotals
@@ -40,7 +42,7 @@ public:
     void setBlockType(int local_z, BlockType block_type);
 
     bool recalcExposuresForBlock(const Chunk &chunk, const LocalGrid &local_coord, SurfaceTotals *pOut);
-    void addToSurfaceLists(Chunk &owner, const LocalGrid &local_coord);
+    void addToSurfaceLists(Chunk &chunk, const LocalGrid &local_coord);
 
 private:
     FORBID_COPYING(ChunkStripe)

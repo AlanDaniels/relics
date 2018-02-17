@@ -348,15 +348,17 @@ LocalGrid::LocalGrid(int x, int y, int z) :
 }
 
 
-// Local grid comparator.
+// Local grid comparator. Note that we sort by X, then Z,
+// then finally Y, to align with how stripes are laid out.
 bool operator<(const LocalGrid &one, const LocalGrid &two)
 {
     if      (one.x() < two.x()) { return true;  }
     else if (one.x() > two.x()) { return false; }
-    else if (one.y() < two.y()) { return true;  }
-    else if (one.y() > two.y()) { return false; }
     else if (one.z() < two.z()) { return true;  }
     else if (one.z() > two.z()) { return false; }
+    else if (one.y() < two.y()) { return true;  }
+    else if (one.y() > two.y()) { return false; }
+
     // Must be equal.
     else {
         return false;

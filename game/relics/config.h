@@ -206,7 +206,7 @@ struct ConfigRender
 struct ConfigLogic
 {
     ConfigLogic() :
-        eval_blocks(5),
+        eval_block_count(5),
         hit_test_distance_meters(10.0f),
         player_walk_speed(1.0f),
         player_run_speed(1.0f),
@@ -222,9 +222,9 @@ struct ConfigLogic
     GLfloat getHitTestDistanceCm() const { return hit_test_distance_meters * 100.0f; }
 
     // Note that our OpenGL drawing distance can't be more than what's loaded in the world.
-    GLfloat getDrawDistanceCm() const { return eval_blocks * CHUNK_WIDTH * 100.0f; }
+    GLfloat getDrawDistanceCm() const { return eval_block_count * CHUNK_WIDTH * 100.0f; }
 
-    int     eval_blocks;
+    int     eval_block_count;
     GLfloat hit_test_distance_meters;
     GLfloat player_walk_speed;
     GLfloat player_run_speed;

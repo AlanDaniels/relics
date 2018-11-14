@@ -91,7 +91,7 @@ render = {
 -- Game logic.
 -- Now, *this* will. Mess with at your own peril.
 logic = {
-    eval_blocks = 3,
+    eval_block_count    = 3,
     hit_test_distance   = 25.0,  -- Meters
     player_walk_speed   =  2.5,  -- Meters / secone
     player_run_speed    =  7.0,  -- Meters / secone

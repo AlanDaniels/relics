@@ -246,10 +246,10 @@ bool Config::loadFromFile()
         //   A value of 1 => (1 + 2x) ** 2 =>  3 ** 2 =>   9 blocks.
         //   A value of 7 => (1 + 2x) ** 2 => 15 ** 2 => 225 blocks.
         // If we go any bigger than that, we're asking to run out of memory.
-        lua_getfield(L, -1, "eval_blocks");
+        lua_getfield(L, -1, "eval_block_count");
         if (lua_isnumber(L, -1)) {
             int val = static_cast<int>(lua_tointeger(L, -1));
-            logic.eval_blocks = clampInt(val, 1, 7);
+            logic.eval_block_count = clampInt(val, 1, 7);
         }
         lua_pop(L, 1);
 

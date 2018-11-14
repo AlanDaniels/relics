@@ -20,6 +20,7 @@ public:
     const VertList_PNT *getSurfaceList_RO(SurfaceType surf) const;
     VertList_PNT &getSurfaceList_RW(SurfaceType surf);
     void rebuildSurfaceLists();
+    void freeSurfaceLists();
 
 private:
     FORBID_DEFAULT_CTOR(Landscape)

@@ -195,7 +195,7 @@ bool WFObject::parseObjectLine(int line_num, const std::string &line)
         // Look up which face group to add to. Note that total blanks is okay.
         std::string name = m_current_group_name;
 
-        if (m_group_map.find(name) == m_group_map.end()) {
+        if (!IS_KEY_IN_MAP(m_group_map, name)) {
             createFaceGroup(line_num, name);
         }
 
@@ -225,16 +225,18 @@ bool WFObject::parseObjectLine(int line_num, const std::string &line)
     // Use this for the current face group. Note that the "current"
     // face group might be the default blank, so create it if needed.
     else if (keyword == "usemtl") {
-        const auto &iter = m_mat_map.find(tokens[1]);
-        if (iter == m_mat_map.end()) {
+        const std::string &mat_name = tokens[1];
+
+        if (!IS_KEY_IN_MAP(m_mat_map, mat_name)) {
             PrintDebug(fmt::format(
                 "Line {0}: Referenced material {1} is never defined!\n",
-                line_num, tokens[1]));
+                line_num, mat_name));
         }
 
+        const auto &iter = m_mat_map.find(mat_name);
         std::shared_ptr<WFMaterial> mat = iter->second;
 
-        if (m_group_map.find(m_current_group_name) == m_group_map.end()) {
+        if (!IS_KEY_IN_MAP(m_group_map, m_current_group_name)) {
             createFaceGroup(line_num, m_current_group_name);
         }
 
@@ -288,8 +290,7 @@ bool WFObject::parseObjectLine(int line_num, const std::string &line)
 // Create a new face group.
 void WFObject::createFaceGroup(int line_num, const std::string &name)
 {
-    const auto &iter = m_group_map.find(name);
-    if (iter != m_group_map.end()) {
+    if (IS_KEY_IN_MAP(m_group_map, name)) {
         PrintDebug(fmt::format(
             "Line {0}: Tried to add group '{1}' twice. Ignoring.\n",
             line_num, name));

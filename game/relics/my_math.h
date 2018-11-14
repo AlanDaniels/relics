@@ -487,6 +487,7 @@ LocalPillar GlobalPillarToLocal(const GlobalPillar &pillar, const ChunkOrigin &o
 
 // An "eval region", the four values always align along chunk boundaries.
 // This should alway result in a 3x3 grid of chunks, or 5x5, etc.
+// The values are inclusive on the east and north edges, so use "<=", not just "<".
 struct EvalRegion
 {
 public:
@@ -506,6 +507,9 @@ public:
 
     bool contains(const ChunkOrigin &origin) const;
     EvalRegion expand() const;
+
+    std::vector<ChunkOrigin> getEntirety() const;
+    std::vector<ChunkOrigin> getOutline() const;
 
     std::string toDebugStr() const;
 

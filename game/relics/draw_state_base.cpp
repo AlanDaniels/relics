@@ -95,8 +95,7 @@ bool DrawState_Base::addUniformFloat(const std::string &name)
         return false;
     }
 
-    const auto &iter = m_uniform_float_map.find(name);
-    if (iter != m_uniform_float_map.end()) {
+    if (IS_KEY_IN_MAP(m_uniform_float_map, name)) {
         PrintDebug(fmt::format("Tried to add uniform float {} twice.\n", name));
         return false;
     }
@@ -114,8 +113,7 @@ bool DrawState_Base::addUniformVec4(const std::string &name)
         return false;
     }
 
-    const auto &iter = m_uniform_vec4_map.find(name);
-    if (iter != m_uniform_vec4_map.end()) {
+    if (IS_KEY_IN_MAP(m_uniform_vec4_map, name)) {
         PrintDebug(fmt::format("Tried to add uniform vec4 {} twice.\n", name));
         return false;
     }
@@ -133,8 +131,7 @@ bool DrawState_Base::addUniformMatrix4by4(const std::string &name)
         return false;
     }
 
-    const auto &iter = m_uniform_matrix4by4_map.find(name);
-    if (iter != m_uniform_matrix4by4_map.end()) {
+    if (IS_KEY_IN_MAP(m_uniform_matrix4by4_map, name)) {
         PrintDebug(fmt::format("Tried to add uniform matrix4by4 {} twice.\n", name));
         return false;
     }
@@ -146,8 +143,8 @@ bool DrawState_Base::addUniformMatrix4by4(const std::string &name)
 
 // Look up an attribute.
 GLint DrawState_Base::getAttribute(const std::string &name) const {
+    assert(IS_KEY_IN_MAP(m_attrib_map, name));
     const auto &iter = m_attrib_map.find(name);
-    assert(iter != m_attrib_map.end());
     return iter->second;
 }
 
@@ -261,12 +258,12 @@ bool DrawState_Base::updateUniformFloat(const std::string &name, GLfloat value) 
     // Use our compiled program.
     glUseProgram(m_program_ID);
 
-    const auto &iter = m_uniform_float_map.find(name);
-    if (iter == m_uniform_float_map.end()) {
+    if (!IS_KEY_IN_MAP(m_uniform_float_map, name)) {
         PrintDebug(fmt::format("Could not find uniform float {}\n", name));
         return false;
     }
 
+    const auto &iter = m_uniform_float_map.find(name);
     glUniform1f(iter->second, value);
     return true;
 }
@@ -278,12 +275,12 @@ bool DrawState_Base::updateUniformVec4(const std::string &name, const MyVec4 &va
     // Use our compiled program.
     glUseProgram(m_program_ID);
 
-    const auto &iter = m_uniform_vec4_map.find(name);
-    if (iter == m_uniform_vec4_map.end()) {
+    if (!IS_KEY_IN_MAP(m_uniform_vec4_map, name)) {
         PrintDebug(fmt::format("Could not find uniform vec4 {}\n", name));
         return false;
     }
 
+    const auto &iter = m_uniform_vec4_map.find(name);
     glUniform4f(iter->second, val.x(), val.y(), val.z(), val.w());
     return true;
 }
@@ -295,12 +292,12 @@ bool DrawState_Base::updateUniformMatrix4by4(const std::string &name, const MyMa
     // Use our compiled program.
     glUseProgram(m_program_ID);
 
-    const auto &iter = m_uniform_matrix4by4_map.find(name);
-    if (iter == m_uniform_matrix4by4_map.end()) {
+    if (!IS_KEY_IN_MAP(m_uniform_matrix4by4_map, name)) {
         PrintDebug(fmt::format("Could not find uniform matrix-4by4 {}\n", name));
         return false;
     }
 
+    const auto &iter = m_uniform_matrix4by4_map.find(name);
     glUniformMatrix4fv(iter->second, 1, GL_FALSE, val.ptr());
     return true;
 }

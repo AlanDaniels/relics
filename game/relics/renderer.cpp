@@ -107,9 +107,9 @@ std::vector<const Chunk *> Renderer::getChunksToRender(RenderStats *pOut_stats)
 {
     std::vector<const Chunk *> results;
 
-    GLfloat field_of_view = GetConfig().render.field_of_view;
-    int     eval_blocks   = GetConfig().logic.eval_blocks;
-    GLfloat draw_distance = GetConfig().logic.getDrawDistanceCm();
+    GLfloat field_of_view    = GetConfig().render.field_of_view;
+    int     eval_block_count = GetConfig().logic.eval_block_count;
+    GLfloat draw_distance    = GetConfig().logic.getDrawDistanceCm();
 
     const Player &player = m_world.getPlayer();
     MyVec4  camera_pos   = player.getCameraPos();
@@ -135,7 +135,7 @@ std::vector<const Chunk *> Renderer::getChunksToRender(RenderStats *pOut_stats)
     MyPlane right_clip_plane = MyRay(camera_pos, right_dir_2).toPlane();
 
     // Look up every chunk within our eval region.
-    EvalRegion region = WorldPosToEvalRegion(camera_pos, eval_blocks);
+    EvalRegion region = WorldPosToEvalRegion(camera_pos, eval_block_count);
 
     for     (int x = region.west();  x <= region.east();  x += CHUNK_WIDTH) {
         for (int z = region.south(); z <= region.north(); z += CHUNK_WIDTH) {

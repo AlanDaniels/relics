@@ -16,7 +16,7 @@
 * I found the string trimming functions here:
 *     https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
 *
-* This version last updated on Feb 3rd, 2018.
+* This version last updated on March 25th, 2018.
 */
 
 enum class BlockType : unsigned char {
@@ -25,6 +25,13 @@ enum class BlockType : unsigned char {
     STONE = 2,
     COAL  = 3
 };
+
+
+// A quick check to see if a key is already in a map. C++ is a nightmare at times.
+template<typename K, typename V, typename Cmp, typename Alloc>
+inline bool IS_KEY_IN_MAP(const std::map<K, V, Cmp, Alloc> &some_map, const K &key) {
+    return some_map.find(key) != some_map.end();
+}
 
 
 // String trimming.

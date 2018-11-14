@@ -196,13 +196,13 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
 
     // Print our eval region.
     if (config.debug.hud_eval_region) {
-        MyVec4  pos = game_world.getPlayer().getCameraPos();
-        int eval_blocks = config.logic.eval_blocks;
-        EvalRegion region = WorldPosToEvalRegion(pos, eval_blocks);
+        MyVec4 pos = game_world.getPlayer().getCameraPos();
+        int eval_block_count = config.logic.eval_block_count;
+        EvalRegion region = WorldPosToEvalRegion(pos, eval_block_count);
 
         std::string msg = fmt::format(
             "Eval distance: {0} meters, W={1}, E={2}, S={3}, N={4}", 
-            eval_blocks * CHUNK_WIDTH, 
+            eval_block_count * CHUNK_WIDTH, 
             region.west(), region.east(), region.south(), region.north());
         m_text.setString(msg);
 

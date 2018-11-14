@@ -490,6 +490,66 @@ EvalRegion EvalRegion::expand() const
 }
 
 
+// Build a vector of all the origins within the region.
+// This is safer than hand-rolling the loops everywhere.
+std::vector<ChunkOrigin> EvalRegion::getEntirety() const
+{
+    int width  = ((m_east  - m_west)  / CHUNK_WIDTH) + 1;
+    int length = ((m_north - m_south) / CHUNK_WIDTH) + 1;
+    int capacity = width * length;
+
+    std::vector<ChunkOrigin> results(capacity);
+
+    for     (int x = m_west;  x <= m_east;  x += CHUNK_WIDTH) {
+        for (int z = m_south; z <= m_north; z += CHUNK_WIDTH) {
+            ChunkOrigin origin(x, z);
+            results.emplace_back(origin);
+        }
+    }
+
+    return std::move(results);
+}
+
+
+// Build a vector of the "outline" of the chunk origins right along the edge.
+// Mild TODO: Maybe we could figure out the capacity of the vector ahead of time.
+// Mild TODO: Once you're happy with the logic here, use "emplace_back" for speed.
+std::vector<ChunkOrigin> EvalRegion::getOutline() const
+{
+    std::vector<ChunkOrigin> results;
+
+    // First, the western edge.
+    for (int z = m_south; z <= m_north; z += CHUNK_WIDTH) {
+        ChunkOrigin west_origin(m_west, z);
+        results.push_back(west_origin);
+    }
+
+    // Then, all the ones along the north edge.
+    int west_plus_one  = m_west + CHUNK_WIDTH;
+    int east_minus_one = m_east - CHUNK_WIDTH;
+
+    for (int x = west_plus_one; x <= east_minus_one; x += CHUNK_WIDTH) {
+        ChunkOrigin north_origin(x, m_north);
+        results.push_back(north_origin);
+    }
+
+    // Then, all the ones along the south edge.
+    for (int x = west_plus_one; x <= east_minus_one; x += CHUNK_WIDTH) {
+        ChunkOrigin south_origin(x, m_south);
+        results.push_back(south_origin);
+    }
+
+    // Then, the eastern edge.
+    for (int z = m_south; z <= m_north; z += CHUNK_WIDTH) {
+        ChunkOrigin east_origin(m_east, z);
+        results.emplace_back(east_origin);
+    }
+
+
+    return std::move(results);
+}
+
+
 // Return a debug version of an eval region.
 std::string EvalRegion::toDebugStr() const
 {

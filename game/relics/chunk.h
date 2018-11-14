@@ -94,10 +94,10 @@ ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos);
 
 // For a chunk, what's been calculated so far? 
 enum class ChunkStatus : unsigned char {
-    NOTHING   = 0,
-    INNER     = 1,
-    EDGES     = 2,
-    LANDSCAPE = 3
+    NOTHING    = 0,
+    INNER      = 1,
+    EDGES      = 2,
+    UP_TO_DATE = 3
 };
 
 
@@ -112,6 +112,13 @@ public:
         m_status(ChunkStatus::NOTHING) {}
 
     ~Chunk() {}
+
+    // TODO: Hi Self! Happy day after Easter! Add these next.
+    void joinMainThread();
+    void departMainThread();
+
+    void touch(int msecs) { m_last_touched_msecs = msecs; }
+    int  getLastTouchedMsecs() const { return m_last_touched_msecs; }
 
     BlockType getBlockType(const LocalGrid &coord) const;
     void setBlockType(const LocalGrid &coord, BlockType block_type);
@@ -143,6 +150,7 @@ public:
     // Methods needed by the specialty objects.
     void rebuildInnerExposedBlockSet(SurfaceTotals *pOutTotals);
     void rebuildEdgeExposedBlockSet(SurfaceTotals *pOutTotals);
+    void rebuildLandscape();
 
     std::vector<LocalGrid> getExposedBlockList();
     void addToSurfaceLists(const LocalGrid &coord);
@@ -164,6 +172,7 @@ private:
     const GameWorld &m_world;
     ChunkOrigin m_origin;
     ChunkStatus m_status;
+    int m_last_touched_msecs;
 
     std::array<ChunkStripe, CHUNK_WIDTH * CHUNK_HEIGHT> m_stripes;
 

@@ -15,7 +15,7 @@ Landscape::Landscape(Chunk &owner) :
 // Destructor.
 Landscape::~Landscape()
 {
-
+    freeSurfaceLists();
 }
 
 
@@ -95,4 +95,16 @@ void Landscape::rebuildSurfaceLists()
             "Recalculated all exposures for [{0}, {1}]. Found {2} surfaces total.\n",
             origin.debugX(), origin.debugZ(), grand_total));
     }
+}
+
+
+// Free up any surface lists.
+void Landscape::freeSurfaceLists() {
+    for (int i = 0; i < SURFACE_TYPE_COUNT; i++) {
+        if (m_vert_lists.at(i) != nullptr) {
+            m_vert_lists.at(i)->reset();
+        }
+    }
+
+    m_vert_lists.empty();
 }

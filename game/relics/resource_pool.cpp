@@ -243,12 +243,12 @@ bool ResourcePool::loadWFObjects()
 // Clone an instance of a Wavefront object.
 std::unique_ptr<WFInstance> ResourcePool::cloneWFObject(const std::string &name, const MyVec4 &move) const
 {
-    const auto &iter = m_wfobject_map.find(name);
-    if (iter == m_wfobject_map.end()) {
+    if (!IS_KEY_IN_MAP(m_wfobject_map, name)) {
         PrintDebug(fmt::format("Could not find Wavefront object {}!\n", name));
         return nullptr;
     }
 
+    const auto &iter = m_wfobject_map.find(name);
     auto result = iter->second->clone(move);
     return std::move(result);
 }

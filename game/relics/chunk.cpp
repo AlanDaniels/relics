@@ -150,8 +150,11 @@ const Chunk *Chunk::getNeighborWest() const
 
 // Rebuild our set of inner blocks that generate surfaces.
 // We do this as a separate step since it doesn't involve other chunks.
+// This resets our status back to the start.
 void Chunk::rebuildInnerExposedBlockSet(SurfaceTotals *pOutTotals)
 {
+    m_status = ChunkStatus::INNER;
+
     m_inner_exposed_block_set.clear();
 
     for     (int x = 1; x < CHUNK_WIDTH - 1; x++) {
@@ -166,8 +169,6 @@ void Chunk::rebuildInnerExposedBlockSet(SurfaceTotals *pOutTotals)
             }
         }
     }
-
-    m_status = ChunkStatus::INNER;
 }
 
 
@@ -228,6 +229,15 @@ void Chunk::rebuildEdgeExposedBlockSet(SurfaceTotals *pOutTotals)
 }
 
 
+// Rebuild the lanscape vert lists. This should only be done here.
+void Chunk::rebuildLandscape()
+{
+    assert(m_status == ChunkStatus::EDGES);
+    landscape.rebuildSurfaceLists(); 
+    m_status = ChunkStatus::UP_TO_DATE;
+}
+
+
 // Get a vector of the exposed blocks.
 std::vector<LocalGrid> Chunk::getExposedBlockList()
 {
@@ -281,7 +291,7 @@ std::string Chunk::toString() const
     int coal_surfaces  = landscape.getCountForSurface(SurfaceType::COAL);
 
     // Print the results.
-    std::string up_to_date = (getStatus() == ChunkStatus::LANDSCAPE) ? "true" : "false";
+    std::string up_to_date = (getStatus() == ChunkStatus::UP_TO_DATE) ? "true" : "false";
 
     std::string result =
         fmt::format("Chunk at [{0}, {1}]\n", m_origin.x(), m_origin.z()) +

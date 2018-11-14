@@ -178,6 +178,11 @@ std::unique_ptr<Chunk> LoadChunk(const std::string &db_fname, GameWorld *world, 
         }
     }
 
+    // Just before we leave, recalc the inner exposures. The edge exposures,
+    // and the actual landscape, will be rebuilt back in the main thread.
+    SurfaceTotals ignored;
+    chunk->rebuildInnerExposedBlockSet(&ignored);
+
     // All done.
     PrintDebug(fmt::format(
         "Loaded chunk [{0}, {1}] with {2} dirt tops.\n", 

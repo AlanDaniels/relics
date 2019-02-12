@@ -110,10 +110,11 @@ bool Config::loadFromFile()
         debug.hud_collision    = getBoolField(L, "hud_collision",    false);
         debug.hud_second_clock = getBoolField(L, "hud_second_clock", false);
 
-        debug.hud_memory_usage = getBoolField(L, "hud_memory_usage", false);
-        debug.hud_render_stats = getBoolField(L, "hud_render_stats", false);
-        debug.hud_eval_region  = getBoolField(L, "hud_eval_region",  false);
-        debug.hud_chunk_stats  = getBoolField(L, "hud_chunk_stats",  false);
+        debug.hud_memory_usage  = getBoolField(L, "hud_memory_usage",   false);
+        debug.hud_render_stats  = getBoolField(L, "hud_render_stats",   false);
+        debug.hud_eval_region   = getBoolField(L, "hud_eval_region",    false);
+        debug.hud_chunk_summary = getBoolField(L, "hud_chunk_summary",  false);
+        debug.hud_chunk_details = getBoolField(L, "hud_chunk_details",  false);
 
         debug.print_draw_state     = getBoolField(L, "print_draw_state",     false);
         debug.print_window_context = getBoolField(L, "print_window_context", false);

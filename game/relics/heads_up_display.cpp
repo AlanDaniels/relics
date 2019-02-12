@@ -24,25 +24,34 @@ void SetHudDebugLine(const std::string &line) {
 }
 
 
-// For the blinker rectangle.
+// TODO: Hmm. This might be better in a config file.
+const int DEBUGGING_TEXT_LINE_HEIGHT  = 18;
+const int DEBUGGING_TEXT_LINE_SPACING = 1;
+
+const int CHUNK_DETAIL_TEXT_LINE_HEIGHT  = 14;
+const int CHUNK_DETAIL_TEXT_LINE_SPACING = 0;
+
 const GLfloat CROSSHAIR_THIN  = 1.0f;
 const GLfloat CHROSSHAIR_LONG = 50.0f;
 
 const GLfloat SECOND_CLOCK_RADIUS = 30.0f;
 const GLfloat SECOND_CLOCK_OFFSET = 10.0f;
 
+const GLfloat CHUNK_DETAIL_OFFSET_X = 200.0f;
+const GLfloat CHUNK_DETAIL_OFFSET_Y = 50.0f;
+
 
 // Initialize our stuff.
 bool HeadsUpDisplay::init()
 {
-    std::string font_name = GetConfig().render.hud_font;
+    const std::string font_name = GetConfig().render.hud_font;
     if (!ReadFontResource(&m_font, font_name)) {
         return false;
     }
 
-    sf::Vector2u dims = m_window.getSize();
-    int screen_width  = dims.x;
-    int screen_height = dims.y;
+    const sf::Vector2u dims = m_window.getSize();
+    const int screen_width  = dims.x;
+    const int screen_height = dims.y;
 
     m_crosshair_vert.setSize(sf::Vector2f(CROSSHAIR_THIN, CHROSSHAIR_LONG));
     m_crosshair_vert.setPosition(sf::Vector2f(
@@ -71,12 +80,20 @@ bool HeadsUpDisplay::init()
     m_second_hand.setFillColor(sf::Color::Black);
 
     // The text for drawing debug messages.
-    m_text.setFont(m_font);
-    m_text.setCharacterSize(14);
-    m_text.setStyle(sf::Text::Regular);
-    m_text.setFillColor(sf::Color::Yellow);
-    m_text.setOutlineColor(sf::Color::Black);
-    m_text.setOutlineThickness(1.0f);
+    m_debugging_text.setFont(m_font);
+    m_debugging_text.setCharacterSize(DEBUGGING_TEXT_LINE_HEIGHT);
+    m_debugging_text.setStyle(sf::Text::Regular);
+    m_debugging_text.setFillColor(sf::Color::Yellow);
+    m_debugging_text.setOutlineColor(sf::Color::Black);
+    m_debugging_text.setOutlineThickness(1.0f);
+
+    // The text for drawing chunk details.
+    m_chunk_detail_text.setFont(m_font);
+    m_chunk_detail_text.setCharacterSize(12);
+    m_chunk_detail_text.setStyle(sf::Text::Regular);
+    m_chunk_detail_text.setFillColor(sf::Color::Yellow);
+    m_chunk_detail_text.setOutlineThickness(0.0f);
+
     return true;
 }
 
@@ -91,18 +108,18 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
 
     const Config &config = GetConfig();
 
-    const GLfloat text_down = 18.0f;
-
     // Before drawing the text.
+    const int move_amount = DEBUGGING_TEXT_LINE_HEIGHT + DEBUGGING_TEXT_LINE_SPACING;
+
     m_window.pushGLStates();
 
-    m_text.setPosition(10.0f, 0.0f);
+    m_debugging_text.setPosition(10.0f, 0.0f);
 
     // Print our one-off debug line (if any).
     if (debug_line != "") {
-        m_text.setString(debug_line);
-        m_window.draw(m_text);
-        m_text.move(0.0f, text_down);
+        m_debugging_text.setString(debug_line);
+        m_window.draw(m_debugging_text);
+        m_debugging_text.move(0.0f, move_amount);
     }
 
     // Print our hit-test debugging info.
@@ -110,14 +127,14 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
         if (game_world.getHitTestSuccess()) {
             std::string descr = game_world.getHitTestResult().toString();
             std::string msg   = fmt::format("Hit Test: {}", descr);
-            m_text.setString(msg);
+            m_debugging_text.setString(msg);
         }
         else {
-            m_text.setString("Hit Test: None");
+            m_debugging_text.setString("Hit Test: None");
         }
 
-        m_window.draw(m_text);
-        m_text.move(0.0f, text_down);
+        m_window.draw(m_debugging_text);
+        m_debugging_text.move(0.0f, move_amount);
     }
 
     // Print our memory usage.
@@ -125,10 +142,10 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
         int memory = GetMemoryUsage();
         std::string readable = ReadableNumber(memory);
         std::string msg = fmt::format("Memory: {}", readable);
-        m_text.setString(msg);
+        m_debugging_text.setString(msg);
 
-        m_window.draw(m_text);
-        m_text.move(0.0f, text_down);
+        m_window.draw(m_debugging_text);
+        m_debugging_text.move(0.0f, move_amount);
     }
 
     // Print our render stats.
@@ -137,20 +154,20 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
         std::string msg = fmt::format(
             "Render: {0} states, {1} tris",
             stats.state_changes, readable);
-        m_text.setString(msg);
+        m_debugging_text.setString(msg);
 
-        m_window.draw(m_text);
-        m_text.move(0.0f, text_down);
+        m_window.draw(m_debugging_text);
+        m_debugging_text.move(0.0f, move_amount);
     }
 
     // Print our mouse position.
     if (config.debug.hud_mouse_pos) {
         sf::Vector2i mouse_pos = sf::Mouse::getPosition(m_window);
         std::string msg = fmt::format("Mouse: {0:03d}, {1:03d}", mouse_pos.x, mouse_pos.y);
-        m_text.setString(msg);
+        m_debugging_text.setString(msg);
 
-        m_window.draw(m_text);
-        m_text.move(0.0f, text_down);
+        m_window.draw(m_debugging_text);
+        m_debugging_text.move(0.0f, move_amount);
     }
 
     // Print the player's positition.
@@ -164,19 +181,19 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
             "Pos = {0:.0f}, {1:.0f}, {2:.0f}, Yaw = {3:03.1f}, Pitch = {4:02.1f}",
             camera_pos.x(), camera_pos.y(), camera_pos.z(),
             camera_yaw, camera_pitch);
-        m_text.setString(msg);
+        m_debugging_text.setString(msg);
 
-        m_window.draw(m_text);
-        m_text.move(0.0f, text_down);
+        m_window.draw(m_debugging_text);
+        m_debugging_text.move(0.0f, move_amount);
     }
 
     // Print the player's collision details.
     if (config.debug.hud_collision) {
         std::string msg = fmt::format("Collision: {}", collision_line);
-        m_text.setString(msg);
+        m_debugging_text.setString(msg);
 
-        m_window.draw(m_text);
-        m_text.move(0.0f, text_down);
+        m_window.draw(m_debugging_text);
+        m_debugging_text.move(0.0f, move_amount);
     }
 
     // Print the game time.
@@ -188,10 +205,10 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
         int minutes = game_time % 60;
 
         std::string msg = fmt::format("Time: {0:02d}:{1:02d}", minutes, secs);
-        m_text.setString(msg);
+        m_debugging_text.setString(msg);
 
-        m_window.draw(m_text);
-        m_text.move(0.0f, text_down);
+        m_window.draw(m_debugging_text);
+        m_debugging_text.move(0.0f, move_amount);
     }
 
     // Print our eval region.
@@ -204,14 +221,14 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
             "Eval distance: {0} meters, W={1}, E={2}, S={3}, N={4}", 
             eval_block_count * CHUNK_WIDTH, 
             region.west(), region.east(), region.south(), region.north());
-        m_text.setString(msg);
+        m_debugging_text.setString(msg);
 
-        m_window.draw(m_text);
-        m_text.move(0.0f, text_down);
+        m_window.draw(m_debugging_text);
+        m_debugging_text.move(0.0f, move_amount);
     }
 
-    // Print out our chunk stats.
-    if (config.debug.hud_chunk_stats) {
+    // Print out our chunk details.
+    if (config.debug.hud_chunk_summary) {
         int in_memory  = game_world.getChunksInMemoryCount();
         int considered = stats.chunks_considered;
         int rendered   = stats.chunks_rendered;
@@ -219,36 +236,28 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
         std::string msg = fmt::format(
             "Chunks: In memory = {0}, considered = {1}, rendered = {2}",
             in_memory, considered, rendered);
-        m_text.setString(msg);
+        m_debugging_text.setString(msg);
 
-        m_window.draw(m_text);
-        m_text.move(0.0f, text_down);
+        m_window.draw(m_debugging_text);
+        m_debugging_text.move(0.0f, move_amount);
     }
 
     // Print our framerate.
     if (config.debug.hud_framerate) {
         std::string msg = fmt::format("FPS: {:02.1f}", fps);
-        m_text.setString(msg);
+        m_debugging_text.setString(msg);
 
-        m_window.draw(m_text);
-        m_text.move(0.0f, text_down);
+        m_window.draw(m_debugging_text);
+        m_debugging_text.move(0.0f, move_amount);
     }
 
-    // Draw our second clock.
+    // That's the end of text-based output...
     if (config.debug.hud_second_clock) {
-        sf::Vector2u dims = m_window.getSize();
-        int screen_width  = dims.x;
-        int screen_height = dims.y;
+        drawSecondClock(game_world);
+    }
 
-        m_second_hand.setPosition(sf::Vector2f(
-            screen_width  - SECOND_CLOCK_RADIUS - SECOND_CLOCK_OFFSET,
-            screen_height - SECOND_CLOCK_RADIUS - SECOND_CLOCK_OFFSET));
-
-        int leftover_msecs = game_world.getTimeMsecs() % 1000;
-        m_second_hand.setRotation((leftover_msecs / 1000.0f) * 360.0f);
-
-        m_window.draw(m_second_clock);
-        m_window.draw(m_second_hand);
+    if (config.debug.hud_chunk_details) {
+        drawChunkDetail(game_world);
     }
 
     // Draw the crosshairs, but only if the game is un-paused.
@@ -259,4 +268,46 @@ void HeadsUpDisplay::render(const GameWorld &game_world, const RenderStats &stat
 
     // After drawing the text.
     m_window.popGLStates();
+}
+
+
+// Draw the second clock. Helps us look for sputtering.
+// We draw this in the bottom right corner.
+void HeadsUpDisplay::drawSecondClock(const GameWorld &game_world) {
+    sf::Vector2u dims = m_window.getSize();
+    int screen_width  = dims.x;
+    int screen_height = dims.y;
+
+    m_second_hand.setPosition(sf::Vector2f(
+        screen_width  - SECOND_CLOCK_RADIUS - SECOND_CLOCK_OFFSET,
+        screen_height - SECOND_CLOCK_RADIUS - SECOND_CLOCK_OFFSET));
+
+    int leftover_msecs = game_world.getTimeMsecs() % 1000;
+    m_second_hand.setRotation((leftover_msecs / 1000.0f) * 360.0f);
+
+    m_window.draw(m_second_clock);
+    m_window.draw(m_second_hand);
+}
+
+
+// Draw all the chunk detail as a list down the right side.
+void HeadsUpDisplay::drawChunkDetail(const GameWorld &game_world)
+{
+    const sf::Vector2u dims = m_window.getSize();
+    const int screen_width  = dims.x;
+
+    const int move_amount = CHUNK_DETAIL_TEXT_LINE_HEIGHT + CHUNK_DETAIL_TEXT_LINE_SPACING;
+
+    m_chunk_detail_text.setPosition(sf::Vector2f(
+        screen_width - CHUNK_DETAIL_OFFSET_X,
+        CHUNK_DETAIL_OFFSET_Y));
+
+    std::vector<ChunkOrigin> origins = game_world.getLoadedChunkOrigins();
+    for (const auto &iter : origins) {
+        std::string msg = fmt::format("{0}, {1}", iter.debugX(), iter.debugZ());
+        m_chunk_detail_text.setString(msg);
+
+        m_window.draw(m_chunk_detail_text);
+        m_chunk_detail_text.move(sf::Vector2f(0.0f, move_amount));
+    }
 }

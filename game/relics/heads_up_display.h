@@ -28,13 +28,20 @@ private:
     FORBID_COPYING(HeadsUpDisplay)
     FORBID_MOVING(HeadsUpDisplay)
 
+    // Private methods.
+    void drawSecondClock(const GameWorld &game_world);
+    void drawChunkDetail(const GameWorld &game_world);
+
     // Private data.
     sf::RenderWindow &m_window;
 
     sf::RectangleShape m_crosshair_vert;
     sf::RectangleShape m_crosshair_horz;
+
     sf::CircleShape    m_second_clock;
     sf::RectangleShape m_second_hand;
+    
     sf::Font m_font;
-    sf::Text m_text;
+    sf::Text m_debugging_text;
+    sf::Text m_chunk_detail_text;
 };

@@ -43,7 +43,8 @@ struct ConfigDebug
         hud_memory_usage(false),
         hud_render_stats(false),
         hud_eval_region(false),
-        hud_chunk_stats(false),
+        hud_chunk_summary(false),
+        hud_chunk_details(false),
 
         print_draw_state(false),
         print_window_context(false) {}
@@ -70,7 +71,8 @@ struct ConfigDebug
     bool hud_memory_usage;
     bool hud_render_stats;
     bool hud_eval_region;
-    bool hud_chunk_stats;
+    bool hud_chunk_summary;
+    bool hud_chunk_details;
 
     bool print_draw_state;
     bool print_window_context;

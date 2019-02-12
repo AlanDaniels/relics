@@ -26,10 +26,11 @@ debug = {
     hud_memory_usage = true,
     hud_render_stats = true,
     hud_eval_region = false,
-    hud_chunk_stats = false,
+    hud_chunk_stats = true,
+    hud_chunk_details = true,
 
     print_draw_state = false,
-    print_window_context = false
+    print_window_context = true
 }
 
 -- Window details.

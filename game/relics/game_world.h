@@ -37,6 +37,7 @@ public:
     void onGameTick(int elapsed_msec, const EventStateMsg &msg);
 
     const Chunk *getChunk(const ChunkOrigin &origin) const;
+    std::vector<ChunkOrigin> getLoadedChunkOrigins() const;
 
     void setPlayerAtStart();
     void deleteBlockInFrontOfUs();

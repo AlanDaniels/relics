@@ -102,10 +102,26 @@ const Chunk *GameWorld::getChunk(const ChunkOrigin &origin) const
         return nullptr;
     }
 
-    auto iter = m_chunk_map.find(origin);
+    const auto &iter = m_chunk_map.find(origin);
     const Chunk *pResult = iter->second.get();
     assert(pResult != nullptr);
     return pResult;
+}
+
+
+// Get a list of the origins of all the currently loaded chunks.
+// TODO: Why does "emplace_back" cause a compiler error here? More C++ deep voodoo.
+std::vector<ChunkOrigin> GameWorld::getLoadedChunkOrigins() const
+{
+    std::vector<ChunkOrigin> result;
+
+    for (const auto &iter : m_chunk_map) {
+        const ChunkOrigin &origin = iter.first;
+        result.emplace_back(origin);
+    }
+
+    std::sort(result.begin(), result.end());
+    return std::move(result);
 }
 
 

@@ -147,7 +147,7 @@ std::unique_ptr<Chunk> LoadChunk(const std::string &db_fname, GameWorld *world, 
         const GlobalPillar &global_pillar = iter.first;
         int dirt_top = iter.second;
 
-        LocalPillar &pillar = GlobalPillarToLocal(global_pillar, origin);
+        const LocalPillar &pillar = GlobalPillarToLocal(global_pillar, origin);
         for (int y = 0; y <= dirt_top; y++) {
             LocalGrid coord(pillar.x(), y, pillar.z());
             chunk->setBlockType(coord, BlockType::DIRT);
@@ -160,7 +160,7 @@ std::unique_ptr<Chunk> LoadChunk(const std::string &db_fname, GameWorld *world, 
         const GlobalPillar &global_pillar = iter.first;
         int stone_top = iter.second;
 
-        LocalPillar &pillar = GlobalPillarToLocal(global_pillar, origin);
+        const LocalPillar &pillar = GlobalPillarToLocal(global_pillar, origin);
         for (int y = 0; y <= stone_top; y++) {
             LocalGrid coord(pillar.x(), y, pillar.z());
             chunk->setBlockType(coord, BlockType::STONE);
@@ -171,17 +171,18 @@ std::unique_ptr<Chunk> LoadChunk(const std::string &db_fname, GameWorld *world, 
         const GlobalPillar &global_pillar = iter.first;
         const std::vector<int> spots_vec  = iter.second;
 
-        LocalPillar &pillar = GlobalPillarToLocal(global_pillar, origin);
+        const LocalPillar &pillar = GlobalPillarToLocal(global_pillar, origin);
         for (int y : spots_vec) {
             LocalGrid coord(pillar.x(), y, pillar.z());
             chunk->setBlockType(coord, BlockType::COAL);
         }
     }
 
-    // Just before we leave, recalc the inner exposures. The edge exposures,
-    // and the actual landscape, will be rebuilt back in the main thread.
+    // Just before we leave, recalc the exposures.
+    // The actual landscape will be rebuilt back in the main thread,
+    // since the OpenGL part can't be done in a sub-thread.
     SurfaceTotals ignored;
-    chunk->rebuildInnerExposedBlockSet(&ignored);
+    chunk->rebuildExposedBlockSet(&ignored);
 
     // All done.
     PrintDebug(fmt::format(

@@ -84,7 +84,7 @@ void Landscape::rebuildSurfaceLists()
 
     const auto &origin = m_owner.getOrigin();
 
-    int grand_total = totals.getGrandTotal();
+    const int grand_total = totals.getGrandTotal();
     if (grand_total == 0) {
         PrintDebug(fmt::format(
             "Recalculated all exposures for [{0}, {1}].\n",

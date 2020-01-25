@@ -92,15 +92,6 @@ private:
 ChunkOrigin WorldToChunkOrigin(const MyVec4 &pos);
 
 
-// For a chunk, what's been calculated so far? 
-enum class ChunkStatus : unsigned char {
-    NOTHING    = 0,
-    INNER      = 1,
-    EDGES      = 2,
-    UP_TO_DATE = 3
-};
-
-
 // The chunk itself.
 class Chunk
 {
@@ -109,7 +100,7 @@ public:
         landscape(*this),
         m_world(world),
         m_origin(origin),
-        m_status(ChunkStatus::NOTHING) {}
+        m_last_touched_msecs(0) {}
 
     ~Chunk() {}
 
@@ -129,8 +120,6 @@ public:
     bool isAbovePlane(const MyPlane &plane) const;
     const ChunkOrigin &getOrigin() const { return m_origin; }
 
-    ChunkStatus getStatus() const { return m_status; }
-
     const Chunk *getNeighborNorth() const;
     const Chunk *getNeighborSouth() const;
     const Chunk *getNeighborEast()  const;
@@ -148,8 +137,7 @@ public:
     std::string toString() const;
 
     // Methods needed by the specialty objects.
-    void rebuildInnerExposedBlockSet(SurfaceTotals *pOutTotals);
-    void rebuildEdgeExposedBlockSet(SurfaceTotals *pOutTotals);
+    void rebuildExposedBlockSet(SurfaceTotals *pOutTotals);
     void rebuildLandscape();
 
     std::vector<LocalGrid> getExposedBlockList();
@@ -171,13 +159,11 @@ private:
     // Private data.
     const GameWorld &m_world;
     ChunkOrigin m_origin;
-    ChunkStatus m_status;
     int m_last_touched_msecs;
 
     std::array<ChunkStripe, CHUNK_WIDTH * CHUNK_HEIGHT> m_stripes;
 
-    std::set<LocalGrid> m_inner_exposed_block_set;
-    std::set<LocalGrid> m_edge_exposed_block_set;
+    std::set<LocalGrid> m_exposed_block_set;
 
     std::vector<std::unique_ptr<WFInstance>> m_wfinstance_list;
 };

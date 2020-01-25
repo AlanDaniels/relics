@@ -77,99 +77,71 @@ bool ChunkStripe::recalcExposuresForBlock(
     current.clearSurfaces();
 
     // If this block is empty, it doesn't generate any faces.
-    BlockType block_type = current.getBlockType();
+    const BlockType block_type = current.getBlockType();
     if (IsBlockTypeEmpty(block_type)) {
         return false;
     }
 
     // Check for edge cases.
-    int x = local_coord.x();
-    int y = local_coord.y();
-    int z = local_coord.z();
+    const int x = local_coord.x();
+    const int y = local_coord.y();
+    const int z = local_coord.z();
 
-    bool west_edge = (x == 0);
-    bool east_edge = (x == (CHUNK_WIDTH - 1));
+    const bool west_edge = (x == 0);
+    const bool east_edge = (x == (CHUNK_WIDTH - 1));
 
-    bool south_edge = (z == 0);
-    bool north_edge = (z == (CHUNK_WIDTH - 1));
+    const bool south_edge = (z == 0);
+    const bool north_edge = (z == (CHUNK_WIDTH - 1));
 
-    bool bottom_edge = (y == 0);
-    bool top_edge    = (y == (CHUNK_HEIGHT - 1));
+    const bool bottom_edge = (y == 0);
+    const bool top_edge    = (y == (CHUNK_HEIGHT - 1));
 
     // Get our six neigbors, straddling across chunk boundaries if necessary.
     BlockType west_block_type = BlockType::AIR;
-    if (west_edge) {
-        const Chunk *neighbor = chunk.getNeighborWest();
-        if (neighbor != nullptr) {
-            LocalGrid coord(CHUNK_WIDTH - 1, y, z);
-            west_block_type = neighbor->getBlockType(coord);
-        }
-    }
-    else {
-        LocalGrid coord(x - 1, y, z);
+    if (!west_edge) {
+        const LocalGrid coord(x - 1, y, z);
         west_block_type = chunk.getBlockType(coord);
     }
 
     BlockType east_block_type = BlockType::AIR;
-    if (east_edge) {
-        const Chunk *neighbor = chunk.getNeighborEast();
-        if (neighbor != nullptr) {
-            LocalGrid coord(0, y, z);
-            east_block_type = neighbor->getBlockType(coord);
-        }
-    }
-    else {
-        LocalGrid coord(x + 1, y, z);
+    if (!east_edge) {
+        const LocalGrid coord(x + 1, y, z);
         east_block_type = chunk.getBlockType(coord);
     }
 
     BlockType south_block_type = BlockType::AIR;
-    if (south_edge) {
-        const Chunk *neighbor = chunk.getNeighborSouth();
-        if (neighbor != nullptr) {
-            LocalGrid coord(x, y, CHUNK_WIDTH - 1);
-            south_block_type = neighbor->getBlockType(coord);
-        }
-    }
-    else {
-        LocalGrid coord(x, y, z - 1);
+    if (!south_edge) {
+        const LocalGrid coord(x, y, z - 1);
         south_block_type = chunk.getBlockType(coord);
     }
 
     BlockType north_block_type = BlockType::AIR;
-    if (north_edge) {
-        const Chunk *neighbor = chunk.getNeighborNorth();
-        if (neighbor != nullptr) {
-            LocalGrid coord(x, y, 0);
-            north_block_type = neighbor->getBlockType(coord);
-        }
-    }
-    else {
-        LocalGrid coord(x, y, z + 1);
+    if (!north_edge) {
+        const LocalGrid coord(x, y, z + 1);
         north_block_type = chunk.getBlockType(coord);
     }
 
     BlockType top_block_type = BlockType::AIR;
     if (!top_edge) {
-        LocalGrid coord(x, y + 1, z);
+        const LocalGrid coord(x, y + 1, z);
         top_block_type = chunk.getBlockType(coord);
     }
 
     BlockType bottom_block_type = BlockType::AIR;
     if (!bottom_edge) {
-        LocalGrid coord(x, y - 1, z);
+        const LocalGrid coord(x, y - 1, z);
         bottom_block_type = chunk.getBlockType(coord);
     }
 
     // Check each of the faces.
-    SurfaceType west_surf   = CalcSurfaceType(block_type, FaceType::WEST, west_block_type);
-    SurfaceType east_surf   = CalcSurfaceType(block_type, FaceType::EAST, east_block_type);
+    const SurfaceType west_surf   = CalcSurfaceType(block_type, FaceType::WEST, west_block_type);
+    const SurfaceType east_surf   = CalcSurfaceType(block_type, FaceType::EAST, east_block_type);
 
-    SurfaceType south_surf  = CalcSurfaceType(block_type, FaceType::SOUTH, south_block_type);
-    SurfaceType north_surf  = CalcSurfaceType(block_type, FaceType::NORTH, north_block_type);
+    const SurfaceType south_surf  = CalcSurfaceType(block_type, FaceType::SOUTH, south_block_type);
+    const SurfaceType north_surf  = CalcSurfaceType(block_type, FaceType::NORTH, north_block_type);
 
-    SurfaceType top_surf    = CalcSurfaceType(block_type, FaceType::TOP,    top_block_type);
-    SurfaceType bottom_surf = CalcSurfaceType(block_type, FaceType::BOTTOM, bottom_block_type);
+    const SurfaceType top_surf    = CalcSurfaceType(block_type, FaceType::TOP,    top_block_type);
+    const SurfaceType bottom_surf = CalcSurfaceType(block_type, FaceType::BOTTOM, bottom_block_type);
 
     current.setSurface(FaceType::SOUTH,  south_surf);
     current.setSurface(FaceType::NORTH,  north_surf);
@@ -206,12 +178,12 @@ void ChunkStripe::addToSurfaceLists(Chunk &chunk, const LocalGrid &local_coord)
         return;
     }
 
-    int x = local_coord.x();
-    int y = local_coord.y();
-    int z = local_coord.z();
+    const int x = local_coord.x();
+    const int y = local_coord.y();
+    const int z = local_coord.z();
 
     // Top face.
-    SurfaceType top_surf = current.getSurface(FaceType::TOP);
+    const SurfaceType top_surf = current.getSurface(FaceType::TOP);
     if (top_surf != SurfaceType::NOTHING) {
         VertList_PNT &list = chunk.landscape.getSurfaceList_RW(top_surf);
         auto tris = GetLandscapePatch_PNT(chunk, local_coord, FaceType::TOP);
@@ -219,7 +191,7 @@ void ChunkStripe::addToSurfaceLists(Chunk &chunk, const LocalGrid &local_coord)
     }
 
     // Bottom face.
-    SurfaceType bottom_surf = current.getSurface(FaceType::BOTTOM);
+    const SurfaceType bottom_surf = current.getSurface(FaceType::BOTTOM);
     if (bottom_surf != SurfaceType::NOTHING) {
         VertList_PNT &list = chunk.landscape.getSurfaceList_RW(bottom_surf);
         auto tris = GetLandscapePatch_PNT(chunk, local_coord, FaceType::BOTTOM);
@@ -227,7 +199,7 @@ void ChunkStripe::addToSurfaceLists(Chunk &chunk, const LocalGrid &local_coord)
     }
 
     // Southern face.
-    SurfaceType south_surf = current.getSurface(FaceType::SOUTH);
+    const SurfaceType south_surf = current.getSurface(FaceType::SOUTH);
     if (south_surf != SurfaceType::NOTHING) {
         VertList_PNT &list = chunk.landscape.getSurfaceList_RW(south_surf);
         auto tris = GetLandscapePatch_PNT(chunk, local_coord, FaceType::SOUTH);
@@ -235,7 +207,7 @@ void ChunkStripe::addToSurfaceLists(Chunk &chunk, const LocalGrid &local_coord)
     }
 
     // Northern face.
-    SurfaceType north_surf = current.getSurface(FaceType::NORTH);
+    const SurfaceType north_surf = current.getSurface(FaceType::NORTH);
     if (north_surf != SurfaceType::NOTHING) {
         VertList_PNT &list = chunk.landscape.getSurfaceList_RW(north_surf);
         auto tris = GetLandscapePatch_PNT(chunk, local_coord, FaceType::NORTH);
@@ -243,7 +215,7 @@ void ChunkStripe::addToSurfaceLists(Chunk &chunk, const LocalGrid &local_coord)
     }
 
     // Eastern face.
-    SurfaceType east_surf = current.getSurface(FaceType::EAST);
+    const SurfaceType east_surf = current.getSurface(FaceType::EAST);
     if (east_surf != SurfaceType::NOTHING) {
         VertList_PNT &list = chunk.landscape.getSurfaceList_RW(east_surf);
         auto tris = GetLandscapePatch_PNT(chunk, local_coord, FaceType::EAST);
@@ -251,7 +223,7 @@ void ChunkStripe::addToSurfaceLists(Chunk &chunk, const LocalGrid &local_coord)
     }
 
     // Western face.
-    SurfaceType west_surf = current.getSurface(FaceType::WEST);
+    const SurfaceType west_surf = current.getSurface(FaceType::WEST);
     if (west_surf != SurfaceType::NOTHING) {
         VertList_PNT &list = chunk.landscape.getSurfaceList_RW(west_surf);
         auto tris = GetLandscapePatch_PNT(chunk, local_coord, FaceType::WEST);

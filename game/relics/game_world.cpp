@@ -63,8 +63,7 @@ GameWorld::GameWorld(const std::string &db_fname) :
         Chunk *chunk = iter.second.get();
 
         SurfaceTotals totals;
-        chunk->rebuildInnerExposedBlockSet(&totals);
-        chunk->rebuildEdgeExposedBlockSet(&totals);
+        chunk->rebuildExposedBlockSet(&totals);
         chunk->rebuildLandscape();
     }
 }
@@ -181,35 +180,13 @@ void GameWorld::loadWorldAsNeeded()
         if (!already_loaded) {
             bool now_arriving = IS_KEY_IN_MAP(m_chunk_loader_map, origin);
             assert(now_arriving);
+            // TODO: Dump out everything here. Let's pick up where we left off.
 
             auto arrival = m_chunk_loader_map.find(origin);
             std::unique_ptr<Chunk> chunk = arrival->second.get();
             m_chunk_map[origin] = std::move(chunk);
 
             m_chunk_loader_map.erase(arrival);
-        }
-    }
-
-    // Next, recalc the chunks within the draw region.
-    // The block of code above should have everything loaded already.
-    SurfaceTotals ignored;
-
-    for (const auto &origin : draw_region.getEntirety()) {
-        assert(IS_KEY_IN_MAP(m_chunk_map, origin));
-
-        auto &chunk = m_chunk_map.at(origin);
-        switch (chunk->getStatus()) {
-        case ChunkStatus::INNER:
-            chunk->rebuildEdgeExposedBlockSet(&ignored);
-            chunk->rebuildLandscape();
-            break;
-
-        case ChunkStatus::UP_TO_DATE:
-            break;
-
-        default:
-            PrintTheImpossible(__FILE__, __LINE__, static_cast<int>(chunk->getStatus()));
-            break;
         }
     }
 
@@ -341,8 +318,7 @@ void GameWorld::deleteBlockInFrontOfUs()
         chunk->setBlockType(local_coord, BlockType::AIR);
 
         SurfaceTotals totals;
-        chunk->rebuildInnerExposedBlockSet(&totals);
-        chunk->rebuildEdgeExposedBlockSet(&totals);
+        chunk->rebuildExposedBlockSet(&totals);
         chunk->rebuildLandscape();
     }
 }
@@ -364,8 +340,7 @@ bool GameWorld::cashInWorkerThread() {
             assert(!IS_KEY_IN_MAP(m_chunk_map, origin));
 
             std::unique_ptr<Chunk> chunk = arrival.get();
-            chunk->rebuildInnerExposedBlockSet(&totals);
-            chunk->rebuildEdgeExposedBlockSet(&totals);
+            chunk->rebuildExposedBlockSet(&totals);
             chunk->rebuildLandscape();
             m_chunk_map[origin] = std::move(chunk);
 

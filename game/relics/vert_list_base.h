@@ -110,8 +110,8 @@ bool VertList_Base<T>::update()
     }
 
     // Update the buffer.
-    int byte_count = m_verts.size() * sizeof(T);
-    int item_count = m_verts.size();
+    const int byte_count = m_verts.size() * sizeof(T);
+    const int item_count = m_verts.size();
 
     glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer_ID);
     glBufferData(GL_ARRAY_BUFFER, byte_count, &m_verts.at(0), GL_STATIC_DRAW);
